@@ -1,0 +1,19 @@
+'use server'
+
+import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { revalidatePath } from 'next/cache'
+
+export async function toggleTaskComplete(taskId: string, completed: boolean) {
+  const supabase = await createSupabaseServer()
+
+  await supabase
+    .from('journey_tasks')
+    .update({
+      status: completed ? 'completed' : 'pending',
+      completed_at: completed ? new Date().toISOString() : null,
+    })
+    .eq('id', taskId)
+
+  revalidatePath('/hire/dashboard')
+  revalidatePath('/hire/tasks')
+}
