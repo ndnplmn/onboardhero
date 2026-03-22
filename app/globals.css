@@ -197,6 +197,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .hce-bar.risk { background: linear-gradient(90deg,var(--amber),#f87171); }
 .badge-on,.badge-risk { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 100px; white-space: nowrap; }
 .badge-on { background: var(--cyan-light); color: #007a8a; }
+.badge-warn { background: var(--amber-bg); color: var(--amber); padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
 .badge-risk { background: var(--amber-bg); color: #92400e; }
 .hc-timeline { background: var(--surface2); border-radius: var(--r); padding: 10px; border: 1px solid var(--border); }
 .htl-label { font-size: 10px; font-weight: 600; color: var(--text3); display: block; margin-bottom: 14px; }
