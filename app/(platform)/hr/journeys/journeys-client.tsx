@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import TemplateCard from '@/components/platform/TemplateCard'
 import TemplateEditor from '@/components/platform/TemplateEditor'
+import JourneyPreview from '@/components/ai/JourneyPreview'
 
 export default function JourneysClient({ templates, taskCounts }: { templates: any[]; taskCounts: Record<string, number> }) {
   const [showEditor, setShowEditor] = useState(false)
+  const [showAIGenerator, setShowAIGenerator] = useState(false)
 
   return (
     <div style={{ padding: '32px' }}>
@@ -15,7 +17,7 @@ export default function JourneysClient({ templates, taskCounts }: { templates: a
           <button className="btn btn-outline" onClick={() => setShowEditor(true)}>
             <i className="fa-solid fa-plus"></i> Create Template
           </button>
-          <button className="btn btn-primary" disabled title="Coming in Phase 5">
+          <button className="btn btn-primary" onClick={() => setShowAIGenerator(true)}>
             <i className="fa-solid fa-robot"></i> Generate with AI
           </button>
         </div>
@@ -32,6 +34,7 @@ export default function JourneysClient({ templates, taskCounts }: { templates: a
       </div>
 
       {showEditor && <TemplateEditor onClose={() => setShowEditor(false)} />}
+      {showAIGenerator && <JourneyPreview onClose={() => setShowAIGenerator(false)} />}
     </div>
   )
 }
