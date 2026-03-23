@@ -1,6 +1,7 @@
 import { getTeamMemberDetail } from '@/lib/db/queries/manager'
 import JourneyTimeline from '@/components/platform/JourneyTimeline'
 import RiskBadge from '@/components/platform/RiskBadge'
+import TeamMemberCoachButton from './TeamMemberCoachButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,10 +17,18 @@ export default async function TeamMemberPage({ params }: { params: Promise<{ id:
 
   return (
     <div style={{ padding: '32px' }}>
-      <h1 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '8px' }}>{journey.employee.full_name}</h1>
-      <p style={{ color: 'var(--text2)', marginBottom: '24px' }}>
-        Week {journey.current_week} · {journey.employee.department || 'General'} · <RiskBadge score={journey.risk_score} />
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+        <div>
+          <h1 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '8px' }}>{journey.employee.full_name}</h1>
+          <p style={{ color: 'var(--text2)', marginBottom: '24px' }}>
+            Week {journey.current_week} · {journey.employee.department || 'General'} · <RiskBadge score={journey.risk_score} />
+          </p>
+        </div>
+        <TeamMemberCoachButton
+          employeeName={journey.employee.full_name}
+          journeyId={journey.id}
+        />
+      </div>
 
       <JourneyTimeline currentWeek={journey.current_week} checkIns={checkIns} />
 
