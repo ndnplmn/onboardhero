@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 
 export default function Pricing() {
   const [annual, setAnnual] = useState(false)
@@ -50,7 +51,7 @@ export default function Pricing() {
               <li className="n"><i className="fa-solid fa-xmark"></i> Analytics dashboard</li>
               <li className="n"><i className="fa-solid fa-xmark"></i> Integrations</li>
             </ul>
-            <button className="btn btn-outline btn-block">Choose Starter</button>
+            <Link href="/signup" className="btn btn-outline btn-block">Choose Starter</Link>
           </div>
           {/* PROFESSIONAL */}
           <div className="price-card featured" data-plan="professional" data-monthly="149" data-annual="119">
@@ -72,7 +73,7 @@ export default function Pricing() {
               <li className="y"><i className="fa-solid fa-check"></i> Manager collaboration tools</li>
               <li className="n"><i className="fa-solid fa-xmark"></i> White-label / branding</li>
             </ul>
-            <button className="btn btn-primary btn-block">Choose Professional</button>
+            <Link href="/signup" className="btn btn-primary btn-block">Choose Professional</Link>
           </div>
           {/* ENTERPRISE */}
           <div className="price-card" data-plan="enterprise" data-monthly="399" data-annual="319">
@@ -93,7 +94,7 @@ export default function Pricing() {
               <li className="y"><i className="fa-solid fa-check"></i> SSO / SAML support</li>
               <li className="y"><i className="fa-solid fa-check"></i> Dedicated CSM &amp; priority SLA</li>
             </ul>
-            <button className="btn btn-outline btn-block">Choose Enterprise</button>
+            <Link href="/signup" className="btn btn-outline btn-block">Choose Enterprise</Link>
           </div>
         </div>
       </div>

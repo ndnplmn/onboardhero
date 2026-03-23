@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function Hero() {
   return (
     <section className="hero" id="hero">
@@ -19,9 +21,9 @@ export default function Hero() {
             Guide every new hire from day 1 to day 90. OnboardHero gives HR teams, managers, and new recruits exactly what they need — in one structured, intelligent platform.
           </p>
           <div className="hero-btns">
-            <a href="#pricing" className="btn btn-primary btn-lg">
+            <Link href="/signup" className="btn btn-primary btn-lg">
               Start onboarding smarter <i className="fa-solid fa-arrow-right"></i>
-            </a>
+            </Link>
             <a href="#how-it-works" className="btn btn-outline btn-lg">See how it works</a>
           </div>
           <div className="hero-proof">
