@@ -1,5 +1,4 @@
 import { createSupabaseServer } from '@/lib/db/supabase-server'
-import KPICard from '@/components/platform/KPICard'
 import RiskScoreCard from '@/components/ai/RiskScoreCard'
 import AIInsightBanner from '@/components/ai/AIInsightBanner'
 import RunRiskScanButton from '@/components/ai/RunRiskScanButton'

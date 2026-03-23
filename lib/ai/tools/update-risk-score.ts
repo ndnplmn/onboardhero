@@ -16,7 +16,7 @@ export function updateRiskScore() {
     execute: async ({ journeyId, score, reasons }) => {
       const supabase = createSupabaseAdmin()
 
-      const status = score > 70 ? 'at_risk' : 'active'
+      const status = score > 60 ? 'at_risk' : 'in_progress'
 
       const { error } = await supabase
         .from('journeys')

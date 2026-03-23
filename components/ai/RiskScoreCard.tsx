@@ -15,9 +15,9 @@ export default function RiskScoreCard({
   avatarUrl?: string | null
   employeeId?: string
 }) {
-  const riskLevel = score > 70 ? 'high' : score > 40 ? 'medium' : 'low'
-  const riskLabel = score > 70 ? 'At risk' : score > 40 ? 'Attention' : 'On track'
-  const badgeClass = score > 70 ? 'badge-risk' : score > 40 ? 'badge-warn' : 'badge-on'
+  const riskLevel = score > 60 ? 'high' : score > 30 ? 'medium' : 'low'
+  const riskLabel = score > 60 ? 'At risk' : score > 30 ? 'Attention' : 'On track'
+  const badgeClass = score > 60 ? 'badge-risk' : score > 30 ? 'badge-warn' : 'badge-on'
 
   return (
     <div
