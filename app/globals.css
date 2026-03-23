@@ -738,6 +738,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .notif-header { padding: 14px 16px; border-bottom: 1px solid var(--border); }
 .notif-empty { padding: 24px 16px; text-align: center; color: var(--text3); font-size: 0.9rem; }
 .notif-item {
+  display: flex; gap: 10px; align-items: flex-start;
   padding: 12px 16px; border-bottom: 1px solid var(--border);
   cursor: pointer; transition: background 0.15s;
 }
@@ -745,6 +746,15 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .notif-item.unread { background: var(--blue-light); }
 .notif-item strong { font-size: 0.85rem; display: block; margin-bottom: 4px; }
 .notif-item p { font-size: 0.8rem; color: var(--text2); margin: 0; }
+.notif-item-icon {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--grad-soft); color: var(--blue);
+  font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;
+}
+.notif-item.unread .notif-item-icon { background: var(--blue-light); color: var(--blue); }
+.notif-item-content { flex: 1; min-width: 0; }
+.notif-time { font-size: 0.7rem; color: var(--text3); margin-top: 4px; display: block; }
 
 /* ── CHAT WINDOW ─────────────────────────────────────────── */
 .chat-container { display: flex; flex-direction: column; height: calc(100vh - 120px); padding: 0 32px 32px; }
