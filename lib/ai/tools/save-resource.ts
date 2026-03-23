@@ -2,7 +2,7 @@ import { tool } from 'ai'
 import { z } from 'zod'
 import { createSupabaseAdmin } from '@/lib/db/supabase-server'
 
-export function saveResource(userId: string) {
+export function saveResource() {
   return tool({
     description:
       'Save AI-generated content as a resource in the organization library. Call this only when the user explicitly confirms they want to save the content.',

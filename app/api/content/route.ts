@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     return new Response('Forbidden: HR role required', { status: 403 })
   }
 
-  const config = createContentStudioConfig(user.id)
+  const config = createContentStudioConfig()
 
   const { messages } = await req.json()
 

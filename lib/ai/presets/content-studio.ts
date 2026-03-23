@@ -2,7 +2,7 @@ import { getOrgContext } from '../tools/get-org-context'
 import { getTemplateContext } from '../tools/get-template-context'
 import { saveResource } from '../tools/save-resource'
 
-export function createContentStudioConfig(userId: string) {
+export function createContentStudioConfig() {
   return {
     systemPrompt: `You are a professional onboarding content writer for OnboardHero.
 Your job is to help HR teams generate high-quality onboarding documents, guides, checklists, and other written resources from natural language descriptions.
@@ -31,7 +31,7 @@ Rules:
     tools: {
       getOrgContext: getOrgContext(),
       getTemplateContext: getTemplateContext(),
-      saveResource: saveResource(userId),
+      saveResource: saveResource(),
     },
   }
 }
