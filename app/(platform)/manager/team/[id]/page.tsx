@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation'
+import { createSupabaseServer } from '@/lib/db/supabase-server'
 import { getTeamMemberDetail } from '@/lib/db/queries/manager'
 import JourneyTimeline from '@/components/platform/JourneyTimeline'
 import RiskBadge from '@/components/platform/RiskBadge'
@@ -6,6 +8,10 @@ import TeamMemberCoachButton from './TeamMemberCoachButton'
 export const dynamic = 'force-dynamic'
 
 export default async function TeamMemberPage({ params }: { params: Promise<{ id: string }> }) {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
   const { id } = await params
   const { journey, tasks, checkIns } = await getTeamMemberDetail(id)
 
