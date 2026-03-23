@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import TemplateCard from '@/components/platform/TemplateCard'
 import TemplateEditor from '@/components/platform/TemplateEditor'
 import JourneyPreview from '@/components/ai/JourneyPreview'
 
 export default function JourneysClient({ templates, taskCounts }: { templates: any[]; taskCounts: Record<string, number> }) {
+  const router = useRouter()
   const [showEditor, setShowEditor] = useState(false)
   const [showAIGenerator, setShowAIGenerator] = useState(false)
 
@@ -34,7 +36,7 @@ export default function JourneysClient({ templates, taskCounts }: { templates: a
       </div>
 
       {showEditor && <TemplateEditor onClose={() => setShowEditor(false)} />}
-      {showAIGenerator && <JourneyPreview onClose={() => setShowAIGenerator(false)} />}
+      {showAIGenerator && <JourneyPreview onClose={() => { setShowAIGenerator(false); router.refresh() }} />}
     </div>
   )
 }

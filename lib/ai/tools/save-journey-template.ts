@@ -57,7 +57,9 @@ export function saveJourneyTemplate(createdBy: string) {
       const { error: tasksError } = await supabase.from('template_tasks').insert(taskRows)
 
       if (tasksError) {
-        return { error: `Template created but failed to insert tasks: ${tasksError.message}` }
+        // Clean up orphaned template
+        await supabase.from('journey_templates').delete().eq('id', template.id)
+        return { error: `Failed to save journey tasks: ${tasksError.message}` }
       }
 
       return {
