@@ -1,4 +1,4 @@
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseServer, createSupabaseAdmin } from '@/lib/db/supabase-server'
 import { redirect } from 'next/navigation'
 import CoachingClient from './CoachingClient'
 
@@ -13,8 +13,9 @@ export default async function ManagerCoaching() {
 
   if (!user) redirect('/login')
 
-  // Verify manager role
-  const { data: profile } = await supabase
+  // Verify manager role (admin client bypasses RLS)
+  const admin = createSupabaseAdmin()
+  const { data: profile } = await admin
     .from('profiles')
     .select('role')
     .eq('id', user.id)
@@ -22,8 +23,8 @@ export default async function ManagerCoaching() {
 
   if (!profile || profile.role !== 'manager') redirect('/')
 
-  // Fetch team journeys
-  const { data: journeys } = await supabase
+  // Fetch team journeys (admin client to avoid RLS issues with joined profiles)
+  const { data: journeys } = await admin
     .from('journeys')
     .select('id, status, current_week, risk_score, sentiment_score, start_date, employee:profiles!employee_id(id, full_name, department)')
     .eq('manager_id', user.id)
@@ -35,7 +36,7 @@ export default async function ManagerCoaching() {
   let taskCounts: Record<string, { total: number; completed: number }> = {}
 
   if (journeyIds.length > 0) {
-    const { data: tasks } = await supabase
+    const { data: tasks } = await admin
       .from('journey_tasks')
       .select('journey_id, status')
       .in('journey_id', journeyIds)

@@ -1,4 +1,4 @@
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseAdmin } from '@/lib/db/supabase-server'
 import RiskScoreCard from '@/components/ai/RiskScoreCard'
 import AIInsightBanner from '@/components/ai/AIInsightBanner'
 import RunRiskScanButton from '@/components/ai/RunRiskScanButton'
@@ -6,7 +6,7 @@ import RunRiskScanButton from '@/components/ai/RunRiskScanButton'
 export const dynamic = 'force-dynamic'
 
 export default async function HRAnalytics() {
-  const supabase = await createSupabaseServer()
+  const supabase = createSupabaseAdmin()
 
   // Fetch all journeys with related data
   const { data: journeys } = await supabase

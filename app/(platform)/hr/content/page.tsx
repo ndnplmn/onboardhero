@@ -1,10 +1,10 @@
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseAdmin } from '@/lib/db/supabase-server'
 import ContentClient from './content-client'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HRContent() {
-  const supabase = await createSupabaseServer()
+  const supabase = createSupabaseAdmin()
 
   const { data: resources } = await supabase
     .from('resources')

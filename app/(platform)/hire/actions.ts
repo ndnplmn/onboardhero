@@ -1,10 +1,10 @@
 'use server'
 
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseAdmin } from '@/lib/db/supabase-server'
 import { revalidatePath } from 'next/cache'
 
 export async function toggleTaskComplete(taskId: string, completed: boolean) {
-  const supabase = await createSupabaseServer()
+  const supabase = createSupabaseAdmin()
 
   await supabase
     .from('journey_tasks')

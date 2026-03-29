@@ -1,7 +1,7 @@
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseAdmin } from '@/lib/db/supabase-server'
 
 export async function getHRDashboardData() {
-  const supabase = await createSupabaseServer()
+  const supabase = createSupabaseAdmin()
 
   const [journeysRes, tasksRes, notifsRes] = await Promise.all([
     supabase

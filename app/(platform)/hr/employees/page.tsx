@@ -1,10 +1,10 @@
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseAdmin } from '@/lib/db/supabase-server'
 import EmployeesClient from './employees-client'
 
 export const dynamic = 'force-dynamic'
 
 export default async function EmployeesPage() {
-  const supabase = await createSupabaseServer()
+  const supabase = createSupabaseAdmin()
 
   const [profilesRes, managersRes, templatesRes, journeysRes] = await Promise.all([
     supabase.from('profiles').select('*').order('created_at', { ascending: false }),

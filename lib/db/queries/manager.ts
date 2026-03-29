@@ -1,7 +1,7 @@
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseAdmin } from '@/lib/db/supabase-server'
 
 export async function getManagerDashboardData(managerId: string) {
-  const supabase = await createSupabaseServer()
+  const supabase = createSupabaseAdmin()
 
   const { data: journeys } = await supabase
     .from('journeys')
@@ -22,7 +22,7 @@ export async function getManagerDashboardData(managerId: string) {
 }
 
 export async function getTeamMemberDetail(journeyId: string) {
-  const supabase = await createSupabaseServer()
+  const supabase = createSupabaseAdmin()
 
   const [journeyRes, tasksRes, checkInsRes] = await Promise.all([
     supabase

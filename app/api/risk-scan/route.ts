@@ -1,7 +1,7 @@
 import { generateText, stepCountIs } from 'ai'
 import { model } from '@/lib/ai/groq'
 import { createRiskDetectorConfig } from '@/lib/ai/presets/risk-detector'
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseServer, createSupabaseAdmin } from '@/lib/db/supabase-server'
 
 export const maxDuration = 60
 
@@ -17,8 +17,9 @@ export async function POST() {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Verify HR role
-  const { data: profile } = await supabase
+  // Verify HR role (admin bypasses RLS)
+  const admin = createSupabaseAdmin()
+  const { data: profile } = await admin
     .from('profiles')
     .select('role')
     .eq('id', user.id)

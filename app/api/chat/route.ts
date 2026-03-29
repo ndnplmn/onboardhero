@@ -1,7 +1,7 @@
 import { streamText, convertToModelMessages, stepCountIs } from 'ai'
 import { model } from '@/lib/ai/groq'
 import { createChatbotConfig } from '@/lib/ai/presets/chatbot'
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseServer, createSupabaseAdmin } from '@/lib/db/supabase-server'
 
 export async function POST(req: Request) {
   const supabase = await createSupabaseServer()
@@ -15,8 +15,10 @@ export async function POST(req: Request) {
     return new Response('Unauthorized', { status: 401 })
   }
 
+  const admin = createSupabaseAdmin()
+
   // Get profile
-  const { data: profile } = await supabase
+  const { data: profile } = await admin
     .from('profiles')
     .select('full_name, role, department')
     .eq('id', user.id)
@@ -27,11 +29,12 @@ export async function POST(req: Request) {
   }
 
   // Get active journey
-  const { data: journey } = await supabase
+  const { data: journey } = await admin
     .from('journeys')
     .select('id, current_week, status')
     .eq('employee_id', user.id)
-    .eq('status', 'active')
+    .in('status', ['in_progress', 'at_risk', 'not_started'])
+    .limit(1)
     .single()
 
   if (!journey) {

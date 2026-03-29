@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/db/supabase-client'
 import Link from 'next/link'
-import Image from 'next/image'
 
 export default function SignupForm() {
   const [fullName, setFullName] = useState('')
@@ -44,11 +43,9 @@ export default function SignupForm() {
 
   return (
     <div className="auth-card">
-      <Image
+      <img
         src="/ONBOARD_HERO_LOGO.png"
         alt="OnboardHero"
-        width={160}
-        height={40}
         className="auth-logo"
       />
       <h2 className="auth-title">Create your account</h2>

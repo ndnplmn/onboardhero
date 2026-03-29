@@ -1,4 +1,4 @@
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseServer, createSupabaseAdmin } from '@/lib/db/supabase-server'
 import { redirect } from 'next/navigation'
 import type { Profile } from '@/lib/db/types'
 
@@ -8,13 +8,19 @@ export async function getUser(): Promise<Profile> {
 
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  // Use admin client to bypass RLS — avoids recursive policy issues on profiles
+  const admin = createSupabaseAdmin()
+  const { data: profile } = await admin
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single()
 
-  if (!profile) redirect('/login')
+  if (!profile) {
+    // Profile missing — sign out to avoid redirect loop
+    await supabase.auth.signOut()
+    redirect('/login')
+  }
 
   return profile as Profile
 }

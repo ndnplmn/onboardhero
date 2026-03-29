@@ -1,7 +1,7 @@
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseAdmin } from '@/lib/db/supabase-server'
 
 export async function getHireDashboardData(userId: string) {
-  const supabase = await createSupabaseServer()
+  const supabase = createSupabaseAdmin()
 
   const { data: journey } = await supabase
     .from('journeys')

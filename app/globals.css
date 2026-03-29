@@ -133,10 +133,10 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .navbar.scrolled { box-shadow: var(--shadow); }
 .nav-inner {
   max-width: 1180px; margin: 0 auto; padding: 0 24px;
-  height: 64px; display: flex; align-items: center; gap: 28px;
+  width: 100%; height: 80px; display: flex; align-items: center; gap: 28px;
 }
 .logo-link { display: flex; align-items: center; text-decoration: none; }
-.logo-img { height: 34px; width: auto; object-fit: contain; }
+.logo-img { width: 180px; height: auto; object-fit: contain; }
 .nav-links { list-style: none; display: flex; gap: 2px; margin-left: 20px; }
 .nav-links a { text-decoration: none; color: var(--text2); font-size: 14px; font-weight: 500; padding: 7px 12px; border-radius: 8px; transition: all 0.2s; }
 .nav-links a:hover { color: var(--text); background: var(--border); }
@@ -219,7 +219,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .how-card { text-align: center; padding: 0 24px; }
 .how-arrow { color: var(--border2); font-size: 20px; padding-top: 48px; }
 .how-num { font-family: var(--font-display); font-size: 11px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); margin-bottom: 12px; }
-.how-icon { width: 64px; height: 64px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; margin: 0 auto 16px; }
+.how-icon { width: 64px; width: 220px; height: auto; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; margin: 0 auto 16px; }
 .cyan-icon { background: var(--grad); }
 .blue-icon { background: linear-gradient(135deg,#1A6CF6,#0D3FA0); }
 .aqua-icon { background: linear-gradient(135deg,#22D3B8,#059669); }
@@ -300,14 +300,14 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .cta-bg-ring { position: absolute; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.12); pointer-events: none; }
 .r1 { width:500px;height:500px;top:-200px;left:-120px; }
 .r2 { width:300px;height:300px;bottom:-150px;right:5%; }
-.cta-logo { height: 44px; width: auto; margin-bottom: 24px; filter: brightness(0) invert(1); }
+.cta-logo { width: 220px; height: auto; margin-bottom: 24px; filter: brightness(0) invert(1); }
 .cta-inner h2 { font-family: var(--font-display); font-size: clamp(24px,4vw,38px); font-weight: 800; color: #fff; margin-bottom: 10px; }
 .cta-inner p { color: rgba(255,255,255,0.8); font-size: 16px; margin-bottom: 30px; }
 
 /* ── FOOTER ──────────────────────────────────────────────────── */
 .footer { background: var(--sb-bg); color: var(--sb-text); padding: 60px 0 28px; }
 .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 44px; }
-.footer-brand .footer-logo { height: 36px; width: auto; margin-bottom: 16px; }
+.footer-brand .footer-logo { width: 160px; height: auto; margin-bottom: 16px; }
 .footer-brand p { font-size: 13px; color: rgba(255,255,255,0.4); line-height: 1.75; max-width: 240px; margin-bottom: 22px; }
 .footer-social { display: flex; gap: 12px; }
 .footer-social a { color: rgba(255,255,255,0.35); font-size: 17px; transition: color 0.2s; }
@@ -326,7 +326,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .checkout-left { background: var(--sb-bg); padding: 36px 32px; display: flex; flex-direction: column; color: #fff; }
 .back-btn { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; color: rgba(255,255,255,0.45); font-size: 13px; cursor: pointer; margin-bottom: 28px; transition: color 0.2s; font-family: var(--font-body); padding: 0; }
 .back-btn:hover { color: #fff; }
-.co-logo { height: 36px; width: auto; margin-bottom: 32px; }
+.co-logo { width: 180px; height: auto; margin-bottom: 32px; }
 .co-sum-label { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 18px; }
 .co-plan-row { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--r-lg); padding: 18px; display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
 .co-plan-icon { width: 42px; height: 42px; background: var(--grad-btn); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
@@ -374,7 +374,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .app-layout { display: flex; height: 100vh; overflow: hidden; }
 .app-sidebar { width: 240px; background: var(--sb-bg); flex-shrink: 0; display: flex; flex-direction: column; overflow-y: auto; }
 .sb-logo { padding: 18px 18px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-.sb-logo-img { height: 32px; width: auto; }
+.sb-logo-img { width: 160px; height: auto; }
 .sb-role-switch { padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
 .sb-role-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 10px; }
 .sb-roles { display: flex; flex-direction: column; gap: 3px; }
@@ -661,8 +661,8 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .auth-logo {
   display: block;
   margin: 0 auto 24px;
-  height: 40px;
-  width: auto;
+  width: 220px; height: auto;
+
 }
 .auth-title {
   text-align: center;

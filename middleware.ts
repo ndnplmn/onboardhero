@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
@@ -34,11 +35,21 @@ export async function middleware(request: NextRequest) {
 
   // Redirect logged-in users away from auth pages
   if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
-    const { data: profile } = await supabase
+    // Use admin client to bypass RLS for profile lookup
+    const admin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: profile } = await admin
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
+
+    if (!profile) {
+      // No profile yet — let them stay on login/signup
+      return supabaseResponse
+    }
 
     const redirectMap: Record<string, string> = {
       hr: '/hr/dashboard',
@@ -46,7 +57,7 @@ export async function middleware(request: NextRequest) {
       new_hire: '/hire/dashboard',
     }
     const url = request.nextUrl.clone()
-    url.pathname = redirectMap[profile?.role || 'hr'] || '/hr/dashboard'
+    url.pathname = redirectMap[profile.role] || '/hr/dashboard'
     return NextResponse.redirect(url)
   }
 

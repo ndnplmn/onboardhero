@@ -1,7 +1,7 @@
 import { streamText, convertToModelMessages, stepCountIs } from 'ai'
 import { model } from '@/lib/ai/groq'
 import { createManagerCoachConfig } from '@/lib/ai/presets/manager-coach'
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseServer, createSupabaseAdmin } from '@/lib/db/supabase-server'
 
 export async function POST(req: Request) {
   const supabase = await createSupabaseServer()
@@ -15,8 +15,9 @@ export async function POST(req: Request) {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  // Get profile and verify manager role
-  const { data: profile } = await supabase
+  // Get profile and verify manager role (admin bypasses RLS)
+  const admin = createSupabaseAdmin()
+  const { data: profile } = await admin
     .from('profiles')
     .select('full_name, role')
     .eq('id', user.id)

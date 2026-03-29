@@ -1,7 +1,7 @@
 import { streamText, convertToModelMessages, stepCountIs } from 'ai'
 import { model } from '@/lib/ai/groq'
 import { createJourneyGeneratorConfig } from '@/lib/ai/presets/journey-generator'
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseServer, createSupabaseAdmin } from '@/lib/db/supabase-server'
 
 export async function POST(req: Request) {
   const supabase = await createSupabaseServer()
@@ -15,8 +15,9 @@ export async function POST(req: Request) {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  // Verify HR role
-  const { data: profile } = await supabase
+  // Verify HR role (admin bypasses RLS)
+  const admin = createSupabaseAdmin()
+  const { data: profile } = await admin
     .from('profiles')
     .select('role')
     .eq('id', user.id)
