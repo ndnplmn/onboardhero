@@ -12,6 +12,10 @@ export interface Profile {
   role: UserRole
   department: string | null
   avatar_url: string | null
+  phone: string | null
+  bio: string | null
+  emergency_contact: { name?: string; phone?: string; relationship?: string } | null
+  active: boolean
   created_at: string
 }
 
@@ -62,6 +66,9 @@ export interface JourneyTask {
   status: TaskStatus
   completed_at: string | null
   notes: string | null
+  requires_approval: boolean
+  approved_by: string | null
+  approved_at: string | null
 }
 
 export interface CheckIn {
@@ -104,5 +111,43 @@ export interface AIConversation {
   journey_id: string | null
   preset: string
   messages: { role: string; content: string; timestamp: string }[]
+  created_at: string
+}
+
+export interface FormField {
+  id: string
+  type: 'text' | 'textarea' | 'select' | 'date' | 'checkbox' | 'email' | 'phone'
+  label: string
+  required: boolean
+  placeholder?: string
+  options?: string[]
+}
+
+export interface OnboardingForm {
+  id: string
+  title: string
+  description: string
+  department: string | null
+  fields: FormField[]
+  created_by: string | null
+  created_at: string
+}
+
+export interface FormSubmission {
+  id: string
+  form_id: string
+  employee_id: string
+  journey_id: string | null
+  answers: Record<string, string | boolean>
+  submitted_at: string
+}
+
+export interface FeedbackSurvey {
+  id: string
+  journey_id: string
+  employee_id: string
+  milestone: Milestone
+  rating: number
+  comments: string | null
   created_at: string
 }
