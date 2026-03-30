@@ -1,6 +1,6 @@
 'use client'
 
-import { deleteTemplate } from '@/app/(platform)/hr/journeys/actions'
+import { deleteTemplate, cloneTemplate } from '@/app/(platform)/hr/journeys/actions'
 import { useTransition } from 'react'
 
 interface Props {
@@ -31,6 +31,15 @@ export default function TemplateCard({ template, taskCount }: Props) {
           {template.ai_generated && <span style={{ color: 'var(--cyan)', marginLeft: '8px' }}><i className="fa-solid fa-robot"></i> AI</span>}
         </span>
       </div>
+      <button
+        className="btn btn-ghost"
+        style={{ fontSize: '0.8rem' }}
+        onClick={() => startTransition(() => cloneTemplate(template.id))}
+        disabled={isPending}
+        title="Clone template"
+      >
+        <i className="fa-solid fa-copy"></i>
+      </button>
       <button
         className="btn btn-ghost"
         style={{ fontSize: '0.8rem', color: 'var(--red)' }}

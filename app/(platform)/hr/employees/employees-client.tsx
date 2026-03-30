@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import InviteUserModal from '@/components/platform/InviteUserModal'
+import EditEmployeeModal from '@/components/platform/EditEmployeeModal'
 
 interface Props {
   profiles: any[]
@@ -12,6 +13,7 @@ interface Props {
 
 export default function EmployeesClient({ profiles, managers, templates, journeys }: Props) {
   const [showInvite, setShowInvite] = useState(false)
+  const [editingEmployee, setEditingEmployee] = useState<any>(null)
 
   const roleLabel: Record<string, string> = { hr: 'HR', manager: 'Manager', new_hire: 'New Hire' }
   const roleColor: Record<string, string> = { hr: 'var(--cyan)', manager: 'var(--blue)', new_hire: 'var(--aqua)' }
@@ -50,6 +52,13 @@ export default function EmployeesClient({ profiles, managers, templates, journey
                   {journey.status === 'at_risk' ? 'At risk' : journey.status === 'completed' ? 'Completed' : 'Active'}
                 </span>
               )}
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: '0.8rem' }}
+                onClick={() => setEditingEmployee({ ...p, active: p.active ?? true })}
+              >
+                <i className="fa-solid fa-pen"></i>
+              </button>
             </div>
           )
         })}
@@ -60,6 +69,14 @@ export default function EmployeesClient({ profiles, managers, templates, journey
           managers={managers}
           templates={templates}
           onClose={() => setShowInvite(false)}
+        />
+      )}
+
+      {editingEmployee && (
+        <EditEmployeeModal
+          employee={editingEmployee}
+          managers={managers}
+          onClose={() => setEditingEmployee(null)}
         />
       )}
     </div>
