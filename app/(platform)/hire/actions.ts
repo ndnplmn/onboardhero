@@ -45,3 +45,19 @@ export async function updateProfile(formData: FormData) {
   revalidatePath('/hire/profile')
   revalidatePath('/hire/dashboard')
 }
+
+export async function submitForm(formId: string, journeyId: string | null, answers: Record<string, string | boolean>) {
+  const supabase = createSupabaseAdmin()
+  const user = await getUser()
+
+  await supabase
+    .from('form_submissions')
+    .insert({
+      form_id: formId,
+      employee_id: user.id,
+      journey_id: journeyId,
+      answers,
+    })
+
+  revalidatePath('/hire/forms')
+}
