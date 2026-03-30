@@ -21,6 +21,7 @@ const NAV_ITEMS = {
     { icon: 'fa-solid fa-gauge-high', label: 'My Journey', href: '/hire/dashboard' },
     { icon: 'fa-solid fa-list-check', label: 'Tasks', href: '/hire/tasks' },
     { icon: 'fa-solid fa-book', label: 'Resources', href: '/hire/resources' },
+    { icon: 'fa-solid fa-user', label: 'Profile', href: '/hire/profile' },
     { icon: 'fa-solid fa-robot', label: 'AI Assistant', href: '/hire/chat' },
   ],
 }
