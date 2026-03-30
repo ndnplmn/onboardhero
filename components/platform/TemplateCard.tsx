@@ -34,7 +34,7 @@ export default function TemplateCard({ template, taskCount }: Props) {
       <button
         className="btn btn-ghost"
         style={{ fontSize: '0.8rem' }}
-        onClick={() => startTransition(() => cloneTemplate(template.id))}
+        onClick={() => startTransition(() => { cloneTemplate(template.id) })}
         disabled={isPending}
         title="Clone template"
       >
@@ -43,7 +43,7 @@ export default function TemplateCard({ template, taskCount }: Props) {
       <button
         className="btn btn-ghost"
         style={{ fontSize: '0.8rem', color: 'var(--red)' }}
-        onClick={() => startTransition(() => deleteTemplate(template.id))}
+        onClick={() => startTransition(() => { deleteTemplate(template.id) })}
         disabled={isPending}
       >
         <i className="fa-solid fa-trash"></i>
