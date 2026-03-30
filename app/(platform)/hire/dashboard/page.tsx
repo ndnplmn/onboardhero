@@ -42,6 +42,24 @@ export default async function HireDashboard() {
     .filter((ci: any) => !feedbackMilestones.has(ci.milestone))
     .map((ci: any) => ci.milestone)
 
+  if (journey.status === 'completed') {
+    return (
+      <div style={{ padding: '32px', textAlign: 'center' }}>
+        <div style={{ fontSize: '4rem', marginBottom: '16px' }}>&#127881;</div>
+        <h1 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '8px' }}>
+          Congratulations, {user.full_name.split(' ')[0]}!
+        </h1>
+        <p style={{ color: 'var(--text2)', fontSize: '1.1rem', marginBottom: '24px' }}>
+          You&apos;ve completed your onboarding journey. All {totalTasks} tasks done!
+        </p>
+        <div className="hce-prog" style={{ height: '10px', marginBottom: '8px', maxWidth: '400px', margin: '0 auto 24px' }}>
+          <div className="hce-bar" style={{ width: '100%' }}></div>
+        </div>
+        <JourneyTimeline currentWeek={journey.current_week} checkIns={checkIns} />
+      </div>
+    )
+  }
+
   return (
     <div style={{ padding: '32px' }}>
       <h1 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '4px' }}>

@@ -113,8 +113,26 @@ export default function NotificationBell({ userId }: { userId: string }) {
       </button>
       {open && (
         <div className="notif-dropdown">
-          <div className="notif-header">
+          <div className="notif-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <strong>Notifications</strong>
+            {unreadCount > 0 && (
+              <button
+                onClick={async () => {
+                  await supabase
+                    .from('notifications')
+                    .update({ read: true })
+                    .eq('user_id', userId)
+                    .eq('read', false)
+                  setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+                }}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: '0.75rem', color: 'var(--cyan)', fontWeight: 600,
+                }}
+              >
+                Mark all read
+              </button>
+            )}
           </div>
           {notifications.length === 0 ? (
             <div className="notif-empty">No notifications yet</div>

@@ -7,7 +7,7 @@ export async function getHireDashboardData(userId: string) {
     .from('journeys')
     .select('*, manager:profiles!manager_id(*), template:journey_templates!template_id(*)')
     .eq('employee_id', userId)
-    .in('status', ['in_progress', 'at_risk', 'not_started'])
+    .in('status', ['in_progress', 'at_risk', 'not_started', 'completed'])
     .single()
 
   if (!journey) return { journey: null, tasks: [], checkIns: [], resources: [] }

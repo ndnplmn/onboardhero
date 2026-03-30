@@ -15,6 +15,62 @@ export async function toggleTaskComplete(taskId: string, completed: boolean) {
     })
     .eq('id', taskId)
 
+  // Check if all tasks in the journey are now completed
+  if (completed) {
+    const { data: task } = await supabase
+      .from('journey_tasks')
+      .select('journey_id')
+      .eq('id', taskId)
+      .single()
+
+    if (task) {
+      const { data: allTasks } = await supabase
+        .from('journey_tasks')
+        .select('status')
+        .eq('journey_id', task.journey_id)
+
+      const allCompleted = allTasks?.every((t: any) => t.status === 'completed')
+      if (allCompleted) {
+        await supabase
+          .from('journeys')
+          .update({ status: 'completed' })
+          .eq('id', task.journey_id)
+
+        // Notify manager and HR
+        const { data: journey } = await supabase
+          .from('journeys')
+          .select('manager_id, employee:profiles!employee_id(full_name)')
+          .eq('id', task.journey_id)
+          .single()
+
+        if (journey) {
+          const employeeName = (journey as any).employee?.full_name || 'An employee'
+          const { data: hrUsers } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('role', 'hr')
+
+          const notifs = [
+            {
+              user_id: journey.manager_id,
+              type: 'milestone' as const,
+              title: 'Journey Completed',
+              message: `${employeeName} has completed their onboarding journey!`,
+            },
+            ...(hrUsers || []).map((hr: any) => ({
+              user_id: hr.id,
+              type: 'milestone' as const,
+              title: 'Journey Completed',
+              message: `${employeeName} has completed their onboarding journey!`,
+            })),
+          ]
+
+          await supabase.from('notifications').insert(notifs)
+        }
+      }
+    }
+  }
+
   revalidatePath('/hire/dashboard')
   revalidatePath('/hire/tasks')
 }
