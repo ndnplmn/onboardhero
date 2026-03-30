@@ -61,3 +61,40 @@ export async function submitForm(formId: string, journeyId: string | null, answe
 
   revalidatePath('/hire/forms')
 }
+
+export async function submitFeedback(journeyId: string, milestone: string, rating: number, comments: string) {
+  const supabase = createSupabaseAdmin()
+  const user = await getUser()
+
+  await supabase
+    .from('feedback_surveys')
+    .insert({
+      journey_id: journeyId,
+      employee_id: user.id,
+      milestone,
+      rating,
+      comments: comments || null,
+    })
+
+  revalidatePath('/hire/dashboard')
+}
+
+export async function markResourceRead(resourceId: string, userId: string) {
+  const supabase = createSupabaseAdmin()
+
+  const { data: resource } = await supabase
+    .from('resources')
+    .select('read_by')
+    .eq('id', resourceId)
+    .single()
+
+  const currentReadBy: string[] = resource?.read_by || []
+  if (!currentReadBy.includes(userId)) {
+    await supabase
+      .from('resources')
+      .update({ read_by: [...currentReadBy, userId] })
+      .eq('id', resourceId)
+  }
+
+  revalidatePath('/hire/resources')
+}
