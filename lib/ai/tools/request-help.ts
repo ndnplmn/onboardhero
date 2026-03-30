@@ -42,9 +42,31 @@ export function requestHelp(userId: string, journeyId: string) {
         return { error: `Failed to send help request: ${insertError.message}` }
       }
 
+      // Escalate to all active HR users
+      const { data: hrUsers } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'hr')
+        .eq('active', true)
+
+      if (hrUsers && hrUsers.length > 0) {
+        const hrNotifs = hrUsers.map((hr: any) => ({
+          user_id: hr.id,
+          type: 'nudge' as const,
+          title: 'Help Request Escalated',
+          message: `A new hire has requested help: ${message}`,
+          metadata: {
+            from_user_id: userId,
+            journey_id: journeyId,
+          },
+          action_url: '/hr/employees',
+        }))
+        await supabase.from('notifications').insert(hrNotifs)
+      }
+
       return {
         message:
-          'Your help request has been sent to your manager. They will be notified and should follow up with you soon.',
+          'Your help request has been sent to your manager and HR team. They will be notified and should follow up with you soon.',
       }
     },
   })
