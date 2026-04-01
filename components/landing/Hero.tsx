@@ -21,7 +21,7 @@ export default function Hero() {
             Guide every new hire from day 1 to day 90. OnboardHero gives HR teams, managers, and new recruits exactly what they need — in one structured, intelligent platform.
           </p>
           <div className="hero-btns">
-            <Link href="/signup" className="btn btn-primary btn-lg">
+            <Link href="/checkout?plan=professional" className="btn btn-primary btn-lg">
               Start onboarding smarter <i className="fa-solid fa-arrow-right"></i>
             </Link>
             <a href="#how-it-works" className="btn btn-outline btn-lg">See how it works</a>

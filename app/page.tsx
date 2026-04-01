@@ -14,13 +14,13 @@ export default function LandingPage() {
     <div id="page-landing" className="page active">
       <Navbar />
       <Hero />
-      <LogosBar />
-      <HowItWorks />
-      <Benefits />
-      <Features />
-      <Pricing />
-      <FAQ />
-      <CTAStrip />
+      <div className="section-reveal"><LogosBar /></div>
+      <div className="section-reveal"><HowItWorks /></div>
+      <div className="section-reveal"><Benefits /></div>
+      <div className="section-reveal"><Features /></div>
+      <div className="section-reveal"><Pricing /></div>
+      <div className="section-reveal"><FAQ /></div>
+      <div className="section-reveal"><CTAStrip /></div>
       <Footer />
     </div>
   )

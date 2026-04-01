@@ -1,10 +1,8 @@
 import { getUser } from '@/lib/auth/get-user'
 import { getHireDashboardData } from '@/lib/db/queries/hire'
-import { createSupabaseAdmin } from '@/lib/db/supabase-server'
-import TaskList from '@/components/platform/TaskList'
-import ContactCard from '@/components/platform/ContactCard'
-import JourneyTimeline from '@/components/platform/JourneyTimeline'
+import JourneyView from '@/components/platform/JourneyView'
 import FeedbackPrompt from './FeedbackPrompt'
+import { createSupabaseAdmin } from '@/lib/db/supabase-server'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,20 +12,17 @@ export default async function HireDashboard() {
 
   if (!journey) {
     return (
-      <div style={{ padding: '32px', textAlign: 'center' }}>
-        <h1 style={{ fontFamily: "'Outfit', sans-serif" }}>Welcome to OnboardHero!</h1>
-        <p style={{ color: 'var(--text2)', marginTop: '12px' }}>Your onboarding journey hasn&apos;t started yet. Please check back soon.</p>
+      <div className="app-main">
+        <div style={{ padding: '64px 32px', textAlign: 'center' }}>
+          <h1 style={{ fontFamily: "'Outfit', sans-serif" }}>Welcome to OnboardHero!</h1>
+          <p style={{ color: 'var(--text2)', marginTop: '12px' }}>Your onboarding journey hasn&apos;t started yet. Please check back soon.</p>
+        </div>
       </div>
     )
   }
 
   const dayNumber = Math.max(1, Math.ceil((Date.now() - new Date(journey.start_date).getTime()) / (1000 * 60 * 60 * 24)))
-  const completedTasks = tasks.filter((t: any) => t.status === 'completed').length
-  const totalTasks = tasks.length
-  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
-  const currentWeekTasks = tasks.filter((t: any) => t.week === journey.current_week && t.assigned_to_role === 'new_hire')
-  const managerTasks = tasks.filter((t: any) => t.week === journey.current_week && t.assigned_to_role === 'manager')
-
+  
   // Check for completed check-ins without feedback
   const supabase = createSupabaseAdmin()
   const { data: existingFeedback } = await supabase
@@ -42,67 +37,26 @@ export default async function HireDashboard() {
     .filter((ci: any) => !feedbackMilestones.has(ci.milestone))
     .map((ci: any) => ci.milestone)
 
-  if (journey.status === 'completed') {
-    return (
-      <div style={{ padding: '32px', textAlign: 'center' }}>
-        <div style={{ fontSize: '4rem', marginBottom: '16px' }}>&#127881;</div>
-        <h1 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '8px' }}>
-          Congratulations, {user.full_name.split(' ')[0]}!
-        </h1>
-        <p style={{ color: 'var(--text2)', fontSize: '1.1rem', marginBottom: '24px' }}>
-          You&apos;ve completed your onboarding journey. All {totalTasks} tasks done!
-        </p>
-        <div className="hce-prog" style={{ height: '10px', marginBottom: '8px', maxWidth: '400px', margin: '0 auto 24px' }}>
-          <div className="hce-bar" style={{ width: '100%' }}></div>
-        </div>
-        <JourneyTimeline currentWeek={journey.current_week} checkIns={checkIns} />
-      </div>
-    )
-  }
-
   return (
-    <div style={{ padding: '32px' }}>
-      <h1 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '4px' }}>
-        Hello {user.full_name.split(' ')[0]}, you&apos;re on Day {dayNumber} — Week {journey.current_week}
-      </h1>
-      <div className="hce-prog" style={{ height: '8px', marginTop: '16px', marginBottom: '8px' }}>
-        <div className="hce-bar" style={{ width: `${progress}%` }}></div>
-      </div>
-      <p style={{ color: 'var(--text2)', fontSize: '0.9rem', marginBottom: '24px' }}>{progress}% completed · {completedTasks}/{totalTasks} tasks done</p>
+    <div className="app-main">
+      <header className="db-header">
+        <div>
+          <h1>Journey Dashboard</h1>
+          <p>Hello {user.full_name.split(' ')[0]}, you&apos;re on Day {dayNumber} of your onboarding journey.</p>
+        </div>
+        <div className="db-header-actions">
+           <button className="btn btn-outline btn-sm"><i className="fa-solid fa-circle-question"></i> Get Help</button>
+        </div>
+      </header>
 
       {pendingFeedbackMilestones.length > 0 && (
-        <FeedbackPrompt journeyId={journey.id} pendingMilestones={pendingFeedbackMilestones} />
-      )}
-
-      <JourneyTimeline currentWeek={journey.current_week} checkIns={checkIns} />
-
-      <div style={{ marginTop: '32px' }}>
-        <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.2rem', marginBottom: '16px' }}>This Week&apos;s Tasks</h2>
-        <TaskList tasks={currentWeekTasks} currentWeek={journey.current_week} />
-      </div>
-
-      {managerTasks.length > 0 && (
-        <div style={{ marginTop: '32px' }}>
-          <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.2rem', marginBottom: '16px' }}>Your Manager&apos;s Tasks</h2>
-          {managerTasks.map((t: any) => (
-            <div key={t.id} className="hc-emp" style={{ opacity: t.status === 'completed' ? 0.6 : 1 }}>
-              <i className={`fa-solid ${t.status === 'completed' ? 'fa-circle-check' : 'fa-circle'}`}
-                 style={{ color: t.status === 'completed' ? 'var(--green)' : 'var(--text3)', width: '26px', textAlign: 'center' }}></i>
-              <div className="hce-info">
-                <strong style={{ textDecoration: t.status === 'completed' ? 'line-through' : 'none' }}>{t.title}</strong>
-                <span>{t.status === 'completed' ? 'Completed' : 'Pending'}</span>
-              </div>
-            </div>
-          ))}
+        <div style={{ padding: '0 28px', marginTop: '24px' }}>
+          <FeedbackPrompt journeyId={journey.id} pendingMilestones={pendingFeedbackMilestones} />
         </div>
       )}
 
-      <div style={{ marginTop: '32px' }}>
-        <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.2rem', marginBottom: '16px' }}>Your Contacts</h2>
-        <div className="hc-employees">
-          <ContactCard name={journey.manager.full_name} role="Manager" avatarUrl={journey.manager.avatar_url} id={journey.manager.id} />
-        </div>
-      </div>
+      <JourneyView journey={journey} dbTasks={tasks} />
     </div>
   )
 }
+

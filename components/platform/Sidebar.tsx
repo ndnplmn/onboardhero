@@ -54,6 +54,23 @@ export default function Sidebar({ user }: SidebarProps) {
       <div className="sb-logo">
         <img src="/ONBOARD_HERO_LOGO.png" alt="OnboardHero" className="sb-logo-img" />
       </div>
+      <div className="sb-role-switcher">
+        <label>View Mode</label>
+        <select
+          value={pathname.startsWith('/hr') ? 'hr' : pathname.startsWith('/manager') ? 'manager' : 'new_hire'}
+          onChange={(e) => {
+            const role = e.target.value
+            if (role === 'hr') router.push('/hr/dashboard')
+            else if (role === 'manager') router.push('/manager/dashboard')
+            else router.push('/hire/dashboard')
+          }}
+        >
+          <option value="hr">HR Manager</option>
+          <option value="manager">Team Manager</option>
+          <option value="new_hire">New Hire</option>
+        </select>
+      </div>
+
       <nav className="sb-nav">
         {items.map((item) => (
           <Link

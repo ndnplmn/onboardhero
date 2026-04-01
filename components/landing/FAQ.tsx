@@ -46,7 +46,7 @@ export default function FAQ() {
                 <span>{item.question}</span>
                 <i className={`fa-solid ${openIndex === i ? 'fa-minus' : 'fa-plus'}`}></i>
               </button>
-              <div className="faq-a">
+              <div className={`faq-a${openIndex === i ? ' open' : ''}`}>
                 <p>{item.answer}</p>
               </div>
             </div>

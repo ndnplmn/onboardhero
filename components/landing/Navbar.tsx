@@ -28,7 +28,7 @@ export default function Navbar() {
         <div className="nav-actions">
           <a href="#pricing" className="btn btn-ghost">See plans</a>
           <Link href="/login" className="btn btn-ghost">Login</Link>
-          <Link href="/signup" className="btn btn-primary">Start free trial</Link>
+          <a href="#pricing" className="btn btn-primary">Start free trial</a>
         </div>
         <button
           className="hamburger"
@@ -45,7 +45,7 @@ export default function Navbar() {
         <a href="#pricing" onClick={() => setMobileOpen(false)}>Pricing</a>
         <a href="#faq" onClick={() => setMobileOpen(false)}>FAQ</a>
         <Link href="/login" onClick={() => setMobileOpen(false)}>Login</Link>
-        <Link href="/signup" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '8px' }} onClick={() => setMobileOpen(false)}>Start free trial</Link>
+        <a href="#pricing" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '8px' }} onClick={() => setMobileOpen(false)}>Start free trial</a>
       </div>
     </nav>
   )
