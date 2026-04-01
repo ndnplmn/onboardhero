@@ -1,9 +1,10 @@
 import { getHRDashboardData } from '@/lib/db/queries/dashboard'
 import KPICard from '@/components/platform/KPICard'
-import EmployeeList from '@/components/platform/EmployeeList'
-import RiskAlerts from '@/components/platform/RiskAlerts'
+import EmployeeTable from '@/components/platform/EmployeeTable'
+import ActiveAlerts from '@/components/platform/ActiveAlerts'
 import StageChecklist from '@/components/platform/StageChecklist'
 import AnalyticsSection from '@/components/platform/AnalyticsSection'
+import JourneyTemplate from '@/components/platform/JourneyTemplate'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,23 +12,12 @@ export default async function HRDashboard() {
   const { journeys, tasks } = await getHRDashboardData()
 
   const activeJourneys = journeys.filter((j: any) => j.status !== 'completed')
-  const completedTasks = tasks.filter((t: any) => t.status === 'completed').length
   const atRiskCount = journeys.filter((j: any) => j.risk_score > 60).length
   const onTrackPct = activeJourneys.length > 0
     ? Math.round((activeJourneys.filter((j: any) => j.risk_score <= 30).length / activeJourneys.length) * 100)
     : 100
 
-  // Mock data for restoration parity
-  const mockRiskAlerts = journeys
-    .filter((j: any) => j.risk_score > 60)
-    .map((j: any) => ({
-      id: j.id,
-      name: j.full_name,
-      avatar: j.avatar_url || `https://i.pravatar.cc/150?u=${j.id}`,
-      issue: 'Integration risk: Low engagement in Week 1 tasks.',
-      level: j.risk_score > 80 ? 'high' : 'mid' as 'high' | 'mid'
-    }))
-
+  // Mock stages for summary
   const mockStages = [
     { label: 'Pre-boarding', count: 12 },
     { label: 'First Week', count: activeJourneys.length },
@@ -79,17 +69,13 @@ export default async function HRDashboard() {
         </div>
 
         <div className="db-row col3">
-          <div className="db-card">
-            <div className="db-card-hd">
-              <h3><i className="fa-solid fa-route" style={{ color: 'var(--blue)', marginRight: '6px' }}></i> Active Onboarding Journeys</h3>
-            </div>
-            <div className="db-card-bd">
-              <EmployeeList journeys={activeJourneys} />
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <EmployeeTable />
+            <JourneyTemplate />
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <RiskAlerts alerts={mockRiskAlerts} />
+            <ActiveAlerts />
             <StageChecklist stages={mockStages} />
           </div>
         </div>

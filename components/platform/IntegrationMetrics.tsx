@@ -15,21 +15,23 @@ export default function IntegrationMetrics({ metrics }: IntegrationMetricsProps)
   return (
     <div className="db-card">
       <div className="db-card-hd">
-        <h3><i className="fa-solid fa-chart-simple" style={{ color: 'var(--cyan)', marginRight: '6px' }}></i> Integration Metrics</h3>
+        <h3><i className="fa-solid fa-chart-line" style={{ color: 'var(--cyan)', marginRight: '6px' }}></i> Integration Metrics</h3>
       </div>
       <div className="db-card-bd">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="im-list">
           {metrics.map((m, i) => (
-            <div key={i}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 700 }}>
-                  <i className={m.icon} style={{ color: m.color }}></i>
-                  {m.label}
-                </div>
-                <span style={{ fontSize: '12px', fontWeight: 800, color: m.color }}>{m.value}%</span>
+            <div key={i} className="im-item">
+              <div className="im-ico" style={{ border: `1.5px solid ${m.color}`, color: m.color }}>
+                <i className={m.icon}></i>
               </div>
-              <div style={{ height: '6px', background: 'var(--bg)', borderRadius: '100px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${m.value}%`, background: m.color, borderRadius: '100px', opacity: 0.8 }}></div>
+              <div className="im-meta">
+                <div className="im-lbl">
+                  <strong>{m.label}</strong>
+                  <span>{m.value}% Score</span>
+                </div>
+                <div className="im-pw">
+                  <div className="im-pf" style={{ width: `${m.value}%`, background: m.color }}></div>
+                </div>
               </div>
             </div>
           ))}
