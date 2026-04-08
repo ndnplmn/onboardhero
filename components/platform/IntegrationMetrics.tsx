@@ -13,29 +13,25 @@ interface IntegrationMetricsProps {
 
 export default function IntegrationMetrics({ metrics }: IntegrationMetricsProps) {
   return (
-    <div className="db-card">
-      <div className="db-card-hd">
-        <h3><i className="fa-solid fa-chart-line" style={{ color: 'var(--cyan)', marginRight: '6px' }}></i> Integration Metrics</h3>
+    <div className="pro-max-card" style={{ padding: '20px' }}>
+      <div className="db-card-hd" style={{ marginBottom: '16px' }}>
+        <h3><i className="fa-solid fa-chart-line" style={{ color: 'var(--blue)' }}></i> Integration Metrics</h3>
       </div>
-      <div className="db-card-bd">
-        <div className="im-list">
-          {metrics.map((m, i) => (
-            <div key={i} className="im-item">
-              <div className="im-ico" style={{ border: `1.5px solid ${m.color}`, color: m.color }}>
-                <i className={m.icon}></i>
+      <div className="im-list">
+        {metrics.map((m, i) => (
+          <div key={i} className="im-item" style={{ marginBottom: '14px' }}>
+            <div className="im-row-top" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <i className={m.icon} style={{ color: m.color, fontSize: '14px' }}></i>
+                <strong style={{ fontSize: '13px', color: 'var(--text)' }}>{m.label}</strong>
               </div>
-              <div className="im-meta">
-                <div className="im-lbl">
-                  <strong>{m.label}</strong>
-                  <span>{m.value}% Score</span>
-                </div>
-                <div className="im-pw">
-                  <div className="im-pf" style={{ width: `${m.value}%`, background: m.color }}></div>
-                </div>
-              </div>
+              <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text2)' }}>{m.value}%</span>
             </div>
-          ))}
-        </div>
+            <div className="im-pw" style={{ height: '5px', background: 'var(--bg)', borderRadius: '100px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+              <div className="im-pf" style={{ width: `${m.value}%`, background: m.color, height: '100%', borderRadius: '100px' }}></div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

@@ -3,7 +3,7 @@ export default function AIInsightBanner({ text }: { text: string }) {
     <div
       style={{
         background: 'var(--grad-soft)',
-        border: '1px solid var(--border)',
+        border: '1px solid var(--blue-light)',
         borderRadius: 'var(--r-lg)',
         padding: '14px 18px',
         display: 'flex',
@@ -12,7 +12,20 @@ export default function AIInsightBanner({ text }: { text: string }) {
         marginBottom: '22px',
       }}
     >
-      <span style={{ fontSize: '18px', flexShrink: 0, lineHeight: 1.3 }}>&#x2728;</span>
+      <div
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: 'var(--r)',
+          background: 'var(--grad)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <i className="fa-solid fa-sparkles" style={{ fontSize: '13px', color: '#fff' }} />
+      </div>
       <div>
         <strong
           style={{
@@ -28,7 +41,7 @@ export default function AIInsightBanner({ text }: { text: string }) {
         >
           AI Insight
         </strong>
-        <p style={{ margin: 0, fontSize: '12px', color: 'var(--text2)', lineHeight: 1.6 }}>{text}</p>
+        <p style={{ margin: 0, fontSize: '13px', color: 'var(--text2)', lineHeight: 1.6 }}>{text}</p>
       </div>
     </div>
   )

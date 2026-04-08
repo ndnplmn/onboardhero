@@ -64,7 +64,7 @@ export default function CheckInAgenda({ onClose, employeeName, journeyId }: Chec
           <i className="fa-solid fa-xmark"></i>
         </button>
         <h2 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '4px' }}>
-          <i className="fa-solid fa-user-tie" style={{ marginRight: '8px', color: 'var(--primary)' }}></i>
+          <i className="fa-solid fa-user-tie" style={{ marginRight: '8px', background: 'var(--grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}></i>
           AI Manager Coach
         </h2>
         <p style={{ color: 'var(--text3)', fontSize: '0.85rem', marginBottom: '16px' }}>
@@ -79,7 +79,7 @@ export default function CheckInAgenda({ onClose, employeeName, journeyId }: Chec
               <p style={{ fontSize: '0.95rem', marginBottom: '12px' }}>
                 Ask me to help you prepare for check-ins or get coaching advice.
               </p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text4)' }}>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text3)' }}>
                 Try: &quot;Show me my team&apos;s progress&quot; or &quot;How should I handle a new hire who is falling behind?&quot;
               </p>
             </div>
@@ -88,7 +88,10 @@ export default function CheckInAgenda({ onClose, employeeName, journeyId }: Chec
           {messages.map((msg) => (
             <div key={msg.id} className={`chat-msg ${msg.role}`}>
               <div className="chat-avatar">
-                {msg.role === 'assistant' ? '\u{1F4CB}' : '\u{1F464}'}
+                {msg.role === 'assistant'
+                  ? <i className="fa-solid fa-sparkles" />
+                  : <i className="fa-solid fa-user" />
+                }
               </div>
               <div className="chat-bubble">
                 {msg.parts.map((part, i) => {
@@ -101,7 +104,7 @@ export default function CheckInAgenda({ onClose, employeeName, journeyId }: Chec
                       const output = part.output as Record<string, unknown>
                       if (output?.message) {
                         return (
-                          <div key={i} style={{ padding: '12px', background: 'var(--green-bg, #e8f5e9)', borderRadius: 'var(--r-md)', marginTop: '8px' }}>
+                          <div key={i} style={{ padding: '12px', background: 'var(--green-bg, #e8f5e9)', borderRadius: 'var(--r)', marginTop: '8px' }}>
                             <i className="fa-solid fa-check-circle" style={{ color: 'var(--green, #4caf50)', marginRight: '8px' }}></i>
                             {output.message as string}
                           </div>
@@ -109,7 +112,7 @@ export default function CheckInAgenda({ onClose, employeeName, journeyId }: Chec
                       }
                       if (output?.error) {
                         return (
-                          <div key={i} style={{ padding: '12px', background: 'var(--red-bg, #fbe9e7)', borderRadius: 'var(--r-md)', marginTop: '8px', color: 'var(--red)' }}>
+                          <div key={i} style={{ padding: '12px', background: 'var(--red-bg, #fbe9e7)', borderRadius: 'var(--r)', marginTop: '8px', color: 'var(--red)' }}>
                             <i className="fa-solid fa-exclamation-circle" style={{ marginRight: '8px' }}></i>
                             {output.error as string}
                           </div>

@@ -30,17 +30,20 @@ const MOCK_ALERTS: Alert[] = [
 
 export default function ActiveAlerts() {
   return (
-    <div className="db-card">
-      <div className="db-card-hd">
-        <h3><i className="fa-solid fa-bell" style={{ color: 'var(--amber)', marginRight: '8px' }}></i> Active Alerts</h3>
+    <div className="pro-max-card" style={{ padding: '24px' }}>
+      <div className="db-card-hd" style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <i className="fa-solid fa-bell" style={{ color: 'var(--amber)' }}></i>
+          <h3>Active Alerts</h3>
+        </div>
       </div>
-      <div className="db-card-bd">
+      <div className="alert-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {MOCK_ALERTS.map(alert => (
-          <div key={alert.id} className={`alert-box ${alert.type === 'warning' ? 'w' : 'i'}`}>
-            <i className={`fa-solid ${alert.type === 'warning' ? 'fa-triangle-exclamation' : 'fa-calendar-check'}`}></i>
-            <div>
-              <strong>{alert.title}</strong>
-              <span>{alert.description}</span>
+          <div key={alert.id} className={`alert-box-pro ${alert.type}`} style={{ padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--bg)', display: 'flex', gap: '12px' }}>
+            <i className={`fa-solid ${alert.type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info'}`} style={{ color: alert.type === 'warning' ? 'var(--red)' : 'var(--blue)', marginTop: '4px' }}></i>
+            <div style={{ flex: 1 }}>
+              <strong style={{ display: 'block', fontSize: '13px', color: 'var(--text)', marginBottom: '2px' }}>{alert.title}</strong>
+              <span style={{ fontSize: '11px', color: 'var(--text3)', lineHeight: '1.4' }}>{alert.description}</span>
             </div>
           </div>
         ))}

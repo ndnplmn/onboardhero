@@ -10,10 +10,13 @@ const MILESTONES = [
 
 export default function JourneyTemplate() {
   return (
-    <div className="db-card">
-      <div className="db-card-hd">
-        <h3>Standard 90-Day Journey Template</h3>
-        <button className="btn btn-ghost btn-sm">Edit Template</button>
+    <div className="pro-max-card" style={{ padding: '24px' }}>
+      <div className="db-card-hd" style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <i className="fa-solid fa-map-location-dot" style={{ color: 'var(--blue)' }}></i>
+          <h3>90-Day Onboarding Template</h3>
+        </div>
+        <button className="btn btn-ghost btn-sm">Edit</button>
       </div>
       <div className="db-card-bd">
         <div className="jt-track-wrap">

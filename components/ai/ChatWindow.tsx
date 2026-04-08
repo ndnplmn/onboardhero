@@ -28,7 +28,19 @@ export default function ChatWindow() {
       <div className="chat-messages">
         {messages.length === 0 && (
           <div style={{ textAlign: 'center', color: 'var(--text3)', padding: '60px 20px' }}>
-            <p style={{ fontSize: '1.5rem', marginBottom: '8px' }}>👋</p>
+            <div style={{
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              background: 'var(--grad-soft)',
+              border: '1px solid var(--blue-light)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 14px',
+            }}>
+              <i className="fa-solid fa-message" style={{ fontSize: '18px', background: 'var(--grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
+            </div>
             <p style={{ fontSize: '0.95rem' }}>
               Hi! I&apos;m your onboarding assistant. Ask me about your tasks, schedule, contacts, or anything else about your journey.
             </p>
@@ -37,7 +49,10 @@ export default function ChatWindow() {
         {messages.map((msg) => (
           <div key={msg.id} className={`chat-msg ${msg.role}`}>
             <div className="chat-avatar">
-              {msg.role === 'assistant' ? '🤖' : '👤'}
+              {msg.role === 'assistant'
+                ? <i className="fa-solid fa-sparkles" />
+                : <i className="fa-solid fa-user" />
+              }
             </div>
             <div className="chat-bubble">
               {msg.parts

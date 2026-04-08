@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion'
+
 interface KPICardProps {
   value: string | number
   label: string
@@ -11,7 +13,12 @@ interface KPICardProps {
 
 export default function KPICard({ value, label, colorClass = 'cyan', icon, trend }: KPICardProps) {
   return (
-    <div className={`kpi-box ${colorClass}`}>
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }}
+      className={`kpi-box ${colorClass}`}
+    >
       {icon && <div className="kpi-icon-sm"><i className={icon}></i></div>}
       <div className="kpi-n">{value}</div>
       <div className="kpi-l">{label}</div>
@@ -21,7 +28,6 @@ export default function KPICard({ value, label, colorClass = 'cyan', icon, trend
           {trend.value}
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }
-

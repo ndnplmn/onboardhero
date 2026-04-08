@@ -1,6 +1,7 @@
 import { getUser } from '@/lib/auth/get-user'
 import Sidebar from '@/components/platform/Sidebar'
 import NotificationBell from '@/components/platform/NotificationBell'
+import AuraAssistant from '@/components/platform/AuraAssistant'
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
   const user = await getUser()
@@ -14,6 +15,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
         </div>
         {children}
       </main>
+      <AuraAssistant role={user.role} />
     </div>
   )
 }

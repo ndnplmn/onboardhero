@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import TaskList from '@/components/platform/TaskList'
 import TeamsModal from './TeamsModal'
 import ResourceModal from './ResourceModal'
@@ -12,7 +13,26 @@ interface JourneyViewProps {
 }
 
 export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
-  const [activeWeek, setActiveWeek] = useState('week1')
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  
+  const weekFromUrl = searchParams.get('week') || 'week1'
+  const [activeWeek, setActiveWeek] = useState(weekFromUrl)
+
+  // Sync state when URL changes
+  useEffect(() => {
+    if (weekFromUrl && weekFromUrl !== activeWeek) {
+      setActiveWeek(weekFromUrl)
+    }
+  }, [weekFromUrl, activeWeek])
+
+  const handleTabChange = (wk: string) => {
+    setActiveWeek(wk)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('week', wk)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+  }
   const [teamsModal, setTeamsModal] = useState<{ isOpen: boolean; contact: string }>({ isOpen: false, contact: '' })
   const [resourceModal, setResourceModal] = useState<{ isOpen: boolean; resource: any | null }>({ isOpen: false, resource: null })
 
@@ -28,8 +48,8 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
   const progress = Math.min(Math.round((journey.current_week / 12) * 100), 100)
 
   return (
-    <div className="db-body">
-      <div className="kpi-row">
+    <div className="jv-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="kpi-row" style={{ marginBottom: 0 }}>
         <div className="kpi-box cyan">
           <div className="kpi-icon-sm"><i className="fa-solid fa-calendar-day"></i></div>
           <div className="kpi-n">{activeWeek.replace('week', 'Week ').replace('month', 'Month ')}</div>
@@ -52,19 +72,19 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
         </div>
       </div>
 
-      <div className="db-tabs">
+      <div className="db-tabs" style={{ marginBottom: 0 }}>
         {weekKeys.map(wk => (
           <button 
             key={wk}
             className={`db-tab ${activeWeek === wk ? 'active' : ''}`}
-            onClick={() => setActiveWeek(wk)}
+            onClick={() => handleTabChange(wk)}
           >
             {MOCK_JOURNEY[wk].label}
           </button>
         ))}
       </div>
 
-      <div className="db-row col2">
+      <div className="db-row col2" style={{ margin: 0 }}>
         {/* TASKS */}
         <div className="db-card">
           <div className="db-card-hd">
@@ -85,7 +105,7 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
               {currentWeekData.meetings.length > 0 ? (
                 currentWeekData.meetings.map((m: any, i: number) => (
                   <div key={i} className="meet-card">
-                    <div className="meet-date">
+                    <div className="meet-date" style={{ background: 'var(--blue-light)', borderRadius: '8px' }}>
                       <div className="md">{m.day}</div>
                       <div className="mm">{m.mon}</div>
                     </div>
@@ -97,7 +117,7 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
                       className="btn btn-primary btn-sm"
                       onClick={() => setTeamsModal({ isOpen: true, contact: m.contact })}
                     >
-                      <i className="fa-brands fa-microsoft"></i> Teams
+                      <i className="fa-brands fa-microsoft"></i>
                     </button>
                   </div>
                 ))

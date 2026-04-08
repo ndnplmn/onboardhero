@@ -51,7 +51,7 @@ export default function ContentEditor({ onClose }: { onClose: () => void }) {
           <i className="fa-solid fa-xmark"></i>
         </button>
         <h2 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '4px' }}>
-          <i className="fa-solid fa-robot" style={{ marginRight: '8px', color: 'var(--primary)' }}></i>
+          <i className="fa-solid fa-wand-magic-sparkles" style={{ marginRight: '8px', background: 'var(--grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}></i>
           AI Content Studio
         </h2>
         <p style={{ color: 'var(--text3)', fontSize: '0.85rem', marginBottom: '16px' }}>
@@ -64,7 +64,7 @@ export default function ContentEditor({ onClose }: { onClose: () => void }) {
               <p style={{ fontSize: '0.95rem', marginBottom: '12px' }}>
                 Describe the content you want to create.
               </p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text4)' }}>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text3)' }}>
                 Example: &quot;Create an onboarding checklist for new engineers covering their first two weeks.&quot;
               </p>
             </div>
@@ -73,7 +73,10 @@ export default function ContentEditor({ onClose }: { onClose: () => void }) {
           {messages.map((msg) => (
             <div key={msg.id} className={`chat-msg ${msg.role}`}>
               <div className="chat-avatar">
-                {msg.role === 'assistant' ? '\u{1F916}' : '\u{1F464}'}
+                {msg.role === 'assistant'
+                  ? <i className="fa-solid fa-sparkles" />
+                  : <i className="fa-solid fa-user" />
+                }
               </div>
               <div className="chat-bubble">
                 {msg.parts.map((part, i) => {
@@ -86,7 +89,7 @@ export default function ContentEditor({ onClose }: { onClose: () => void }) {
                       const output = part.output as Record<string, unknown>
                       if (output?.success) {
                         return (
-                          <div key={i} style={{ padding: '12px', background: 'var(--green-bg, #e8f5e9)', borderRadius: 'var(--r-md)', marginTop: '8px' }}>
+                          <div key={i} style={{ padding: '12px', background: 'var(--green-bg, #e8f5e9)', borderRadius: 'var(--r)', marginTop: '8px' }}>
                             <i className="fa-solid fa-check-circle" style={{ color: 'var(--green, #4caf50)', marginRight: '8px' }}></i>
                             {output.message as string}
                           </div>
@@ -94,7 +97,7 @@ export default function ContentEditor({ onClose }: { onClose: () => void }) {
                       }
                       if (output?.error) {
                         return (
-                          <div key={i} style={{ padding: '12px', background: 'var(--red-bg, #fbe9e7)', borderRadius: 'var(--r-md)', marginTop: '8px', color: 'var(--red)' }}>
+                          <div key={i} style={{ padding: '12px', background: 'var(--red-bg, #fbe9e7)', borderRadius: 'var(--r)', marginTop: '8px', color: 'var(--red)' }}>
                             <i className="fa-solid fa-exclamation-circle" style={{ marginRight: '8px' }}></i>
                             {output.error as string}
                           </div>

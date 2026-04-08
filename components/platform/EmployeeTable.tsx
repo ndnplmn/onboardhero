@@ -20,10 +20,13 @@ const MOCK_EMPLOYEES: Employee[] = [
 
 export default function EmployeeTable() {
   return (
-    <div className="db-card">
-      <div className="db-card-hd">
-        <h3>All Employees on Onboarding</h3>
-        <button className="btn btn-outline btn-sm">View all List</button>
+    <div className="pro-max-card" style={{ padding: '0px', overflow: 'hidden' }}>
+      <div className="db-card-hd" style={{ padding: '24px 24px 16px 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <i className="fa-solid fa-users" style={{ color: 'var(--blue)' }}></i>
+          <h3>All Employees on Onboarding</h3>
+        </div>
+        <button className="btn btn-outline btn-sm">Export List</button>
       </div>
       <div className="db-card-bd" style={{ padding: 0 }}>
         <table className="emp-tbl">

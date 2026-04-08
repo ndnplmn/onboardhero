@@ -56,25 +56,46 @@ export const MOCK_JOURNEY: Record<string, any> = {
   week4: {
     label: 'Week 4',
     meetings: [
-      { day: '26', mon: 'OCT', title: 'Month 1 Performance Review', time: '11:00 AM', contact: 'David Chen' }
+      { day: '26', mon: 'OCT', title: 'Month 1 Alignment Sync', time: '11:00 AM', contact: 'David Chen' }
     ],
-    resources: [],
+    resources: [
+      { id: 'res-feedback', title: 'Self-Reflection Framework', type: 'Notion', icon: 'fa-solid fa-lightbulb' }
+    ],
     expectations: [
-      'Complete the Month 1 feedback survey',
-      'Prepare your goals for the next quarter'
+      'Complete your first independent task end-to-end',
+      'Submit the Month 1 Employee Experience survey',
+      'Finalize your OKRs for the remainder of the quarter'
     ]
   },
   month2: {
     label: 'Month 2',
-    meetings: [],
-    resources: [],
-    expectations: ['Take full ownership of your core functional area.']
+    meetings: [
+      { day: '15', mon: 'NOV', title: 'Cross-functional Collaboration', time: '3:30 PM', contact: 'Product Team' }
+    ],
+    resources: [
+      { id: 'res-deep-dive', title: 'System Architecture Deep Dive', type: 'Technical Doc', icon: 'fa-solid fa-microchip' },
+      { id: 'res-user', title: 'User Persona Research', type: 'Miro', icon: 'fa-solid fa-users' }
+    ],
+    expectations: [
+      'Contribute to a major project feature',
+      'Lead a team ritual (e.g., Standup or Retro)',
+      'Shadow 1-on-1 customer interview sessions'
+    ]
   },
   month3: {
     label: 'Month 3',
-    meetings: [],
-    resources: [],
-    expectations: ['Complete your final probation review.']
+    meetings: [
+      { day: '10', mon: 'DEC', title: 'Probation Milestone Review', time: '10:00 AM', contact: 'David Chen' },
+      { day: '15', mon: 'DEC', title: 'Career Growth Planning', time: '4:00 PM', contact: 'Manager' }
+    ],
+    resources: [
+      { id: 'res-growth', title: 'Leadership & Development Path', type: 'HR Portal', icon: 'fa-solid fa-arrow-trend-up' }
+    ],
+    expectations: [
+      'Fully own a specific product area or process',
+      'Present a proposal for a process improvement',
+      'Mentor a newer hire or peer in a specific domain'
+    ]
   }
 }
 

@@ -16,25 +16,26 @@ const MOCK_MILESTONES: Milestone[] = [
 
 export default function MilestonesList() {
   return (
-    <div className="db-card">
-      <div className="db-card-hd">
-        <h3><i className="fa-solid fa-calendar-check" style={{ color: 'var(--blue)', marginRight: '6px' }}></i> Upcoming Milestones</h3>
+    <div className="pro-max-card" style={{ padding: '20px' }}>
+      <div className="db-card-hd" style={{ marginBottom: '16px' }}>
+        <h3><i className="fa-solid fa-calendar-check" style={{ color: 'var(--blue)' }}></i> Upcoming Milestones</h3>
       </div>
-      <div className="db-card-bd">
-        <div className="ms-list">
-          {MOCK_MILESTONES.map(ms => (
-            <div key={ms.id} className="ms-item">
-              <div className="ms-date">
-                <i className="fa-solid fa-clock-rotate-left"></i>
+      <div className="ms-list">
+        {MOCK_MILESTONES.map(ms => (
+          <div key={ms.id} className="ms-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+            <div className="ms-avatar" style={{ position: 'relative' }}>
+              <img src={ms.avatar} alt={ms.employee} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid var(--bg)' }} />
+              <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '12px', height: '12px', background: 'var(--blue)', borderRadius: '50%', border: '2px solid var(--bg)', fontSize: '6px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <i className="fa-solid fa-clock"></i>
               </div>
-              <div className="ms-info">
-                <strong>{ms.title}</strong>
-                <span>{ms.date} · {ms.employee}</span>
-              </div>
-              <button className="btn btn-ghost btn-sm"><i className="fa-solid fa-chevron-right"></i></button>
             </div>
-          ))}
-        </div>
+            <div className="ms-info" style={{ flex: 1 }}>
+              <strong style={{ display: 'block', fontSize: '13px', color: 'var(--text)' }}>{ms.title}</strong>
+              <span style={{ fontSize: '11px', color: 'var(--text3)' }}>{ms.date} · {ms.employee}</span>
+            </div>
+            <button className="btn btn-ghost btn-sm" style={{ padding: '4px' }}><i className="fa-solid fa-chevron-right" style={{ fontSize: '10px' }}></i></button>
+          </div>
+        ))}
       </div>
     </div>
   )

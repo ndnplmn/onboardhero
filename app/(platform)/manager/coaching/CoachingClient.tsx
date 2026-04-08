@@ -4,6 +4,7 @@ import { useState } from 'react'
 import dynamic from 'next/dynamic'
 
 const CheckInAgenda = dynamic(() => import('@/components/ai/CheckInAgenda'), { ssr: false })
+const LeadershipSimulation = dynamic(() => import('@/components/ai/LeadershipSimulation'), { ssr: false })
 
 interface TeamMember {
   journeyId: string
@@ -21,6 +22,7 @@ interface TeamMember {
 
 export default function CoachingClient({ teamMembers }: { teamMembers: TeamMember[] }) {
   const [coachTarget, setCoachTarget] = useState<TeamMember | null>(null)
+  const [simulationTarget, setSimulationTarget] = useState<TeamMember | null>(null)
   const [showGeneralCoach, setShowGeneralCoach] = useState(false)
 
   function getRiskBadge(score: number) {
@@ -88,14 +90,24 @@ export default function CoachingClient({ teamMembers }: { teamMembers: TeamMembe
                   />
                 </div>
               </div>
-              <button
-                className="btn btn-primary"
-                onClick={() => setCoachTarget(member)}
-                style={{ whiteSpace: 'nowrap' }}
-              >
-                <i className="fa-solid fa-clipboard-list" style={{ marginRight: '6px' }}></i>
-                Get Coaching
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setCoachTarget(member)}
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  <i className="fa-solid fa-clipboard-list" style={{ marginRight: '6px' }}></i>
+                  Get Coaching
+                </button>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => setSimulationTarget(member)}
+                  style={{ whiteSpace: 'nowrap', fontSize: '0.85rem' }}
+                >
+                  <i className="fa-solid fa-person-running" style={{ marginRight: '6px' }}></i>
+                  Start Simulation
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -106,6 +118,20 @@ export default function CoachingClient({ teamMembers }: { teamMembers: TeamMembe
           onClose={() => setCoachTarget(null)}
           employeeName={coachTarget.name}
           journeyId={coachTarget.journeyId}
+        />
+      )}
+
+      {simulationTarget && (
+        <LeadershipSimulation
+          onClose={() => setSimulationTarget(null)}
+          employeeData={{
+            id: simulationTarget.employeeId,
+            name: simulationTarget.name,
+            role: 'New Employee', // Could be dynamic from department
+            riskScore: simulationTarget.riskScore,
+            sentimentScore: simulationTarget.sentimentScore,
+            blockers: [] // Fallback, could be fetched
+          }}
         />
       )}
 
