@@ -1,128 +1,149 @@
-import React from 'react'
 import type { FrictionPoint } from './FrictionMap'
+import { motion } from 'framer-motion'
 
 interface InterventionBriefProps {
   point: FrictionPoint
   onClose: () => void
 }
 
+const TYPE_CONFIG: Record<string, { icon: string; label: string; color: string; bg: string }> = {
+  technical:    { icon: 'fa-solid fa-laptop-code',       label: 'Technical',    color: 'var(--blue)',  bg: 'var(--blue-light)' },
+  culture:      { icon: 'fa-solid fa-users',             label: 'Culture',      color: 'var(--cyan)',  bg: 'var(--cyan-light)' },
+  engagement:   { icon: 'fa-solid fa-bolt',              label: 'Engagement',   color: 'var(--amber)', bg: 'var(--amber-bg)'   },
+  role_clarity: { icon: 'fa-solid fa-compass',           label: 'Role Clarity', color: 'var(--aqua)',  bg: 'var(--aqua-light)' },
+  mentorship:   { icon: 'fa-solid fa-handshake-angle',   label: 'Mentorship',   color: 'var(--green)', bg: 'var(--green-bg)'   },
+}
+
+const SEV_CONFIG = {
+  low:    { label: 'Positive',       color: 'var(--green)', bg: 'var(--green-bg)', border: 'rgba(34,197,94,0.25)'  },
+  medium: { label: 'Watch',          color: 'var(--amber)', bg: 'var(--amber-bg)', border: 'rgba(245,158,11,0.25)' },
+  high:   { label: 'Action Needed',  color: 'var(--red)',   bg: 'var(--red-bg)',   border: 'rgba(239,68,68,0.25)'  },
+}
+
 export default function InterventionBrief({ point, onClose }: InterventionBriefProps) {
-  const ico: Record<string, string> = {
-    technical: 'fa-solid fa-microchip',
-    culture: 'fa-solid fa-users',
-    engagement: 'fa-solid fa-bolt',
-    role_clarity: 'fa-solid fa-compass',
-    mentorship: 'fa-solid fa-handshake-angle'
-  }
+  const type = TYPE_CONFIG[point.type] ?? TYPE_CONFIG.technical
+  const sev  = SEV_CONFIG[point.severity]
 
   return (
-    <div className="ib-overlay" onClick={onClose}>
-      <div className="ib-modal" onClick={e => e.stopPropagation()}>
-        <div className="ib-header">
-          <div className={`ib-ico ${point.type}`}>
-            <i className={ico[point.type]}></i>
+    <div
+      style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(13,21,41,0.45)',
+        backdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 1000, padding: 20,
+      }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 12 }}
+        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: '100%', maxWidth: 500,
+          background: 'var(--surface)',
+          borderRadius: 'var(--r-xl)',
+          border: '1px solid var(--border)',
+          boxShadow: 'var(--shadow-lg)',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          padding: '20px 24px',
+          borderBottom: '1px solid var(--border)',
+          display: 'flex', alignItems: 'center', gap: 14,
+        }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 'var(--r)',
+            background: type.bg,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <i className={type.icon} style={{ fontSize: 18, color: type.color }} />
           </div>
-          <div className="ib-title">
-            <h3>{point.label}</h3>
-            <span>Detected on Day {point.day} • {point.severity} severity</span>
-          </div>
-          <button className="ib-close" onClick={onClose}>&times;</button>
-        </div>
-
-        <div className="ib-body">
-          <section>
-            <h4>Analysis</h4>
-            <p>{point.description}</p>
-          </section>
-
-          <section className="ib-actionable">
-            <h4>AI Recommended Intervention</h4>
-            <div className="ib-brief-box">
-              <i className="fa-solid fa-lightbulb"></i>
-              <p>{point.intervention}</p>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, marginBottom: 3 }}>
+              {point.label}
             </div>
-          </section>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 11, color: 'var(--text3)' }}>Day {point.day} · {type.label}</span>
+              <span style={{
+                fontSize: 10, fontWeight: 700,
+                color: sev.color, background: sev.bg,
+                border: `1px solid ${sev.border}`,
+                padding: '1px 7px', borderRadius: 100,
+              }}>
+                {sev.label}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="btn btn-ghost btn-sm"
+            style={{ color: 'var(--text3)', padding: '6px 8px' }}
+          >
+            <i className="fa-solid fa-xmark" />
+          </button>
+        </div>
 
-          <div className="ib-footer">
-            <button className="btn-secondary" onClick={onClose}>Dismiss</button>
-            <button className="btn-primary">Execute Action</button>
+        {/* Body */}
+        <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* Analysis */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+              Analysis
+            </div>
+            <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.65, margin: 0 }}>
+              {point.description}
+            </p>
+          </div>
+
+          {/* AI Recommendation */}
+          <div style={{
+            background: 'var(--grad-soft)',
+            border: '1px solid var(--blue-light)',
+            borderLeft: '3px solid var(--cyan)',
+            borderRadius: 'var(--r)',
+            padding: '14px 16px',
+          }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              marginBottom: 8,
+            }}>
+              <i className="fa-solid fa-sparkles" style={{
+                fontSize: 11,
+                background: 'var(--grad)', WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                AI Recommended Action
+              </span>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, margin: 0 }}>
+              {point.intervention}
+            </p>
           </div>
         </div>
-      </div>      <style jsx>{`
-        .ib-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(10, 15, 30, 0.4);
-          backdrop-filter: blur(20px) saturate(180%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-          padding: 20px;
-        }
-        .ib-modal {
-          width: 100%;
-          max-width: 500px;
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(40px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 32px;
-          box-shadow: 0 40px 100px rgba(0,0,0,0.5);
-          overflow: hidden;
-          animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .ib-header {
-          padding: 30px;
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-          position: relative;
-        }
-        .ib-ico { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
-        .ib-ico.technical { background: var(--blue); }
-        .ib-ico.culture { background: var(--cyan); }
-        .ib-ico.engagement { background: var(--amber); }
-        .ib-ico.role_clarity { background: var(--indigo); }
-        .ib-ico.mentorship { background: var(--green); }
-        
-        .ib-title h3 { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 4px; letter-spacing: -0.02em; }
-        .ib-title span { font-size: 11px; color: var(--cyan); font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8; }
-        
-        .ib-close { position: absolute; top: 24px; right: 28px; background: none; border: none; font-size: 28px; cursor: pointer; color: rgba(255,255,255,0.4); transition: all 0.2s; }
-        .ib-close:hover { color: #fff; transform: rotate(90deg); }
 
-        .ib-body { padding: 30px; }
-        .ib-body section { margin-bottom: 30px; }
-        .ib-body h4 { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; color: var(--cyan); margin-bottom: 14px; opacity: 0.6; }
-        .ib-body p { font-size: 15px; line-height: 1.7; color: rgba(255, 255, 255, 0.8); font-weight: 500; }
-
-        .ib-actionable { 
-          background: rgba(0, 255, 242, 0.03); 
-          padding: 24px; 
-          border-radius: 20px; 
-          border: 1px solid rgba(0, 255, 242, 0.1);
-          position: relative;
-          overflow: hidden;
-        }
-        .ib-actionable::before {
-          content: '';
-          position: absolute;
-          top: 0; left: 0; width: 4px; height: 100%;
-          background: var(--cyan);
-        }
-        .ib-brief-box { display: flex; gap: 16px; }
-        .ib-brief-box i { font-size: 18px; color: var(--cyan); margin-top: 4px; }
-        .ib-brief-box p { color: #fff; font-weight: 700; font-size: 14px; }
-
-        .ib-footer { display: flex; gap: 16px; margin-top: 10px; }
-        .ib-footer button { flex: 1; height: 52px; border-radius: 16px; font-size: 14px; font-weight: 800; cursor: pointer; border: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        .btn-secondary { background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
-        .btn-primary { background: var(--grad); color: #fff; box-shadow: 0 8px 30px rgba(0, 255, 242, 0.3); }
-        .btn-primary:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0, 255, 242, 0.4); }
-
-      `}</style>
+        {/* Footer */}
+        <div style={{
+          padding: '16px 24px',
+          borderTop: '1px solid var(--border)',
+          display: 'flex', gap: 10,
+          background: 'var(--surface2)',
+        }}>
+          <button className="btn btn-outline btn-sm" onClick={onClose} style={{ flex: 1 }}>
+            Dismiss
+          </button>
+          <button className="btn btn-primary btn-sm" style={{ flex: 2 }}>
+            <i className="fa-solid fa-bolt" /> Execute Action
+          </button>
+        </div>
+      </motion.div>
     </div>
   )
 }
