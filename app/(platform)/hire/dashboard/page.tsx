@@ -12,6 +12,7 @@ import AchievementWall from '@/components/platform/AchievementWall'
 import SocialBridge from '@/components/platform/SocialBridge'
 import FrictionMap from '@/components/platform/FrictionMap'
 import { getRecommendedResources } from '@/lib/ai/resource-logic'
+import HireHeader from './HireHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,17 +81,7 @@ export default async function HireDashboard() {
 
   return (
     <>
-      <header className="db-header">
-        <div className="db-header-left">
-          <h1>My Journey</h1>
-          <p>Track your progress, access resources, and meet your team.</p>
-        </div>
-        <div className="db-header-actions">
-          <button className="btn btn-outline btn-sm">
-            <i className="fa-solid fa-circle-question" /> Get Help
-          </button>
-        </div>
-      </header>
+      <HireHeader />
 
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import TeamCard from '@/components/platform/TeamCard'
 import KPICard from '@/components/platform/KPICard'
 import ProgressRing from '@/components/platform/ProgressRing'
@@ -13,6 +14,7 @@ import ManagerPendingTasks from '@/components/platform/ManagerPendingTasks'
 import TeamSentiment from '@/components/platform/TeamSentiment'
 import CoachingHub from '@/components/platform/CoachingHub'
 import InterventionBrief from '@/components/platform/InterventionBrief'
+import ScheduleCheckInModal from '@/components/platform/ScheduleCheckInModal'
 
 interface ManagerDashboardClientProps {
   user: any
@@ -35,6 +37,7 @@ export default function ManagerDashboardClient({
   atRiskCount,
 }: ManagerDashboardClientProps) {
   const [selectedPoint, setSelectedPoint] = useState<FrictionPoint | null>(null)
+  const [showCheckIn, setShowCheckIn] = useState(false)
 
   return (
     <>
@@ -44,7 +47,7 @@ export default function ManagerDashboardClient({
           <p>Monitor your team's integration progress and upcoming milestones.</p>
         </div>
         <div className="db-header-actions">
-          <button className="btn btn-primary btn-sm btn-glow">
+          <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowCheckIn(true)}>
             <i className="fa-solid fa-calendar-day" /> Schedule Check-in
           </button>
         </div>
@@ -125,6 +128,12 @@ export default function ManagerDashboardClient({
       {selectedPoint && (
         <InterventionBrief point={selectedPoint} onClose={() => setSelectedPoint(null)} />
       )}
+
+      <AnimatePresence>
+        {showCheckIn && (
+          <ScheduleCheckInModal onClose={() => setShowCheckIn(false)} />
+        )}
+      </AnimatePresence>
     </>
   )
 }

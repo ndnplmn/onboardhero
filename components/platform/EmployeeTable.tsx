@@ -1,5 +1,7 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 interface Employee {
   id: string
   name: string
@@ -12,21 +14,51 @@ interface Employee {
 }
 
 const MOCK_EMPLOYEES: Employee[] = [
-  { id: '1', name: 'Marcus Reed', role: 'Senior Product Designer', dept: 'Product', days: 8, progress: 24, status: 'on-track', avatar: 'https://i.pravatar.cc/150?u=marcus' },
-  { id: '2', name: 'Priya Mehta', role: 'Frontend Engineer', dept: 'Engineering', days: 42, progress: 68, status: 'at-risk', avatar: 'https://i.pravatar.cc/150?u=priya' },
-  { id: '3', name: 'Sarah Kim', role: 'HR Operations', dept: 'People', days: 28, progress: 92, status: 'on-track', avatar: 'https://i.pravatar.cc/150?u=sarah' },
-  { id: '4', name: 'James Wilson', role: 'Sales Account Exec', dept: 'Sales', days: 90, progress: 100, status: 'completed', avatar: 'https://i.pravatar.cc/150?u=james' },
+  { id: '1', name: 'Marcus Reed',   role: 'Senior Product Designer', dept: 'Product',     days: 8,  progress: 24,  status: 'on-track',  avatar: 'https://i.pravatar.cc/150?u=marcus' },
+  { id: '2', name: 'Priya Mehta',   role: 'Frontend Engineer',        dept: 'Engineering', days: 42, progress: 68,  status: 'at-risk',   avatar: 'https://i.pravatar.cc/150?u=priya'  },
+  { id: '3', name: 'Sarah Kim',     role: 'HR Operations',            dept: 'People',      days: 28, progress: 92,  status: 'on-track',  avatar: 'https://i.pravatar.cc/150?u=sarah'  },
+  { id: '4', name: 'James Wilson',  role: 'Sales Account Exec',       dept: 'Sales',       days: 90, progress: 100, status: 'completed', avatar: 'https://i.pravatar.cc/150?u=james'  },
 ]
 
-export default function EmployeeTable() {
+function exportListCSV(employees: Employee[]) {
+  const rows = [
+    ['Name', 'Role', 'Department', 'Days', 'Progress', 'Status'],
+    ...employees.map(e => [e.name, e.role, e.dept, String(e.days), `${e.progress}%`, e.status]),
+  ]
+  const csv = rows.map(r => r.join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `employee-list-${new Date().toISOString().split('T')[0]}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+interface EmployeeTableProps {
+  onInviteNew?: () => void
+}
+
+export default function EmployeeTable({ onInviteNew }: EmployeeTableProps) {
+  const router = useRouter()
+
   return (
     <div className="pro-max-card" style={{ padding: '0px', overflow: 'hidden' }}>
       <div className="db-card-hd" style={{ padding: '24px 24px 16px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <i className="fa-solid fa-users" style={{ color: 'var(--blue)' }}></i>
+          <i className="fa-solid fa-users" style={{ color: 'var(--blue)' }} />
           <h3>All Employees on Onboarding</h3>
         </div>
-        <button className="btn btn-outline btn-sm">Export List</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {onInviteNew && (
+            <button className="btn btn-primary btn-sm" onClick={onInviteNew}>
+              <i className="fa-solid fa-user-plus" /> Invite
+            </button>
+          )}
+          <button className="btn btn-outline btn-sm" onClick={() => exportListCSV(MOCK_EMPLOYEES)}>
+            <i className="fa-solid fa-download" /> Export List
+          </button>
+        </div>
       </div>
       <div className="db-card-bd" style={{ padding: 0 }}>
         <table className="emp-tbl">
@@ -61,10 +93,10 @@ export default function EmployeeTable() {
                 <td className="prog-cell">
                   <em>{e.progress}%</em>
                   <div className="pw">
-                    <div 
-                      className={`pf ${e.status === 'at-risk' ? 'risk' : e.status === 'completed' ? 'done' : ''}`} 
+                    <div
+                      className={`pf ${e.status === 'at-risk' ? 'risk' : e.status === 'completed' ? 'done' : ''}`}
                       style={{ width: `${e.progress}%` }}
-                    ></div>
+                    />
                   </div>
                 </td>
                 <td>
@@ -73,7 +105,12 @@ export default function EmployeeTable() {
                   </span>
                 </td>
                 <td>
-                  <button className="btn btn-ghost btn-sm">View journey</button>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => router.push(`/hr/employees/${e.id}`)}
+                  >
+                    View journey
+                  </button>
                 </td>
               </tr>
             ))}

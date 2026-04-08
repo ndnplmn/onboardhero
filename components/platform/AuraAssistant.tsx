@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import styles from './AuraAssistant.module.css'
 import { useAura } from '@/hooks/useAura'
@@ -17,12 +17,19 @@ export default function AuraAssistant({ role }: AuraAssistantProps) {
   const [isTyping, setIsTyping] = useState(false)
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
 
-  // Aura Intelligence 2026: Whisper detection
+  // Whisper detection
   useEffect(() => {
     if (whisper && state === 'IDLE') {
       setState('WHISPERING')
     }
   }, [whisper, state])
+
+  // External open trigger (dispatched by "Get Help" button etc.)
+  useEffect(() => {
+    const handler = () => setState('ENGAGED')
+    window.addEventListener('aura-open', handler)
+    return () => window.removeEventListener('aura-open', handler)
+  }, [])
 
   const toggleEngage = () => {
     setState(prev => prev === 'ENGAGED' ? 'IDLE' : 'ENGAGED')
@@ -78,36 +85,19 @@ export default function AuraAssistant({ role }: AuraAssistantProps) {
         )}
 
         {state !== 'ENGAGED' && (
-          <motion.div 
-            key="orb"
-            initial={{ opacity: 0, scale: 0.8, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, scale: 0.8, filter: 'blur(10px)' }}
-            className={styles.auraOrb} 
+          <motion.button
+            key="fab"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 260 }}
+            className={styles.auraFab}
             onClick={toggleEngage}
           >
-            <svg viewBox="0 0 100 100" className={styles.auraSvg}>
-              <defs>
-                <filter id="aura-liquid">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
-                </filter>
-                <radialGradient id="orb-grad">
-                  <stop offset="0%" stopColor="var(--cyan)" />
-                  <stop offset="100%" stopColor="var(--blue)" />
-                </radialGradient>
-              </defs>
-              <g filter="url(#aura-liquid)">
-                 <circle cx="50" cy="50" r="35" className={`${styles.auraBlob} ${styles.blob1}`} />
-                 <circle cx="50" cy="50" r="30" className={`${styles.auraBlob} ${styles.blob2}`} />
-                 <circle cx="50" cy="50" r="25" className={`${styles.auraBlob} ${styles.blob3}`} />
-              </g>
-              <circle cx="50" cy="50" r="15" className={styles.auraCenterPulse} />
-            </svg>
-            <div className={styles.auraSymbol}>
-               {isTyping ? <div className={styles.neuralTyping} /> : <i className="fa-solid fa-brain" />}
-            </div>
-          </motion.div>
+            <i className={`fa-solid fa-brain ${styles.auraFabIcon}`} />
+            Ask Aura
+            <span className={styles.auraFabDot} />
+          </motion.button>
         )}
 
         {state === 'ENGAGED' && (

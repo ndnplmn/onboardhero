@@ -1,81 +1,117 @@
-import React from 'react'
+'use client'
+
+import { useRouter } from 'next/navigation'
+
+const RECOMMENDATIONS = [
+  {
+    id: 1,
+    title: 'Leadership Brief: Liam Evans',
+    desc: 'Pre-meeting prep for Day 45 sync.',
+    trend: 'at-risk',
+    icon: 'fa-solid fa-file-invoice',
+    href: '/manager/coaching',
+    color: 'var(--red)',
+    bg: 'var(--red-bg)',
+    border: 'rgba(239,68,68,0.2)',
+  },
+  {
+    id: 2,
+    title: 'Simulation: Radical Candor',
+    desc: 'Practice role-play for performance feedback.',
+    trend: 'training',
+    icon: 'fa-solid fa-vr-cardboard',
+    href: '/manager/coaching',
+    color: 'var(--cyan)',
+    bg: 'var(--cyan-light)',
+    border: 'rgba(0,200,224,0.2)',
+  },
+  {
+    id: 3,
+    title: 'Retention Strategy: Dev Team',
+    desc: 'Identified burnout risk. Action recommended.',
+    trend: 'strategy',
+    icon: 'fa-solid fa-shield-heart',
+    href: '/manager/coaching',
+    color: 'var(--blue)',
+    bg: 'var(--blue-light)',
+    border: 'rgba(26,108,246,0.2)',
+  },
+]
 
 export default function CoachingHub() {
-  const recommendations = [
-    { id: 1, title: 'Leadership Brief: Liam Evans', desc: 'Pre-meeting prep for Day 45 sync.', trend: 'at-risk', icon: 'fa-solid fa-file-invoice' },
-    { id: 2, title: 'Simulation: Radical Candor', desc: 'Practice role-play for performance feedback.', trend: 'training', icon: 'fa-solid fa-vr-cardboard' },
-    { id: 3, title: 'Retention Strategy: High-Velocity', desc: 'Identified burnout risk in Dev team.', trend: 'strategy', icon: 'fa-solid fa-shield-heart' }
-  ]
+  const router = useRouter()
 
   return (
     <div className="db-card">
       <div className="db-card-hd">
-        <div style={{ display: 'flex', justifySelf: 'space-between', alignItems: 'center', width: '100%' }}>
-          <h3><i className="fa-solid fa-graduation-cap" style={{ color: 'var(--blue)', marginRight: '6px' }}></i> AI Coaching & Intelligence</h3>
-          <span className="badge-ai">Proactive</span>
-        </div>
+        <h3>
+          <i className="fa-solid fa-graduation-cap" style={{ color: 'var(--blue)' }} />
+          {' '}AI Coaching & Intelligence
+        </h3>
+        <span className="badge-ai">Proactive</span>
       </div>
-      <div className="db-card-bd" style={{ padding: '0' }}>
-        <div className="ch-list">
-          {recommendations.map((rec) => (
-            <div key={rec.id} className="ch-item">
-              <div className={`ch-ico ${rec.trend}`}>
-                <i className={rec.icon}></i>
-              </div>
-              <div className="ch-info">
-                <h4>{rec.title}</h4>
-                <p>{rec.desc}</p>
-              </div>
-              <button className="ch-btn">
-                <i className="fa-solid fa-chevron-right"></i>
-              </button>
+
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {RECOMMENDATIONS.map((rec, i) => (
+          <button
+            key={rec.id}
+            onClick={() => router.push(rec.href)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+              padding: '18px 20px',
+              borderBottom: i < RECOMMENDATIONS.length - 1 ? '1px solid var(--border)' : 'none',
+              background: 'transparent',
+              border: 'none',
+              borderBottomColor: 'var(--border)',
+              borderBottomStyle: i < RECOMMENDATIONS.length - 1 ? 'solid' : undefined,
+              borderBottomWidth: i < RECOMMENDATIONS.length - 1 ? 1 : 0,
+              cursor: 'pointer',
+              textAlign: 'left',
+              transition: 'background 0.15s',
+              width: '100%',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface2)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >
+            <div style={{
+              width: 40,
+              height: 40,
+              borderRadius: 'var(--r)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 16,
+              flexShrink: 0,
+              background: rec.bg,
+              color: rec.color,
+              border: `1px solid ${rec.border}`,
+            }}>
+              <i className={rec.icon} />
             </div>
-          ))}
-        </div>
-
-        <div className="ch-footer">
-          <button className="btn btn-outline btn-sm" style={{ width: '100%', border: '1px dashed rgba(255,255,255,0.1)' }}>
-            <i className="fa-solid fa-plus"></i> Request Custom Simulation
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>
+                {rec.title}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 500 }}>
+                {rec.desc}
+              </div>
+            </div>
+            <i className="fa-solid fa-chevron-right" style={{ fontSize: 11, color: 'var(--text3)', flexShrink: 0 }} />
           </button>
-        </div>
+        ))}
       </div>
 
-      <style jsx>{`
-        .ch-list { display: flex; flexDirection: column; }
-        .ch-item { 
-          display: flex; 
-          align-items: center; 
-          gap: 16px; 
-          padding: 20px; 
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-          transition: all 0.3s;
-          cursor: pointer;
-        }
-        .ch-item:hover { background: rgba(255, 255, 255, 0.02); }
-        .ch-item:last-child { border-bottom: none; }
-
-        .ch-ico { 
-          width: 44px; 
-          height: 44px; 
-          border-radius: 12px; 
-          display: flex; 
-          align-items: center; 
-          justify-content: center; 
-          font-size: 18px;
-          flex-shrink: 0;
-        }
-        .ch-ico.at-risk { background: rgba(255, 107, 107, 0.1); color: var(--red); border: 1px solid rgba(255, 107, 107, 0.2); }
-        .ch-ico.training { background: rgba(0, 255, 242, 0.1); color: var(--cyan); border: 1px solid rgba(0, 255, 242, 0.2); }
-        .ch-ico.strategy { background: rgba(69, 133, 243, 0.1); color: var(--blue); border: 1px solid rgba(69, 133, 243, 0.2); }
-
-        .ch-info h4 { font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 4px; }
-        .ch-info p { font-size: 11px; color: var(--text3); font-weight: 600; }
-
-        .ch-btn { background: none; border: none; color: rgba(255, 255, 255, 0.2); margin-left: auto; transition: all 0.2s; }
-        .ch-item:hover .ch-btn { color: #fff; transform: translateX(4px); }
-
-        .ch-footer { padding: 20px; }
-      `}</style>
+      <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border)' }}>
+        <button
+          className="btn btn-outline btn-sm"
+          style={{ width: '100%' }}
+          onClick={() => router.push('/manager/coaching')}
+        >
+          <i className="fa-solid fa-plus" /> Request Custom Simulation
+        </button>
+      </div>
     </div>
   )
 }

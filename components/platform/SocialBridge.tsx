@@ -31,7 +31,7 @@ export default function SocialBridge() {
                   height: '10px', 
                   borderRadius: '50%', 
                   background: c.status === 'online' ? 'var(--green)' : 'var(--text3)',
-                  border: '2px solid var(--navy)',
+                  border: '2px solid var(--surface)',
                   boxShadow: c.status === 'online' ? '0 0 10px var(--green)' : 'none'
                 }} />
               </div>
