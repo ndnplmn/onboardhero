@@ -19,8 +19,13 @@ export async function getManagerDashboardData(managerId: string) {
       .limit(5),
   ])
 
+  const normalizedJourneys = (journeysRes.data || []).map((j: any) => ({
+    ...j,
+    employee: Array.isArray(j.employee) ? j.employee[0] : j.employee
+  }))
+
   return {
-    journeys:         journeysRes.data  || [],
+    journeys:         normalizedJourneys,
     upcomingCheckIns: checkInsRes.data  || [],
   }
 }
@@ -44,8 +49,13 @@ export async function getManagerHiresData(managerId: string) {
       .is('completed_date', null),
   ])
 
+  const normalizedJourneys = (journeysRes.data || []).map((j: any) => ({
+    ...j,
+    employee: Array.isArray(j.employee) ? j.employee[0] : j.employee
+  }))
+
   return {
-    journeys:         journeysRes.data  || [],
+    journeys:         normalizedJourneys,
     tasks:            tasksRes.data     || [],
     pendingCheckIns:  checkInsRes.data  || [],
   }
@@ -73,8 +83,14 @@ export async function getTeamMemberDetail(journeyId: string) {
       .order('scheduled_date'),
   ])
 
+  const journeyData = journeyRes.data as any
+  if (journeyData) {
+    if (Array.isArray(journeyData.employee)) journeyData.employee = journeyData.employee[0]
+    if (Array.isArray(journeyData.template)) journeyData.template = journeyData.template[0]
+  }
+
   return {
-    journey:  journeyRes.data,
+    journey:  journeyData,
     tasks:    tasksRes.data   || [],
     checkIns: checkInsRes.data || [],
   }

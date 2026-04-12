@@ -15,7 +15,8 @@ export default async function TeamMemberPage({ params }: { params: Promise<{ id:
   if (!user) redirect('/login')
 
   const { id } = await params
-  const { journey, tasks, checkIns } = await getTeamMemberDetail(id)
+  const { journey: rawJourney, tasks, checkIns } = await getTeamMemberDetail(id)
+  const journey = rawJourney as any
 
   if (!journey) return <div style={{ padding: '32px' }}>Journey not found</div>
 
