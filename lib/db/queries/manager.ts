@@ -6,7 +6,7 @@ export async function getManagerDashboardData(managerId: string) {
   const [journeysRes, checkInsRes] = await Promise.all([
     supabase
       .from('journeys')
-      .select('id, status, current_week, risk_score, start_date, employee:profiles!employee_id(id, full_name, department, avatar_url)')
+      .select('id, status, current_week, risk_score, start_date, risk_reasons, friction_points, employee:profiles!employee_id(id, full_name, department, avatar_url)')
       .eq('manager_id', managerId)
       .in('status', ['in_progress', 'at_risk', 'not_started', 'active'])
       .order('created_at', { ascending: false }),

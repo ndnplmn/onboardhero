@@ -8,7 +8,7 @@ export default async function ManagerDashboard() {
   const user = await getUser()
   const { journeys, upcomingCheckIns } = await getManagerDashboardData(user.id)
 
-  let activeJourney = journeys[0] || null
+  let activeJourney = (journeys[0] as any) || null
   
   // State-of-the-Art 2026: Ensure a demo journey is visible for verification
   if (!activeJourney) {
