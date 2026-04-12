@@ -73,6 +73,8 @@ export async function toggleTaskComplete(taskId: string, completed: boolean) {
 
   revalidatePath('/hire/dashboard')
   revalidatePath('/hire/tasks')
+  revalidatePath('/hr/tasks')
+  revalidatePath('/manager/dashboard')
 }
 
 export async function updateProfile(formData: FormData) {

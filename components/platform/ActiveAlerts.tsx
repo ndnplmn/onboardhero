@@ -11,7 +11,8 @@ interface Alert {
   action?: { label: string; href?: string; onClick?: string }
 }
 
-const MOCK_ALERTS: Alert[] = [
+// Default alerts shown when no real data is available
+const DEFAULT_ALERTS: Alert[] = [
   {
     id: '1',
     type: 'warning',
@@ -36,15 +37,17 @@ const MOCK_ALERTS: Alert[] = [
 ]
 
 interface ActiveAlertsProps {
+  alerts?: Alert[]
   onScheduleCheckIn?: () => void
   onInviteNew?: () => void
 }
 
-export default function ActiveAlerts({ onScheduleCheckIn, onInviteNew }: ActiveAlertsProps) {
+export default function ActiveAlerts({ alerts: propAlerts, onScheduleCheckIn, onInviteNew }: ActiveAlertsProps) {
   const router = useRouter()
   const [dismissed, setDismissed] = useState<string[]>([])
 
-  const visible = MOCK_ALERTS.filter(a => !dismissed.includes(a.id))
+  const alerts  = propAlerts && propAlerts.length > 0 ? propAlerts : DEFAULT_ALERTS
+  const visible = alerts.filter(a => !dismissed.includes(a.id))
 
   function handleAction(alert: Alert) {
     if (!alert.action) return
@@ -60,16 +63,29 @@ export default function ActiveAlerts({ onScheduleCheckIn, onInviteNew }: ActiveA
           <i className="fa-solid fa-bell" style={{ color: 'var(--amber)' }} />
           <h3>Active Alerts</h3>
         </div>
-        {visible.length > 0 && (
-          <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>
-            {visible.length} pending
-          </span>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {visible.length > 0 && (
+            <span style={{
+              fontSize: 10, fontWeight: 800, padding: '2px 8px',
+              borderRadius: 100, background: 'var(--red-bg)', color: 'var(--red)',
+              border: '1px solid rgba(239,68,68,0.2)',
+            }}>
+              {visible.length}
+            </span>
+          )}
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ fontSize: 11, color: 'var(--blue)', padding: '3px 8px' }}
+            onClick={() => router.push('/hr/alerts')}
+          >
+            View all <i className="fa-solid fa-arrow-right" style={{ fontSize: 9 }} />
+          </button>
+        </div>
       </div>
 
       {visible.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text3)', fontSize: 13 }}>
-          <i className="fa-solid fa-circle-check" style={{ fontSize: 20, color: 'var(--green)', display: 'block', marginBottom: 8 }} />
+          <i className="fa-solid fa-shield-check" style={{ fontSize: 22, color: 'var(--green)', display: 'block', marginBottom: 8 }} />
           All clear — no active alerts.
         </div>
       ) : (
@@ -78,20 +94,20 @@ export default function ActiveAlerts({ onScheduleCheckIn, onInviteNew }: ActiveA
             <div
               key={alert.id}
               style={{
-                padding: '14px 16px',
+                padding: '12px 14px',
                 borderRadius: 'var(--r)',
                 border: `1px solid ${alert.type === 'warning' ? 'rgba(239,68,68,0.2)' : 'var(--border)'}`,
                 background: alert.type === 'warning' ? 'var(--red-bg)' : 'var(--bg)',
                 borderLeft: `3px solid ${alert.type === 'warning' ? 'var(--red)' : 'var(--blue)'}`,
               }}
             >
-              <div style={{ display: 'flex', gap: 10, marginBottom: alert.action ? 10 : 0 }}>
+              <div style={{ display: 'flex', gap: 10, marginBottom: alert.action ? 8 : 0 }}>
                 <i
                   className={`fa-solid ${alert.type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info'}`}
-                  style={{ color: alert.type === 'warning' ? 'var(--red)' : 'var(--blue)', marginTop: 2, flexShrink: 0 }}
+                  style={{ color: alert.type === 'warning' ? 'var(--red)' : 'var(--blue)', marginTop: 2, flexShrink: 0, fontSize: 12 }}
                 />
                 <div style={{ flex: 1 }}>
-                  <strong style={{ display: 'block', fontSize: '13px', color: 'var(--text)', marginBottom: 3 }}>
+                  <strong style={{ display: 'block', fontSize: '12px', color: 'var(--text)', marginBottom: 2 }}>
                     {alert.title}
                   </strong>
                   <span style={{ fontSize: '11px', color: 'var(--text3)', lineHeight: '1.5' }}>
@@ -103,13 +119,13 @@ export default function ActiveAlerts({ onScheduleCheckIn, onInviteNew }: ActiveA
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 2, flexShrink: 0 }}
                   title="Dismiss"
                 >
-                  <i className="fa-solid fa-xmark" style={{ fontSize: 11 }} />
+                  <i className="fa-solid fa-xmark" style={{ fontSize: 10 }} />
                 </button>
               </div>
               {alert.action && (
                 <button
                   className="btn btn-outline btn-sm"
-                  style={{ fontSize: 11, padding: '4px 12px', marginLeft: 24 }}
+                  style={{ fontSize: 10, padding: '3px 10px', marginLeft: 22 }}
                   onClick={() => handleAction(alert)}
                 >
                   {alert.action.label}

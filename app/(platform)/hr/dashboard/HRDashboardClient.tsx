@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import GlobalFrictionMap from '@/components/platform/GlobalFrictionMap'
 import CulturalResonance from '@/components/platform/CulturalResonance'
 import TalentVelocity from '@/components/platform/TalentVelocity'
-import KPICard from '@/components/platform/KPICard'
 import EmployeeTable from '@/components/platform/EmployeeTable'
 import ActiveAlerts from '@/components/platform/ActiveAlerts'
 import StageChecklist from '@/components/platform/StageChecklist'
@@ -14,28 +14,20 @@ import InviteUserModal from '@/components/platform/InviteUserModal'
 import { AnimatePresence } from 'framer-motion'
 
 interface HRDashboardClientProps {
-  initialData: {
-    journeys: any[]
-    tasks: any[]
-  }
-  engagementData: { label: string; value: number }[]
-  completionData:  { label: string; value: number }[]
-  mockStages:      { label: string; count: number }[]
-  kpis?: {
+  journeys: any[]
+  kpis: {
     totalWorkforce:     number
-    retentionRate:      number
-    integrationVelocity: number
-    frictionAlerts:     number
+    newHires:           number
+    activeJourneys:     number
+    completedJourneys:  number
+    atRisk:             number
+    taskCompletionPct:  number
   }
-  managers?:   { id: string; full_name: string }[]
-  templates?:  { id: string; name: string }[]
-}
-
-const DEFAULT_KPIS = {
-  totalWorkforce: 1240,
-  retentionRate: 94.2,
-  integrationVelocity: 88,
-  frictionAlerts: 12,
+  engagementData:  { label: string; value: number }[]
+  completionData:  { label: string; value: number }[]
+  stages:          { label: string; count: number }[]
+  managers?:       { id: string; full_name: string }[]
+  templates?:      { id: string; name: string }[]
 }
 
 const DEFAULT_MANAGERS = [
@@ -50,32 +42,36 @@ const DEFAULT_TEMPLATES = [
   { id: 't3', name: 'Sales Enablement' },
 ]
 
-function exportReportCSV() {
-  const rows = [
-    ['Name', 'Role', 'Department', 'Days', 'Progress', 'Status'],
-    ['Marcus Reed', 'Senior Product Designer', 'Product', '8', '24%', 'On Track'],
-    ['Priya Mehta', 'Frontend Engineer', 'Engineering', '42', '68%', 'At Risk'],
-    ['Sarah Kim', 'HR Operations', 'People', '28', '92%', 'On Track'],
-    ['James Wilson', 'Sales Account Exec', 'Sales', '90', '100%', 'Completed'],
-  ]
-  const csv = rows.map(r => r.join(',')).join('\n')
+function exportReportCSV(journeys: any[]) {
+  const header = ['Name', 'Department', 'Week', 'Risk Score', 'Status', 'Start Date']
+  const rows = journeys.map(j => [
+    j.employee?.full_name ?? 'Unknown',
+    j.employee?.department ?? '—',
+    j.current_week ?? 0,
+    j.risk_score ?? 0,
+    j.status ?? '—',
+    j.start_date ?? '—',
+  ])
+  const csv = [header, ...rows].map(r => r.join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href     = url
   a.download = `onboarding-report-${new Date().toISOString().split('T')[0]}.csv`
   a.click()
   URL.revokeObjectURL(url)
 }
 
 export default function HRDashboardClient({
+  journeys,
+  kpis,
   engagementData,
   completionData,
-  mockStages,
-  kpis = DEFAULT_KPIS,
-  managers = DEFAULT_MANAGERS,
+  stages,
+  managers  = DEFAULT_MANAGERS,
   templates = DEFAULT_TEMPLATES,
 }: HRDashboardClientProps) {
+  const router     = useRouter()
   const [showInvite, setShowInvite] = useState(false)
 
   return (
@@ -86,7 +82,7 @@ export default function HRDashboardClient({
           <p>Workforce health · integration analytics · active alerts</p>
         </div>
         <div className="db-header-actions">
-          <button className="btn btn-outline btn-sm" onClick={exportReportCSV}>
+          <button className="btn btn-outline btn-sm" onClick={() => exportReportCSV(journeys)}>
             <i className="fa-solid fa-download" /> Export Report
           </button>
           <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowInvite(true)}>
@@ -99,27 +95,48 @@ export default function HRDashboardClient({
 
         {/* Row 1 — KPIs */}
         <div className="kpi-row">
-          <KPICard value={kpis.totalWorkforce}             label="Total Workforce"  colorClass="cyan"  icon="fa-solid fa-users"                trend={{ value: '+4.2%',        isDown: false }} />
-          <KPICard value={`${kpis.retentionRate}%`}        label="Retention 90d"   colorClass="blue"  icon="fa-solid fa-chart-pie"           />
-          <KPICard value={`${kpis.integrationVelocity}%`}  label="Sync Velocity"   colorClass="aqua"  icon="fa-solid fa-bolt-lightning"      trend={{ value: 'Optimized',     isDown: false }} />
-          <KPICard value={kpis.frictionAlerts}             label="Friction Alerts" colorClass="red"   icon="fa-solid fa-triangle-exclamation" trend={{ value: 'Action Needed', isDown: true  }} />
+          <div className="kpi-card">
+            <div className="kpi-icon cyan"><i className="fa-solid fa-users" /></div>
+            <div className="kpi-value">{kpis.totalWorkforce.toLocaleString()}</div>
+            <div className="kpi-label">Total Workforce</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-icon blue"><i className="fa-solid fa-user-tie" /></div>
+            <div className="kpi-value">{kpis.newHires}</div>
+            <div className="kpi-label">Active New Hires</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-icon green"><i className="fa-solid fa-circle-check" /></div>
+            <div className="kpi-value">{kpis.completedJourneys}</div>
+            <div className="kpi-label">Completed Journeys</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-icon amber"><i className="fa-solid fa-triangle-exclamation" /></div>
+            <div className="kpi-value">{kpis.atRisk}</div>
+            <div className="kpi-label">At-Risk Employees</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-icon aqua"><i className="fa-solid fa-list-check" /></div>
+            <div className="kpi-value">{kpis.taskCompletionPct}%</div>
+            <div className="kpi-label">Task Completion</div>
+          </div>
         </div>
 
         {/* Row 2 — Analytics belt: 3 equal-weight cards */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--gap-standard)' }}>
           <CompletionRateCard data={completionData} />
           <EngagementScoreCard data={engagementData} />
-          <StageChecklist stages={mockStages} />
+          <StageChecklist stages={stages} />
         </div>
 
         {/* Row 3 — Main 2/3 + Side 1/3 */}
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--gap-standard)', alignItems: 'start' }}>
-          <div className="db-col-main">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
             <GlobalFrictionMap />
             <EmployeeTable onInviteNew={() => setShowInvite(true)} />
           </div>
-          <div className="db-col-side">
-            <ActiveAlerts onScheduleCheckIn={() => {}} onInviteNew={() => setShowInvite(true)} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
+            <ActiveAlerts onScheduleCheckIn={() => router.push('/hr/alerts')} onInviteNew={() => setShowInvite(true)} />
             <CulturalResonance />
             <TalentVelocity />
           </div>

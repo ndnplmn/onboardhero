@@ -1,93 +1,49 @@
-import { createSupabaseAdmin } from '@/lib/db/supabase-server'
-import TaskList from '@/components/platform/TaskList'
+import { createSupabaseServer } from '@/lib/db/supabase-server'
+import TaskManagerClient from './TaskManagerClient'
 
 export const dynamic = 'force-dynamic'
 
+// Mock data for demo / empty DB
+const MOCK_TASKS = [
+  { id: 'h1', title: 'Submit Hardware Request',         description: 'Technical setup for new Senior Designer.',               week: 1,  status: 'completed', assigned_to_role: 'hr',       completed_at: new Date().toISOString(), order: 0, journey: { id: 'j1', current_week: 3, start_date: '2026-03-01', employee: { id: 'e1', full_name: 'Marcus Reed',  department: 'Product',     avatar_url: 'https://i.pravatar.cc/150?u=marcus' } } },
+  { id: 'h2', title: 'Benefits Enrollment Review',      description: 'Verify health insurance and 401k setup.',               week: 2,  status: 'pending',   assigned_to_role: 'hr',       completed_at: null,                    order: 0, journey: { id: 'j2', current_week: 7, start_date: '2026-01-15', employee: { id: 'e2', full_name: 'Priya Mehta',  department: 'Engineering', avatar_url: 'https://i.pravatar.cc/150?u=priya'  } } },
+  { id: 'h3', title: 'Culture Workshop Invite',         description: 'Send invitation for the monthly culture alignment.',    week: 1,  status: 'completed', assigned_to_role: 'hr',       completed_at: new Date().toISOString(), order: 1, journey: { id: 'j2', current_week: 7, start_date: '2026-01-15', employee: { id: 'e2', full_name: 'Priya Mehta',  department: 'Engineering', avatar_url: 'https://i.pravatar.cc/150?u=priya'  } } },
+  { id: 'h4', title: 'Final Onboarding Exit Interview', description: 'Gather qualitative data on the 90-day journey.',       week: 12, status: 'pending',   assigned_to_role: 'hr',       completed_at: null,                    order: 0, journey: { id: 'j3', current_week: 12, start_date: '2025-12-01', employee: { id: 'e3', full_name: 'James Wilson', department: 'Sales',       avatar_url: 'https://i.pravatar.cc/150?u=james'  } } },
+  { id: 'h5', title: 'Assign Peer Buddy',               description: 'Cross-department buddy matching for social integration.',week: 1,  status: 'pending',   assigned_to_role: 'hr',       completed_at: null,                    order: 2, journey: { id: 'j1', current_week: 3, start_date: '2026-03-01', employee: { id: 'e1', full_name: 'Marcus Reed',  department: 'Product',     avatar_url: 'https://i.pravatar.cc/150?u=marcus' } } },
+  { id: 'h6', title: 'Week 1 Check-in with Manager',    description: 'Ensure manager has completed the first 1:1.',          week: 1,  status: 'completed', assigned_to_role: 'manager',  completed_at: new Date().toISOString(), order: 0, journey: { id: 'j1', current_week: 3, start_date: '2026-03-01', employee: { id: 'e1', full_name: 'Marcus Reed',  department: 'Product',     avatar_url: 'https://i.pravatar.cc/150?u=marcus' } } },
+  { id: 'h7', title: 'IT Setup Checklist',              description: 'Complete laptop setup and tool access.',                week: 1,  status: 'completed', assigned_to_role: 'new_hire', completed_at: new Date().toISOString(), order: 0, journey: { id: 'j2', current_week: 7, start_date: '2026-01-15', employee: { id: 'e2', full_name: 'Priya Mehta',  department: 'Engineering', avatar_url: 'https://i.pravatar.cc/150?u=priya'  } } },
+  { id: 'h8', title: '30-Day Review',                   description: 'First month review session with HR and manager.',      week: 4,  status: 'pending',   assigned_to_role: 'manager',  completed_at: null,                    order: 0, journey: { id: 'j2', current_week: 7, start_date: '2026-01-15', employee: { id: 'e2', full_name: 'Priya Mehta',  department: 'Engineering', avatar_url: 'https://i.pravatar.cc/150?u=priya'  } } },
+  { id: 'h9', title: 'Review Company Handbook',         description: 'Complete handbook reading and acknowledge policies.',  week: 1,  status: 'pending',   assigned_to_role: 'new_hire', completed_at: null,                    order: 1, journey: { id: 'j3', current_week: 12, start_date: '2025-12-01', employee: { id: 'e3', full_name: 'James Wilson', department: 'Sales',       avatar_url: 'https://i.pravatar.cc/150?u=james'  } } },
+]
+
+const MOCK_JOURNEYS = [
+  { id: 'j1', employee: { id: 'e1', full_name: 'Marcus Reed',  department: 'Product'     } },
+  { id: 'j2', employee: { id: 'e2', full_name: 'Priya Mehta',  department: 'Engineering' } },
+  { id: 'j3', employee: { id: 'e3', full_name: 'James Wilson', department: 'Sales'       } },
+]
+
 export default async function HRTasksPage() {
-  const supabase = createSupabaseAdmin()
+  const supabase = await createSupabaseServer()
 
-  const { data: tasks } = await supabase
-    .from('journey_tasks')
-    .select('*, journey:journeys!journey_id(employee:profiles!employee_id(full_name))')
-    .order('week', { ascending: true })
+  const [tasksRes, journeysRes] = await Promise.all([
+    supabase
+      .from('journey_tasks')
+      .select(`
+        id, title, description, week, status, assigned_to_role, completed_at, order,
+        journey:journeys!journey_id(
+          id, current_week, start_date,
+          employee:profiles!employee_id(id, full_name, department, avatar_url)
+        )
+      `)
+      .order('week', { ascending: true }),
+    supabase
+      .from('journeys')
+      .select('id, employee:profiles!employee_id(id, full_name, department)')
+      .eq('status', 'active'),
+  ])
 
-  // Mock tasks for 2026 High-Fidelity demo if DB is empty
-  const hrTasks = (tasks && tasks.length > 0) ? tasks.map(t => ({
-    ...t,
-    title: `${(t.journey as any)?.employee?.full_name}: ${t.title}`
-  })) : [
-    { id: 'h1', title: 'Marcus Reed: Submit Hardware Request', description: 'Technical setup for new Senior Designer.', week: 1, status: 'completed', assigned_to_role: 'hr' },
-    { id: 'h2', title: 'Priya Mehta: Benefits Enrollment', description: 'Verify health insurance and 401k setup.', week: 2, status: 'pending', assigned_to_role: 'hr' },
-    { id: 'h3', title: 'Sarah Kim: Culture Workshop Invite', description: 'Send invitation for the monthly culture alignment session.', week: 1, status: 'completed', assigned_to_role: 'hr' },
-    { id: 'h4', title: 'James Wilson: Final Exit Interview (Onboarding)', description: 'Gather qualitative data on the 90-day journey.', week: 12, status: 'pending', assigned_to_role: 'hr' },
-    { id: 'h5', title: 'Liam Evans: Assign Peer Buddy', description: 'Cross-department buddy matching for social integration.', week: 1, status: 'pending', assigned_to_role: 'hr' },
-  ]
+  const tasks    = (tasksRes.data && tasksRes.data.length > 0)    ? tasksRes.data    : MOCK_TASKS
+  const journeys = (journeysRes.data && journeysRes.data.length > 0) ? journeysRes.data : MOCK_JOURNEYS
 
-  const completedCount = hrTasks.filter(t => t.status === 'completed').length
-  const pendingCount = hrTasks.length - completedCount
-
-  return (
-    <div className="container" style={{ paddingTop: '20px', paddingBottom: '60px' }}>
-      <header className="db-header" style={{ marginBottom: '40px' }}>
-        <div>
-          <span className="sec-tag">Operations Hub</span>
-          <h1 className="hero-h1" style={{ fontSize: '32px', marginBottom: '8px' }}>Global Task Manager</h1>
-          <p className="hero-sub" style={{ fontSize: '15px', marginBottom: 0 }}>
-            Monitor and manage all onboarding tasks across the organization.
-          </p>
-        </div>
-        <div className="db-header-actions">
-           <button className="btn btn-primary btn-sm">
-             <i className="fa-solid fa-plus"></i> Bulk Assign
-           </button>
-        </div>
-      </header>
-
-      <div className="db-row col2-1">
-        <div className="db-card">
-          <div className="db-card-hd">
-            <h3><i className="fa-solid fa-list-ul" style={{ color: 'var(--blue)', marginRight: '8px' }}></i> Active Task Pipeline</h3>
-          </div>
-          <div className="db-card-bd">
-            <TaskList tasks={hrTasks as any} />
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-           <div className="db-card" style={{ padding: '24px' }}>
-              <div className="db-card-hd" style={{ marginBottom: '16px' }}>
-                 <h3><i className="fa-solid fa-chart-line" style={{ color: 'var(--cyan)', marginRight: '8px' }}></i> Task Velocity</h3>
-              </div>
-              <div className="db-card-bd">
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '13px', color: 'var(--text3)' }}>Completed</span>
-                    <span style={{ fontSize: '13px', fontWeight: 700 }}>{completedCount}</span>
-                 </div>
-                 <div className="hce-prog" style={{ height: '8px', marginBottom: '20px' }}>
-                    <div className="hce-bar" style={{ width: `${(completedCount/hrTasks.length)*100}%` }}></div>
-                 </div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '13px', color: 'var(--text3)' }}>Pending Action</span>
-                    <span style={{ fontSize: '13px', fontWeight: 700 }}>{pendingCount}</span>
-                 </div>
-                 <div className="hce-prog" style={{ height: '8px' }}>
-                    <div className="hce-bar risk" style={{ width: `${(pendingCount/hrTasks.length)*100}%` }}></div>
-                 </div>
-              </div>
-           </div>
-
-           <div className="db-card">
-              <div className="db-card-hd">
-                 <h3><i className="fa-solid fa-filter" style={{ color: 'var(--blue)', marginRight: '8px' }}></i> Filters</h3>
-              </div>
-              <div className="db-card-bd" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                 <button className="btn btn-outline btn-sm btn-block" style={{ textAlign: 'left', justifyContent: 'flex-start' }}>Department: All</button>
-                 <button className="btn btn-outline btn-sm btn-block" style={{ textAlign: 'left', justifyContent: 'flex-start' }}>Role: HR Manager</button>
-                 <button className="btn btn-outline btn-sm btn-block" style={{ textAlign: 'left', justifyContent: 'flex-start' }}>Status: Pending</button>
-              </div>
-           </div>
-        </div>
-      </div>
-    </div>
-  )
+  return <TaskManagerClient tasks={tasks as any} journeys={journeys as any} />
 }

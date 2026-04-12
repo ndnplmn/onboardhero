@@ -13,18 +13,18 @@ interface KPICardProps {
 
 export default function KPICard({ value, label, colorClass = 'cyan', icon, trend }: KPICardProps) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }}
-      className={`kpi-box ${colorClass}`}
+      whileHover={{ y: -2 }}
+      className="kpi-card"
     >
-      {icon && <div className="kpi-icon-sm"><i className={icon}></i></div>}
-      <div className="kpi-n">{value}</div>
-      <div className="kpi-l">{label}</div>
+      {icon && <div className={`kpi-icon ${colorClass}`}><i className={icon} /></div>}
+      <div className="kpi-value">{value}</div>
+      <div className="kpi-label">{label}</div>
       {trend && (
-        <div className={`kpi-trend ${trend.isDown ? 'down' : ''}`}>
-          <i className={`fa-solid fa-arrow-trend-${trend.isDown ? 'down' : 'up'}`}></i>
+        <div className={`kpi-trend ${trend.isDown ? 'down' : 'up'}`}>
+          <i className={`fa-solid fa-arrow-trend-${trend.isDown ? 'down' : 'up'}`} />
           {trend.value}
         </div>
       )}

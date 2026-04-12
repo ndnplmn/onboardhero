@@ -1,24 +1,25 @@
-import { createSupabaseAdmin } from '@/lib/db/supabase-server'
+import { createSupabaseServer } from '@/lib/db/supabase-server'
 
 export async function getHRDashboardData() {
-  const supabase = createSupabaseAdmin()
+  const supabase = await createSupabaseServer()
 
-  const [journeysRes, tasksRes, notifsRes] = await Promise.all([
+  const [journeysRes, tasksRes, profilesRes] = await Promise.all([
     supabase
       .from('journeys')
-      .select('*, employee:profiles!employee_id(*), manager:profiles!manager_id(*)')
+      .select('id, status, current_week, risk_score, start_date, employee:profiles!employee_id(id, full_name, department, avatar_url), manager:profiles!manager_id(id, full_name)')
       .order('created_at', { ascending: false }),
-    supabase.from('journey_tasks').select('status'),
     supabase
-      .from('notifications')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(10),
+      .from('journey_tasks')
+      .select('journey_id, status, week, assigned_to_role'),
+    supabase
+      .from('profiles')
+      .select('id, role, department, active')
+      .eq('active', true),
   ])
 
   return {
-    journeys: journeysRes.data || [],
-    tasks: tasksRes.data || [],
-    notifications: notifsRes.data || [],
+    journeys:  journeysRes.data  || [],
+    tasks:     tasksRes.data     || [],
+    profiles:  profilesRes.data  || [],
   }
 }
