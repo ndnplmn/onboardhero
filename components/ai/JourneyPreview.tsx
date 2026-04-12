@@ -3,6 +3,7 @@
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
 
 const transport = new DefaultChatTransport({
   api: '/api/generate-journey',
@@ -13,6 +14,7 @@ function isToolPart(part: { type: string }): part is { type: string; toolName: s
 }
 
 export default function JourneyPreview({ onClose }: { onClose: () => void }) {
+  const router = useRouter()
   const { messages, sendMessage, status, error } = useChat({ transport })
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -133,9 +135,18 @@ export default function JourneyPreview({ onClose }: { onClose: () => void }) {
         </div>
 
         {templateSaved ? (
-          <button className="btn btn-primary btn-block" onClick={onClose}>
-            Done
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>
+              Close
+            </button>
+            <button
+              className="btn btn-primary"
+              style={{ flex: 2 }}
+              onClick={() => { onClose(); router.push('/hr/journeys') }}
+            >
+              <i className="fa-solid fa-route" /> View in Journey Builder
+            </button>
+          </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '8px' }}>
             <input
