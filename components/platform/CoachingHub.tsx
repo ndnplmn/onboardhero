@@ -42,7 +42,7 @@ export default function CoachingHub() {
   const router = useRouter()
 
   return (
-    <div className="db-card">
+    <div className="db-card" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <div className="db-card-hd">
         <h3>
           <i className="fa-solid fa-graduation-cap" style={{ color: 'var(--blue)' }} />
@@ -51,7 +51,7 @@ export default function CoachingHub() {
         <span className="badge-ai">Proactive</span>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
         {RECOMMENDATIONS.map((rec, i) => (
           <button
             key={rec.id}

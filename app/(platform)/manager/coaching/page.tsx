@@ -13,15 +13,7 @@ export default async function ManagerCoaching() {
 
   if (!user) redirect('/login')
 
-  // Verify manager role (admin client bypasses RLS)
   const admin = createSupabaseAdmin()
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || profile.role !== 'manager') redirect('/')
 
   // Fetch team journeys (admin client to avoid RLS issues with joined profiles)
   const { data: journeys } = await admin

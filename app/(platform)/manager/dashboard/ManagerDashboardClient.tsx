@@ -55,24 +55,33 @@ export default function ManagerDashboardClient({
 
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 
-        {/* Row 1 — KPIs */}
-        <div className="kpi-row">
-          <KPICard value={journeys.length}        label="Active Hires"      colorClass="cyan"  icon="fa-solid fa-user-group" />
-          <KPICard value={upcomingCheckIns.length} label="Pending Check-ins" colorClass="blue"  icon="fa-solid fa-calendar-check" />
-          <KPICard value={atRiskCount}             label="At Risk"           colorClass="red"   icon="fa-solid fa-triangle-exclamation" />
-          <KPICard value="4.8/5"                   label="Team Feedback"     colorClass="green" icon="fa-solid fa-face-smile" />
+        {/* Row 1 — 4 KPIs */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 14,
+        }}>
+          <KPICard value={journeys.length}         label="Active Hires"      colorClass="cyan"  icon="fa-solid fa-user-group" />
+          <KPICard value={upcomingCheckIns.length}  label="Pending Check-ins" colorClass="blue"  icon="fa-solid fa-calendar-check" />
+          <KPICard value={atRiskCount}              label="At Risk"           colorClass="red"   icon="fa-solid fa-triangle-exclamation" />
+          <KPICard value="4.8/5"                    label="Team Feedback"     colorClass="green" icon="fa-solid fa-face-smile" />
         </div>
 
-        {/* Row 2 — Main 2/3 + Side 1/3 */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--gap-standard)', alignItems: 'start' }}>
+        {/* Row 2 — Main 2/3 + Side 1/3, columnas de igual altura */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr',
+          gap: 'var(--gap-standard)',
+          alignItems: 'stretch',
+        }}>
 
-          {/* Main column */}
-          <div className="db-col-main">
+          {/* Columna principal */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)', minWidth: 0 }}>
 
             {/* Team integration status */}
             <div className="db-card">
               <div className="db-card-hd">
-                <h3><i className="fa-solid fa-users" style={{ color: 'var(--blue)' }} /> Team Integration Status</h3>
+                <h3><i className="fa-solid fa-users" style={{ color: 'var(--blue)' }} aria-hidden="true" /> Team Integration Status</h3>
                 <span className="badge-ai">Live Pulse</span>
               </div>
               <div className="db-card-bd">
@@ -98,16 +107,18 @@ export default function ManagerDashboardClient({
               </div>
             )}
 
-            <CoachingHub />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <CoachingHub />
+            </div>
           </div>
 
-          {/* Side column */}
-          <div className="db-col-side">
+          {/* Columna lateral */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)', minWidth: 0 }}>
 
-            {/* Progress ring card */}
+            {/* Progress ring */}
             <div className="db-card">
               <div className="db-card-hd">
-                <h3><i className="fa-solid fa-chart-line" style={{ color: 'var(--blue)' }} /> Onboarding Progress</h3>
+                <h3><i className="fa-solid fa-chart-line" style={{ color: 'var(--blue)' }} aria-hidden="true" /> Onboarding Progress</h3>
                 <span className="badge-ai">Predictive</span>
               </div>
               <div className="db-card-bd" style={{ display: 'flex', justifyContent: 'center', padding: '24px 20px' }}>
@@ -119,7 +130,9 @@ export default function ManagerDashboardClient({
             <IntegrationMetrics metrics={mockIntegrationMetrics} />
             <IntegrationRadar />
             <MilestonesList />
-            <ManagerNotes />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <ManagerNotes />
+            </div>
           </div>
         </div>
 

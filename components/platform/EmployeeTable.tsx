@@ -43,7 +43,7 @@ export default function EmployeeTable({ onInviteNew }: EmployeeTableProps) {
   const router = useRouter()
 
   return (
-    <div className="pro-max-card" style={{ padding: '0px', overflow: 'hidden' }}>
+    <div className="pro-max-card" style={{ padding: '0px', overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
       <div className="db-card-hd" style={{ padding: '24px 24px 16px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <i className="fa-solid fa-users" style={{ color: 'var(--blue)' }} />
@@ -60,7 +60,7 @@ export default function EmployeeTable({ onInviteNew }: EmployeeTableProps) {
           </button>
         </div>
       </div>
-      <div className="db-card-bd" style={{ padding: 0 }}>
+      <div className="db-card-bd" style={{ padding: 0, flex: 1, overflow: 'auto' }}>
         <table className="emp-tbl">
           <thead>
             <tr>

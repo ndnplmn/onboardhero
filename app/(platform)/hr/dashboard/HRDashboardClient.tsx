@@ -93,56 +93,77 @@ export default function HRDashboardClient({
 
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 
-        {/* Row 1 — KPIs */}
-        <div className="kpi-row">
+        {/* Row 1 — 5 KPIs */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: 14,
+        }}>
           <div className="kpi-card">
-            <div className="kpi-icon cyan"><i className="fa-solid fa-users" /></div>
+            <div className="kpi-icon cyan"><i className="fa-solid fa-users" aria-hidden="true" /></div>
             <div className="kpi-value">{kpis.totalWorkforce.toLocaleString()}</div>
             <div className="kpi-label">Total Workforce</div>
           </div>
           <div className="kpi-card">
-            <div className="kpi-icon blue"><i className="fa-solid fa-user-tie" /></div>
+            <div className="kpi-icon blue"><i className="fa-solid fa-user-tie" aria-hidden="true" /></div>
             <div className="kpi-value">{kpis.newHires}</div>
             <div className="kpi-label">Active New Hires</div>
           </div>
           <div className="kpi-card">
-            <div className="kpi-icon green"><i className="fa-solid fa-circle-check" /></div>
+            <div className="kpi-icon green"><i className="fa-solid fa-circle-check" aria-hidden="true" /></div>
             <div className="kpi-value">{kpis.completedJourneys}</div>
             <div className="kpi-label">Completed Journeys</div>
           </div>
           <div className="kpi-card">
-            <div className="kpi-icon amber"><i className="fa-solid fa-triangle-exclamation" /></div>
+            <div className="kpi-icon amber"><i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /></div>
             <div className="kpi-value">{kpis.atRisk}</div>
             <div className="kpi-label">At-Risk Employees</div>
           </div>
           <div className="kpi-card">
-            <div className="kpi-icon aqua"><i className="fa-solid fa-list-check" /></div>
+            <div className="kpi-icon aqua"><i className="fa-solid fa-list-check" aria-hidden="true" /></div>
             <div className="kpi-value">{kpis.taskCompletionPct}%</div>
             <div className="kpi-label">Task Completion</div>
           </div>
         </div>
 
-        {/* Row 2 — Analytics belt: 3 equal-weight cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--gap-standard)' }}>
+        {/* Row 2 — Analytics belt: 3 equal-weight cards, igual altura */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr 1fr',
+          gap: 'var(--gap-standard)',
+          alignItems: 'stretch',
+        }}>
           <CompletionRateCard data={completionData} />
           <EngagementScoreCard data={engagementData} />
           <StageChecklist stages={stages} />
         </div>
 
-        {/* Row 3 — Main 2/3 + Side 1/3 */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--gap-standard)', alignItems: 'start' }}>
+        {/* Row 3 — Main 2/3 + Side 1/3, columnas de igual altura */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr',
+          gap: 'var(--gap-standard)',
+          alignItems: 'stretch',
+        }}>
+          {/* Columna principal */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
             <GlobalFrictionMap />
-            <EmployeeTable onInviteNew={() => setShowInvite(true)} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <EmployeeTable onInviteNew={() => setShowInvite(true)} />
+            </div>
           </div>
+
+          {/* Columna lateral */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
             <ActiveAlerts onScheduleCheckIn={() => router.push('/hr/alerts')} onInviteNew={() => setShowInvite(true)} />
             <CulturalResonance />
-            <TalentVelocity />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <TalentVelocity />
+            </div>
           </div>
         </div>
 
-        {/* Row 4 — Full-width bottom */}
+        {/* Row 4 — Full-width */}
         <JourneyTemplate />
 
       </div>

@@ -21,7 +21,7 @@ const FILL_COLORS: Record<string, string> = {
 
 export default function TalentVelocity() {
   return (
-    <div className="db-card" style={{ padding: '24px' }}>
+    <div className="db-card" style={{ padding: '24px', flex: 1 }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
