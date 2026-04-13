@@ -16,13 +16,17 @@ const NAV_SCHEMA = {
     { section: 'Content', items: [
       { icon: 'fa-solid fa-wand-magic-sparkles', label: 'Content Studio', href: '/hr/content' },
       { icon: 'fa-solid fa-file-circle-check',   label: 'Forms',          href: '/hr/forms'   },
+      { icon: 'fa-solid fa-book-open',           label: 'Company Wiki',   href: '/hr/wiki'    },
     ]},
     { section: 'Analytics', items: [
       { icon: 'fa-solid fa-chart-bar', label: 'Reports', href: '/hr/analytics' },
       { icon: 'fa-solid fa-bell',      label: 'Alerts',  href: '/hr/alerts'    },
+      { icon: 'fa-solid fa-calendar',  label: 'Calendar',href: '/hr/calendar'  },
     ]},
-    { section: 'Settings', items: [
-      { icon: 'fa-solid fa-gear', label: 'Settings', href: '/hr/settings' },
+    { section: 'Account', items: [
+      { icon: 'fa-solid fa-robot',       label: 'AI Assistant', href: '/hr/chat'    },
+      { icon: 'fa-solid fa-user-circle', label: 'My Profile',   href: '/hr/profile' },
+      { icon: 'fa-solid fa-gear',        label: 'Settings',     href: '/hr/settings'},
     ]},
   ],
   manager: [
@@ -36,21 +40,31 @@ const NAV_SCHEMA = {
       { icon: 'fa-solid fa-comment-dots', label: 'Feedback',     href: '/manager/feedback'  },
       { icon: 'fa-solid fa-calendar',     label: 'Calendar',     href: '/manager/calendar'  },
     ]},
+    { section: 'Resources', items: [
+      { icon: 'fa-solid fa-book-open', label: 'Company Wiki', href: '/manager/wiki' },
+      { icon: 'fa-solid fa-bell',      label: 'Alerts',       href: '/manager/alerts' },
+    ]},
+    { section: 'Account', items: [
+      { icon: 'fa-solid fa-robot',       label: 'AI Assistant', href: '/manager/chat'    },
+      { icon: 'fa-solid fa-user-circle', label: 'My Profile',   href: '/manager/profile' },
+    ]},
   ],
   new_hire: [
     { section: 'My Journey', items: [
       { icon: 'fa-solid fa-house',      label: 'Home',     href: '/hire/dashboard' },
       { icon: 'fa-solid fa-list-check', label: 'My Tasks', href: '/hire/tasks'     },
       { icon: 'fa-solid fa-file-pen',   label: 'Forms',    href: '/hire/forms'     },
+      { icon: 'fa-solid fa-calendar-days', label: 'My Schedule', href: '/hire/calendar' },
     ]},
     { section: 'Resources', items: [
-      { icon: 'fa-solid fa-book',         label: 'Company Wiki',  href: '/hire/resources/wiki'     },
+      { icon: 'fa-solid fa-book-open',    label: 'Company Wiki',  href: '/hire/resources/wiki'     },
       { icon: 'fa-solid fa-address-book', label: 'Key Contacts',  href: '/hire/resources/contacts' },
       { icon: 'fa-solid fa-folder-open',  label: 'Resources',     href: '/hire/resources'          },
     ]},
     { section: 'Account', items: [
-      { icon: 'fa-solid fa-user-circle', label: 'My Profile',    href: '/hire/profile' },
-      { icon: 'fa-solid fa-robot',       label: 'AI Assistant',  href: '/hire/chat'    },
+      { icon: 'fa-solid fa-user-circle', label: 'My Profile',   href: '/hire/profile' },
+      { icon: 'fa-solid fa-robot',       label: 'AI Assistant', href: '/hire/chat'    },
+      { icon: 'fa-solid fa-bell',        label: 'My Alerts',    href: '/hire/alerts'  },
     ]},
   ],
 }
