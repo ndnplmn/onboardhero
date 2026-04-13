@@ -194,7 +194,7 @@ export default function SettingsClient() {
 
   return (
     <>
-      <header className="db-header">
+      <div className="db-header">
         <div className="db-header-left">
           <h1>Settings</h1>
           <p>Configure your organization&apos;s onboarding platform and preferences.</p>
@@ -204,14 +204,15 @@ export default function SettingsClient() {
             className="btn btn-primary btn-sm btn-glow"
             onClick={handleSave}
             disabled={isPending}
+            aria-label="Save settings changes"
           >
             {isPending
-              ? <><i className="fa-solid fa-spinner fa-spin" /> Saving...</>
-              : <><i className="fa-solid fa-floppy-disk" /> Save Changes</>
+              ? <><i className="fa-solid fa-spinner fa-spin" aria-hidden="true" /> Saving...</>
+              : <><i className="fa-solid fa-floppy-disk" aria-hidden="true" /> Save Changes</>
             }
           </button>
         </div>
-      </header>
+      </div>
 
       <div className="db-body">
         <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 20, alignItems: 'start' }}>

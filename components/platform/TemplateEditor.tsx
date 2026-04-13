@@ -48,7 +48,7 @@ export default function TemplateEditor({ onClose }: { onClose: () => void }) {
     <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box" style={{ maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto' }}>
         <button className="modal-close" onClick={onClose}><i className="fa-solid fa-xmark"></i></button>
-        <h2 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '20px' }}>Create Journey Template</h2>
+        <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: '20px' }}>Create Journey Template</h2>
         {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-row two">
@@ -61,7 +61,7 @@ export default function TemplateEditor({ onClose }: { onClose: () => void }) {
           </div>
 
           <div style={{ marginTop: '24px' }}>
-            <h3 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1rem', marginBottom: '16px' }}>Tasks by Week</h3>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', marginBottom: '16px' }}>Tasks by Week</h3>
             {Array.from({ length: 12 }, (_, i) => i + 1).map((week) => {
               const weekTasks = tasks.filter(t => t.week === week)
               return (

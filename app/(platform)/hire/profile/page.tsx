@@ -7,9 +7,29 @@ export default async function ProfilePage() {
   const user = await getUser()
 
   return (
-    <div style={{ padding: '32px', maxWidth: '600px' }}>
-      <h1 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '24px' }}>My Profile</h1>
-      <ProfileForm profile={user} />
-    </div>
+    <>
+      <div className="db-header">
+        <div className="db-header-left">
+          <h1>
+            <i
+              className="fa-solid fa-user-circle"
+              style={{
+                marginRight: 8,
+                background: 'var(--grad)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+              aria-hidden="true"
+            />
+            My Profile
+          </h1>
+          <p>Update your personal information and preferences.</p>
+        </div>
+      </div>
+      <div className="db-body" style={{ maxWidth: 640 }}>
+        <ProfileForm profile={user} />
+      </div>
+    </>
   )
 }

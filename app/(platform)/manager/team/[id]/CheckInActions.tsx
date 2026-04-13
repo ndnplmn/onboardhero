@@ -54,13 +54,14 @@ export default function CheckInActions({ checkIns }: CheckInActionsProps) {
   if (checkIns.length === 0) return null
 
   return (
-    <div style={{ marginTop: '32px' }}>
-      <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.2rem', marginBottom: '16px' }}>
-        <i className="fa-solid fa-calendar-check" style={{ marginRight: '8px' }}></i>
-        Check-ins
-      </h2>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div className="db-card">
+      <div className="db-card-hd">
+        <h3>
+          <i className="fa-solid fa-calendar-check" style={{ color: 'var(--blue)' }} aria-hidden="true" />
+          {' '}Check-ins
+        </h3>
+      </div>
+      <div className="db-card-bd" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {checkIns.map((ci) => {
           const isCompleted = !!ci.completed_date
           const isOverdue = !isCompleted && ci.scheduled_date < today
@@ -181,3 +182,4 @@ export default function CheckInActions({ checkIns }: CheckInActionsProps) {
     </div>
   )
 }
+

@@ -424,6 +424,8 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .kpi-icon.amber  { background: var(--amber-bg);    color: var(--amber); }
 .kpi-icon.red    { background: var(--red-bg);      color: var(--red); }
 .kpi-icon.aqua   { background: var(--aqua-light);  color: var(--aqua); }
+.kpi-icon.violet { background: color-mix(in srgb, var(--violet) 12%, transparent); color: var(--violet); }
+.kpi-icon.purple { background: color-mix(in srgb, var(--purple) 12%, transparent); color: var(--purple); }
 .kpi-value { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
 .kpi-label { font-size: 11px; color: var(--text3); font-weight: 600; }
 

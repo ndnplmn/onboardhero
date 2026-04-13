@@ -474,30 +474,30 @@ export default function TaskManagerClient({ tasks, journeys }: Props) {
   return (
     <>
       {/* Header */}
-      <header className="db-header">
+      <div className="db-header">
         <div className="db-header-left">
           <h1>Task Manager</h1>
           <p>Monitor and manage all onboarding tasks across the organization.</p>
         </div>
         <div className="db-header-actions">
-          <button className="btn btn-outline btn-sm" onClick={() => exportTasksCSV(filtered)}>
-            <i className="fa-solid fa-download" /> Export
+          <button className="btn btn-outline btn-sm" onClick={() => exportTasksCSV(filtered)} aria-label="Export tasks as CSV">
+            <i className="fa-solid fa-download" aria-hidden="true" /> Export
           </button>
-          <button className="btn btn-outline btn-sm" onClick={() => setShowCreateTask(true)}>
-            <i className="fa-solid fa-plus" /> Add Task
+          <button className="btn btn-outline btn-sm" onClick={() => setShowCreateTask(true)} aria-label="Add a new task">
+            <i className="fa-solid fa-plus" aria-hidden="true" /> Add Task
           </button>
           {selected.length > 0 && (
-            <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowBulkComplete(true)}>
-              <i className="fa-solid fa-circle-check" /> Complete Selected ({selected.length})
+            <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowBulkComplete(true)} aria-label={`Complete ${selected.length} selected tasks`}>
+              <i className="fa-solid fa-circle-check" aria-hidden="true" /> Complete Selected ({selected.length})
             </button>
           )}
           {selected.length === 0 && (
-            <button className="btn btn-primary btn-sm btn-glow" onClick={selectAllPending}>
-              <i className="fa-solid fa-list-check" /> Bulk Select
+            <button className="btn btn-primary btn-sm btn-glow" onClick={selectAllPending} aria-label="Select all pending tasks">
+              <i className="fa-solid fa-list-check" aria-hidden="true" /> Bulk Select
             </button>
           )}
         </div>
-      </header>
+      </div>
 
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 
@@ -511,12 +511,10 @@ export default function TaskManagerClient({ tasks, journeys }: Props) {
           ].map(k => (
             <div key={k.label} className="kpi-card">
               <div className={`kpi-icon ${k.colorClass}`}>
-                <i className={k.icon} />
+                <i className={k.icon} aria-hidden="true" />
               </div>
-              <div className="kpi-body">
-                <div className="kpi-value">{k.value}</div>
-                <div className="kpi-label">{k.label}</div>
-              </div>
+              <div className="kpi-value">{k.value}</div>
+              <div className="kpi-label">{k.label}</div>
             </div>
           ))}
         </div>

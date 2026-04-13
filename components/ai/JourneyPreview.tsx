@@ -52,7 +52,7 @@ export default function JourneyPreview({ onClose }: { onClose: () => void }) {
         <button className="modal-close" onClick={onClose}>
           <i className="fa-solid fa-xmark"></i>
         </button>
-        <h2 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '4px' }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: '4px' }}>
           <i className="fa-solid fa-route" style={{ marginRight: '8px', background: 'var(--grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}></i>
           AI Journey Generator
         </h2>

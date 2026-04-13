@@ -41,17 +41,17 @@ export default function ManagerDashboardClient({
 
   return (
     <>
-      <header className="db-header">
+      <div className="db-header">
         <div className="db-header-left">
           <h1>Manager Overview</h1>
           <p>Monitor your team's integration progress and upcoming milestones.</p>
         </div>
         <div className="db-header-actions">
-          <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowCheckIn(true)}>
-            <i className="fa-solid fa-calendar-day" /> Schedule Check-in
+          <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowCheckIn(true)} aria-label="Schedule a check-in with a new hire">
+            <i className="fa-solid fa-calendar-day" aria-hidden="true" /> Schedule Check-in
           </button>
         </div>
-      </header>
+      </div>
 
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 

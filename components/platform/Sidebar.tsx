@@ -8,14 +8,18 @@ import Link from 'next/link'
 const NAV_SCHEMA = {
   hr: [
     { section: 'Main', items: [
-      { icon: 'fa-solid fa-gauge-high', label: 'Dashboard', href: '/hr/dashboard' },
-      { icon: 'fa-solid fa-users', label: 'All Employees', href: '/hr/employees' },
-      { icon: 'fa-solid fa-route', label: 'Journey Builder', href: '/hr/journeys' },
-      { icon: 'fa-solid fa-list-check', label: 'Task Manager', href: '/hr/tasks' },
+      { icon: 'fa-solid fa-gauge-high',   label: 'Dashboard',      href: '/hr/dashboard'  },
+      { icon: 'fa-solid fa-users',         label: 'All Employees',  href: '/hr/employees'  },
+      { icon: 'fa-solid fa-route',         label: 'Journey Builder',href: '/hr/journeys'   },
+      { icon: 'fa-solid fa-list-check',    label: 'Task Manager',   href: '/hr/tasks'      },
+    ]},
+    { section: 'Content', items: [
+      { icon: 'fa-solid fa-wand-magic-sparkles', label: 'Content Studio', href: '/hr/content' },
+      { icon: 'fa-solid fa-file-circle-check',   label: 'Forms',          href: '/hr/forms'   },
     ]},
     { section: 'Analytics', items: [
       { icon: 'fa-solid fa-chart-bar', label: 'Reports', href: '/hr/analytics' },
-      { icon: 'fa-solid fa-bell', label: 'Alerts', href: '/hr/alerts' },
+      { icon: 'fa-solid fa-bell',      label: 'Alerts',  href: '/hr/alerts'    },
     ]},
     { section: 'Settings', items: [
       { icon: 'fa-solid fa-gear', label: 'Settings', href: '/hr/settings' },
@@ -23,25 +27,30 @@ const NAV_SCHEMA = {
   ],
   manager: [
     { section: 'Overview', items: [
-      { icon: 'fa-solid fa-gauge-high', label: 'Dashboard', href: '/manager/dashboard' },
-      { icon: 'fa-solid fa-person', label: 'My New Hires', href: '/manager/hires' },
-      { icon: 'fa-solid fa-list-check', label: 'My Tasks', href: '/manager/tasks' },
+      { icon: 'fa-solid fa-gauge-high', label: 'Dashboard',    href: '/manager/dashboard' },
+      { icon: 'fa-solid fa-person',     label: 'My New Hires', href: '/manager/hires'     },
+      { icon: 'fa-solid fa-list-check', label: 'My Tasks',     href: '/manager/tasks'     },
     ]},
-    { section: 'Actions', items: [
-      { icon: 'fa-solid fa-comment-dots', label: 'Feedback', href: '/manager/feedback' },
-      { icon: 'fa-solid fa-calendar', label: 'Calendar', href: '/manager/calendar' },
+    { section: 'Coaching', items: [
+      { icon: 'fa-solid fa-brain',        label: 'Coaching Hub', href: '/manager/coaching'  },
+      { icon: 'fa-solid fa-comment-dots', label: 'Feedback',     href: '/manager/feedback'  },
+      { icon: 'fa-solid fa-calendar',     label: 'Calendar',     href: '/manager/calendar'  },
     ]},
   ],
   new_hire: [
     { section: 'My Journey', items: [
-      { icon: 'fa-solid fa-house', label: 'Home', href: '/hire/dashboard' },
-      { icon: 'fa-solid fa-calendar-week', label: 'Week 1', href: '/hire/dashboard?week=week1' },
-      { icon: 'fa-solid fa-calendar-week', label: 'Week 2', href: '/hire/dashboard?week=week2' },
-      { icon: 'fa-solid fa-calendar-week', label: 'Week 3', href: '/hire/dashboard?week=week3' },
+      { icon: 'fa-solid fa-house',      label: 'Home',     href: '/hire/dashboard' },
+      { icon: 'fa-solid fa-list-check', label: 'My Tasks', href: '/hire/tasks'     },
+      { icon: 'fa-solid fa-file-pen',   label: 'Forms',    href: '/hire/forms'     },
     ]},
     { section: 'Resources', items: [
-      { icon: 'fa-solid fa-book', label: 'Company Wiki', href: '/hire/resources/wiki' },
-      { icon: 'fa-solid fa-address-book', label: 'Key Contacts', href: '/hire/resources/contacts' },
+      { icon: 'fa-solid fa-book',         label: 'Company Wiki',  href: '/hire/resources/wiki'     },
+      { icon: 'fa-solid fa-address-book', label: 'Key Contacts',  href: '/hire/resources/contacts' },
+      { icon: 'fa-solid fa-folder-open',  label: 'Resources',     href: '/hire/resources'          },
+    ]},
+    { section: 'Account', items: [
+      { icon: 'fa-solid fa-user-circle', label: 'My Profile',    href: '/hire/profile' },
+      { icon: 'fa-solid fa-robot',       label: 'AI Assistant',  href: '/hire/chat'    },
     ]},
   ],
 }
@@ -94,27 +103,31 @@ export default function Sidebar({ user }: SidebarProps) {
         {sections.map((sec: any) => (
           <div key={sec.section}>
             <div className="sb-nav-sec">{sec.section}</div>
-            {sec.items.map((item: any) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`sb-nav-item${pathname === item.href ? ' active' : ''}`}
-              >
-                <i className={item.icon}></i>
-                <span>{item.label}</span>
-              </Link>
-            ))}
+            {sec.items.map((item: any) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`sb-nav-item${isActive ? ' active' : ''}`}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <i className={item.icon} aria-hidden="true"></i>
+                  <span>{item.label}</span>
+                </Link>
+              )
+            })}
           </div>
         ))}
       </nav>
       <div className="sb-user">
-        <img src={user.avatar_url || `https://i.pravatar.cc/34?u=${user.id}`} alt="user" />
+        <img src={user.avatar_url || `https://i.pravatar.cc/34?u=${user.id}`} alt={user.full_name} />
         <div>
           <strong>{user.full_name}</strong>
           <span>{roleLabel[currentRole]}</span>
         </div>
-        <button className="sb-logout" onClick={handleLogout} title="Log out">
-          <i className="fa-solid fa-arrow-right-from-bracket"></i>
+        <button className="sb-logout" onClick={handleLogout} aria-label="Log out">
+          <i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
         </button>
       </div>
     </aside>

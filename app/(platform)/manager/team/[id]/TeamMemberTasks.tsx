@@ -60,10 +60,16 @@ export default function TeamMemberTasks({ tasks, currentWeek }: TeamMemberTasksP
   }
 
   return (
-    <div style={{ marginTop: '32px' }}>
-      <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.2rem', marginBottom: '16px' }}>
-        Tasks ({completedTasks}/{totalTasks} completed — {progress}%)
-      </h2>
+    <div className="db-card">
+      <div className="db-card-hd">
+        <h3>
+          <i className="fa-solid fa-list-check" style={{ color: 'var(--blue)' }} aria-hidden="true" /> Tasks
+        </h3>
+        <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>
+          {completedTasks}/{totalTasks} · {progress}%
+        </span>
+      </div>
+      <div className="db-card-bd" style={{ paddingTop: 0 }}>
       {Array.from({ length: 12 }, (_, i) => i + 1).map((week) => {
         const weekTasks = tasks.filter((t) => t.week === week)
         if (weekTasks.length === 0) return null
@@ -88,10 +94,11 @@ export default function TeamMemberTasks({ tasks, currentWeek }: TeamMemberTasksP
               return (
                 <div key={t.id}>
                   <div
-                    className="hc-emp"
                     style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      padding: '10px 0',
+                      borderBottom: '1px solid var(--border)',
                       opacity: isCompleted ? 0.6 : 1,
-                      alignItems: 'center',
                     }}
                   >
                     {/* Toggle button for manager tasks, static icon for others */}
@@ -122,9 +129,11 @@ export default function TeamMemberTasks({ tasks, currentWeek }: TeamMemberTasksP
                       ></i>
                     )}
 
-                    <div className="hce-info" style={{ flex: 1 }}>
-                      <strong>{t.title}</strong>
-                      <span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <strong style={{ display: 'block', fontSize: 13, fontWeight: 700, color: isCompleted ? 'var(--text3)' : 'var(--text)', textDecoration: isCompleted ? 'line-through' : 'none', textDecorationColor: 'var(--text3)' }}>
+                        {t.title}
+                      </strong>
+                      <span style={{ fontSize: 11, color: 'var(--text3)' }}>
                         {t.assigned_to_role === 'new_hire' ? 'New Hire' : t.assigned_to_role === 'manager' ? 'Manager' : 'HR'}
                       </span>
                     </div>
@@ -225,6 +234,7 @@ export default function TeamMemberTasks({ tasks, currentWeek }: TeamMemberTasksP
           </div>
         )
       })}
+      </div>
     </div>
   )
 }

@@ -84,13 +84,12 @@ export default function TasksClient({ tasks, kpis, breakdown }: TasksClientProps
 
   return (
     <>
-      <header className="db-header">
+      <div className="db-header">
         <div className="db-header-left">
-          <span className="sec-tag">Productivity Hub</span>
           <h1>My Tasks</h1>
           <p>Track and manage your onboarding-related actions and follow-ups.</p>
         </div>
-      </header>
+      </div>
 
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 

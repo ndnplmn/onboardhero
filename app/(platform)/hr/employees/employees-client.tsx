@@ -190,12 +190,10 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
           ].map(k => (
             <div key={k.label} className="kpi-card">
               <div className={`kpi-icon ${k.colorClass}`}>
-                <i className={k.icon} />
+                <i className={k.icon} aria-hidden="true" />
               </div>
-              <div className="kpi-body">
-                <div className="kpi-value">{k.value}</div>
-                <div className="kpi-label">{k.label}</div>
-              </div>
+              <div className="kpi-value">{k.value}</div>
+              <div className="kpi-label">{k.label}</div>
             </div>
           ))}
         </div>

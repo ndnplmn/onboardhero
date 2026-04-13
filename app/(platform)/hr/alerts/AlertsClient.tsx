@@ -148,7 +148,7 @@ export default function AlertsClient({ atRisk, overdueCheckIns, notifications }:
   return (
     <>
       {/* Header */}
-      <header className="db-header">
+      <div className="db-header">
         <div className="db-header-left">
           <h1>Active Alerts</h1>
           <p>Critical risks, overdue check-ins, and system notifications across all journeys.</p>
@@ -160,24 +160,26 @@ export default function AlertsClient({ atRisk, overdueCheckIns, notifications }:
               borderRadius: 100, background: 'var(--red-bg)', color: 'var(--red)',
               border: '1px solid rgba(239,68,68,0.2)',
             }}>
-              <i className="fa-solid fa-bell" style={{ marginRight: 5 }} />
+              <i className="fa-solid fa-bell" style={{ marginRight: 5 }} aria-hidden="true" />
               {unreadNotifs} unread
             </span>
           )}
           <button
             className="btn btn-outline btn-sm"
             onClick={() => setShowSettings(true)}
+            aria-label="Open alert settings"
           >
-            <i className="fa-solid fa-sliders" /> Settings
+            <i className="fa-solid fa-sliders" aria-hidden="true" /> Settings
           </button>
           <button
             className="btn btn-primary btn-sm btn-glow"
             onClick={handleDeepScan}
+            aria-label="Run a deep risk scan"
           >
-            <i className="fa-solid fa-bolt" /> Run Deep Scan
+            <i className="fa-solid fa-bolt" aria-hidden="true" /> Run Deep Scan
           </button>
         </div>
-      </header>
+      </div>
 
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 
@@ -216,12 +218,10 @@ export default function AlertsClient({ atRisk, overdueCheckIns, notifications }:
           ].map(k => (
             <div key={k.label} className="kpi-card">
               <div className={`kpi-icon ${k.colorClass}`}>
-                <i className={k.icon} />
+                <i className={k.icon} aria-hidden="true" />
               </div>
-              <div className="kpi-body">
-                <div className="kpi-value">{k.value}</div>
-                <div className="kpi-label">{k.label}</div>
-              </div>
+              <div className="kpi-value">{k.value}</div>
+              <div className="kpi-label">{k.label}</div>
             </div>
           ))}
         </div>

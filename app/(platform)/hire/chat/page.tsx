@@ -4,12 +4,29 @@ export const dynamic = 'force-dynamic'
 
 export default function ChatPage() {
   return (
-    <div>
-      <div style={{ padding: '32px 32px 0' }}>
-        <h1 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '4px' }}>AI Assistant</h1>
-        <p style={{ color: 'var(--text2)', fontSize: '0.9rem' }}>Ask me anything about your onboarding journey</p>
+    <>
+      <div className="db-header">
+        <div className="db-header-left">
+          <h1>
+            <i
+              className="fa-solid fa-robot"
+              style={{
+                marginRight: 8,
+                background: 'var(--grad)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+              aria-hidden="true"
+            />
+            AI Assistant
+          </h1>
+          <p>Ask me anything about your onboarding journey, tools, or team.</p>
+        </div>
       </div>
-      <ChatWindow />
-    </div>
+      <div className="db-body">
+        <ChatWindow />
+      </div>
+    </>
   )
 }

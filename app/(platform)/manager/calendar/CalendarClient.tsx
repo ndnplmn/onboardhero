@@ -129,18 +129,17 @@ export default function CalendarClient({ checkIns, deadlines, hirees }: Calendar
 
   return (
     <>
-      <header className="db-header">
+      <div className="db-header">
         <div className="db-header-left">
-          <span className="sec-tag">Schedule Management</span>
           <h1>Team Calendar</h1>
           <p>Oversee all onboarding check-ins, reviews, and key milestones for your team.</p>
         </div>
         <div className="db-header-actions">
-          <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowSchedule(true)}>
-            <i className="fa-solid fa-calendar-plus" /> Schedule Check-in
+          <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowSchedule(true)} aria-label="Schedule a new check-in">
+            <i className="fa-solid fa-calendar-plus" aria-hidden="true" /> Schedule Check-in
           </button>
         </div>
-      </header>
+      </div>
 
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 

@@ -216,13 +216,12 @@ export default function FeedbackClient({ feedback, kpis, categories }: FeedbackC
 
   return (
     <>
-      <header className="db-header">
+      <div className="db-header">
         <div className="db-header-left">
-          <span className="sec-tag">Sentiment Analysis</span>
           <h1>Team Feedback</h1>
           <p>Read and respond to feedback from your new hires to improve the onboarding experience.</p>
         </div>
-      </header>
+      </div>
 
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 

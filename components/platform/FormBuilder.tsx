@@ -55,7 +55,7 @@ export default function FormBuilder({ onClose }: { onClose: () => void }) {
     <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box" style={{ maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
         <button className="modal-close" onClick={onClose}><i className="fa-solid fa-xmark"></i></button>
-        <h2 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '20px' }}>Create Onboarding Form</h2>
+        <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: '20px' }}>Create Onboarding Form</h2>
         {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="fg">
@@ -71,7 +71,7 @@ export default function FormBuilder({ onClose }: { onClose: () => void }) {
             <input name="department" type="text" placeholder="Leave empty for all departments" />
           </div>
 
-          <h3 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1rem', margin: '20px 0 12px' }}>Fields</h3>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', margin: '20px 0 12px' }}>Fields</h3>
 
           {fields.map((field, index) => (
             <div key={field.id} style={{

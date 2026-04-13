@@ -119,18 +119,17 @@ export default function HiresClient({ journeys, kpis, hirees }: HiresClientProps
 
   return (
     <>
-      <header className="db-header">
+      <div className="db-header">
         <div className="db-header-left">
-          <span className="sec-tag">Team Management</span>
           <h1>My New Hires</h1>
           <p>Manage and monitor the onboarding journey of your direct reports.</p>
         </div>
         <div className="db-header-actions">
-          <button className="btn btn-outline btn-sm" onClick={() => setCheckInHiree(hirees)}>
-            <i className="fa-solid fa-calendar-check" /> Schedule Check-in
+          <button className="btn btn-outline btn-sm" onClick={() => setCheckInHiree(hirees)} aria-label="Schedule a check-in with your new hires">
+            <i className="fa-solid fa-calendar-check" aria-hidden="true" /> Schedule Check-in
           </button>
         </div>
-      </header>
+      </div>
 
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 

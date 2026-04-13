@@ -41,12 +41,12 @@ export default function ProfileForm({ profile }: Props) {
           style={{ width: '80px', height: '80px', borderRadius: '50%' }}
         />
         <div>
-          <h2 style={{ fontFamily: "'Outfit', sans-serif", marginBottom: '4px' }}>{profile.full_name}</h2>
+          <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: '4px' }}>{profile.full_name}</h2>
           <span style={{ color: 'var(--text3)' }}>{profile.email}</span>
         </div>
       </div>
 
-      <h3 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1rem', marginBottom: '12px' }}>Personal Info</h3>
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', marginBottom: '12px' }}>Personal Info</h3>
       <div className="fg">
         <label>Full Name</label>
         <input name="full_name" type="text" defaultValue={profile.full_name} required />
@@ -61,7 +61,7 @@ export default function ProfileForm({ profile }: Props) {
           style={{ minHeight: '80px', padding: '10px', border: '1px solid var(--border)', borderRadius: 'var(--r)', background: 'var(--surface)', width: '100%', resize: 'vertical' }} />
       </div>
 
-      <h3 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1rem', margin: '24px 0 12px' }}>Emergency Contact</h3>
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', margin: '24px 0 12px' }}>Emergency Contact</h3>
       <div className="fg">
         <label>Name</label>
         <input name="ec_name" type="text" defaultValue={ec.name || ''} placeholder="Contact name" />
