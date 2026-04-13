@@ -1,71 +1,75 @@
-import TaskList from '@/components/platform/TaskList'
+import { redirect } from 'next/navigation'
+import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { getManagerTasksData } from '@/lib/db/queries/manager'
+import TasksClient from './TasksClient'
 
-const MOCK_MANAGER_TASKS = [
-  { id: 'mt1', title: 'Schedule Week 1 Check-in', description: 'Meet with Liam Evans for his initial integration review.', week: 1, status: 'pending', assigned_to_role: 'manager' },
-  { id: 'mt2', title: 'Review 30-Day Feedback', description: 'Analyze the 30-day survey results for Sarah Kim.', week: 4, status: 'completed', assigned_to_role: 'manager' },
-  { id: 'mt3', title: 'Assigned Buddy for Priya', description: 'Ensure Priya has a clear social buddy for the technical onboarding phase.', week: 2, status: 'pending', assigned_to_role: 'manager' },
-  { id: 'mt4', title: 'IT Setup Final Approval', description: 'Verify all hardware and software access for Marcus Reed.', week: 1, status: 'completed', assigned_to_role: 'manager' },
-  { id: 'mt5', title: 'Conduct Performance Review', description: 'Final onboarding review for James Wilson (Day 90).', week: 12, status: 'pending', assigned_to_role: 'manager' },
+export const dynamic = 'force-dynamic'
+
+// ── Mock fallback ──────────────────────────────────────────────────────────
+
+const MOCK_JOURNEYS = [
+  { id: 'j1', employee: { id: 'e1', full_name: 'Marcus Reed',  department: 'Product',     avatar_url: 'https://i.pravatar.cc/150?u=marcus' } },
+  { id: 'j2', employee: { id: 'e2', full_name: 'Priya Mehta',  department: 'Engineering', avatar_url: 'https://i.pravatar.cc/150?u=priya'  } },
+  { id: 'j3', employee: { id: 'e3', full_name: 'James Wilson', department: 'Sales',       avatar_url: 'https://i.pravatar.cc/150?u=james'  } },
 ]
 
-export default function ManagerTasksPage() {
+const MOCK_TASKS = [
+  { id: 'mt1', journey_id: 'j1', title: 'Schedule Week 1 Check-in',   description: 'Meet with Marcus for his initial integration review.',   week: 1,  status: 'pending',   assigned_to_role: 'manager', due_date: null, completed_at: null },
+  { id: 'mt2', journey_id: 'j2', title: 'Review 30-Day Feedback',     description: 'Analyze the 30-day survey results for Priya.',           week: 4,  status: 'completed', assigned_to_role: 'manager', due_date: null, completed_at: new Date(Date.now() - 2 * 86400000).toISOString() },
+  { id: 'mt3', journey_id: 'j2', title: 'Assign Buddy for Priya',     description: 'Ensure Priya has a social buddy for the technical phase.',week: 2,  status: 'pending',   assigned_to_role: 'manager', due_date: null, completed_at: null },
+  { id: 'mt4', journey_id: 'j1', title: 'IT Setup Final Approval',    description: 'Verify all hardware and software access for Marcus.',     week: 1,  status: 'completed', assigned_to_role: 'manager', due_date: null, completed_at: new Date(Date.now() - 5 * 86400000).toISOString() },
+  { id: 'mt5', journey_id: 'j3', title: 'Conduct 90-Day Review',      description: 'Final onboarding review for James Wilson (Day 90).',     week: 12, status: 'pending',   assigned_to_role: 'manager', due_date: null, completed_at: null },
+  { id: 'mt6', journey_id: 'j2', title: 'Complete Culture Workshop',  description: 'Confirm Priya attended the company culture workshop.',    week: 3,  status: 'pending',   assigned_to_role: 'manager', due_date: null, completed_at: null },
+]
+
+export default async function ManagerTasksPage() {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { tasks: dbTasks, journeys: dbJourneys } = await getManagerTasksData(user.id)
+
+  const tasks    = dbTasks.length    > 0 ? dbTasks    : MOCK_TASKS
+  const journeys = dbJourneys.length > 0 ? dbJourneys : MOCK_JOURNEYS
+
+  // ── Build journey lookup ─────────────────────────────────────────────────
+  const journeyMap: Record<string, { id: string; full_name: string; department: string; avatar_url: string | null }> = {}
+  journeys.forEach((j: any) => {
+    journeyMap[j.id] = j.employee
+  })
+
+  // ── Enrich tasks with employee info ─────────────────────────────────────
+  const enriched = tasks.map((t: any) => ({
+    ...t,
+    employee: journeyMap[t.journey_id] ?? null,
+  }))
+
+  // ── KPIs ─────────────────────────────────────────────────────────────────
+  const total     = enriched.length
+  const completed = enriched.filter((t: any) => t.status === 'completed').length
+  const pending   = enriched.filter((t: any) => t.status !== 'completed').length
+  const pct       = total > 0 ? Math.round((completed / total) * 100) : 0
+
+  // Per-employee breakdown for analytics
+  const byEmployee: Record<string, { name: string; done: number; total: number }> = {}
+  enriched.forEach((t: any) => {
+    const name = t.employee?.full_name ?? 'Unknown'
+    if (!byEmployee[name]) byEmployee[name] = { name, done: 0, total: 0 }
+    byEmployee[name].total++
+    if (t.status === 'completed') byEmployee[name].done++
+  })
+  const breakdown = Object.values(byEmployee).map(e => ({
+    name: e.name,
+    pct:  e.total > 0 ? Math.round((e.done / e.total) * 100) : 0,
+    done:  e.done,
+    total: e.total,
+  }))
+
   return (
-    <div className="container" style={{ paddingTop: '20px', paddingBottom: '60px' }}>
-      <header className="db-header" style={{ marginBottom: '40px' }}>
-        <div>
-          <span className="sec-tag">Productivity Hub</span>
-          <h1 className="hero-h1" style={{ fontSize: '32px', marginBottom: '8px' }}>My Tasks</h1>
-          <p className="hero-sub" style={{ fontSize: '15px', marginBottom: 0 }}>
-            Track and manage your onboarding-related actions and follow-ups.
-          </p>
-        </div>
-      </header>
-
-      <div className="db-row col2">
-        <div className="db-card">
-          <div className="db-card-hd">
-            <h3><i className="fa-solid fa-list-check" style={{ color: 'var(--blue)', marginRight: '8px' }}></i> Active Actions</h3>
-          </div>
-          <div className="db-card-bd">
-            <TaskList tasks={MOCK_MANAGER_TASKS} />
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div className="db-card">
-            <div className="db-card-hd">
-              <h3><i className="fa-solid fa-chart-pie" style={{ color: 'var(--cyan)', marginRight: '8px' }}></i> Task Analytics</h3>
-            </div>
-            <div className="db-card-bd">
-              <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '24px', fontWeight: 800, fontFamily: 'var(--font-display)' }}>60%</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text3)' }}>Completion Rate</div>
-                </div>
-                <div style={{ flex: 2, height: '8px', background: 'var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
-                    <div style={{ width: '60%', height: '100%', background: 'var(--grad)' }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="db-card">
-            <div className="db-card-hd">
-              <h3><i className="fa-solid fa-clock-rotate-left" style={{ color: 'var(--blue)', marginRight: '8px' }}></i> Recently Completed</h3>
-            </div>
-            <div className="db-card-bd">
-              <ul style={{ listStyle: 'none', padding: 0 }}>
-                {MOCK_MANAGER_TASKS.filter(t => t.status === 'completed').map(t => (
-                  <li key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', fontSize: '13px' }}>
-                    <i className="fa-solid fa-check-circle" style={{ color: 'var(--green)' }}></i>
-                    <span>{t.title}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <TasksClient
+      tasks={enriched as any}
+      kpis={{ total, completed, pending, pct }}
+      breakdown={breakdown}
+    />
   )
 }

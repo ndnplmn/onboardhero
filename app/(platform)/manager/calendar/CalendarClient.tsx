@@ -1,0 +1,499 @@
+'use client'
+
+import { useState, useMemo } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import ScheduleCheckInModal from '@/components/platform/ScheduleCheckInModal'
+
+interface CheckIn {
+  id:             string
+  scheduled_date: string
+  completed_date: string | null
+  type:           string
+  notes:          string | null
+  employee: {
+    id:          string
+    full_name:   string
+    department:  string
+    avatar_url:  string | null
+  } | null
+}
+
+interface Deadline {
+  label:    string
+  dateStr:  string
+  days:     number
+  employee: { id: string; full_name: string; department: string; avatar_url: string | null } | null
+}
+
+interface CalendarClientProps {
+  checkIns:  CheckIn[]
+  deadlines: Deadline[]
+  hirees:    { id: string; name: string; role: string }[]
+}
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+const TYPE_LABELS: Record<string, string> = {
+  weekly: 'Weekly 1:1',
+  day30:  '30-Day Review',
+  day60:  '60-Day Review',
+  day90:  '90-Day Sign-off',
+  'ad-hoc': 'Ad-hoc',
+}
+
+const TYPE_COLORS: Record<string, string> = {
+  weekly:   'var(--blue)',
+  day30:    'var(--cyan)',
+  day60:    'var(--aqua)',
+  day90:    'var(--green)',
+  'ad-hoc': 'var(--amber)',
+}
+
+function Avatar({ url, name, size = 28 }: { url: string | null; name: string; size?: number }) {
+  if (url) return (
+    <img src={url} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+  )
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0,
+      background: 'var(--blue-light)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: size * 0.38, fontWeight: 800, color: 'var(--blue)',
+    }}>
+      {name.charAt(0)}
+    </div>
+  )
+}
+
+function daysFromNow(dateStr: string): number {
+  const target = new Date(dateStr)
+  const today  = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Math.round((target.getTime() - today.getTime()) / 86400000)
+}
+
+function formatRelative(dateStr: string): string {
+  const diff = daysFromNow(dateStr)
+  if (diff === 0) return 'Today'
+  if (diff === 1) return 'Tomorrow'
+  if (diff < 0)  return `${Math.abs(diff)}d ago`
+  return `In ${diff}d`
+}
+
+export default function CalendarClient({ checkIns, deadlines, hirees }: CalendarClientProps) {
+  const today    = new Date()
+  const [viewYear,  setViewYear]  = useState(today.getFullYear())
+  const [viewMonth, setViewMonth] = useState(today.getMonth())
+  const [selectedDay, setSelectedDay] = useState<number | null>(today.getDate())
+  const [showSchedule, setShowSchedule] = useState(false)
+
+  // ── Calendar grid ───────────────────────────────────────────────────────
+  const daysInMonth  = new Date(viewYear, viewMonth + 1, 0).getDate()
+  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay()
+  const monthLabel   = new Date(viewYear, viewMonth, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+
+  function prevMonth() {
+    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }
+    else setViewMonth(m => m - 1)
+    setSelectedDay(null)
+  }
+  function nextMonth() {
+    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0) }
+    else setViewMonth(m => m + 1)
+    setSelectedDay(null)
+  }
+
+  // Map check-ins to day numbers in the viewed month
+  const eventsByDay = useMemo(() => {
+    const map: Record<number, CheckIn[]> = {}
+    checkIns.forEach(c => {
+      const d = new Date(c.scheduled_date)
+      if (d.getFullYear() === viewYear && d.getMonth() === viewMonth) {
+        const day = d.getDate()
+        if (!map[day]) map[day] = []
+        map[day].push(c)
+      }
+    })
+    return map
+  }, [checkIns, viewYear, viewMonth])
+
+  // Events for the selected day
+  const selectedEvents = selectedDay ? (eventsByDay[selectedDay] ?? []) : []
+
+  // ── Today's events (always current date, not view month) ────────────────
+  const todayEvents = useMemo(() => {
+    const t = today.toISOString().split('T')[0]
+    return checkIns.filter(c => c.scheduled_date === t)
+  }, [checkIns])
+
+  const isCurrentMonth = viewYear === today.getFullYear() && viewMonth === today.getMonth()
+
+  return (
+    <>
+      <header className="db-header">
+        <div className="db-header-left">
+          <span className="sec-tag">Schedule Management</span>
+          <h1>Team Calendar</h1>
+          <p>Oversee all onboarding check-ins, reviews, and key milestones for your team.</p>
+        </div>
+        <div className="db-header-actions">
+          <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowSchedule(true)}>
+            <i className="fa-solid fa-calendar-plus" /> Schedule Check-in
+          </button>
+        </div>
+      </header>
+
+      <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
+
+        {/* KPI strip */}
+        <div className="kpi-row">
+          <div className="kpi-card">
+            <div className="kpi-icon blue"><i className="fa-solid fa-calendar-check" /></div>
+            <div className="kpi-value">{checkIns.length}</div>
+            <div className="kpi-label">This Month</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-icon green"><i className="fa-solid fa-circle-check" /></div>
+            <div className="kpi-value">{checkIns.filter(c => c.completed_date).length}</div>
+            <div className="kpi-label">Completed</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-icon amber"><i className="fa-solid fa-clock" /></div>
+            <div className="kpi-value">{checkIns.filter(c => !c.completed_date).length}</div>
+            <div className="kpi-label">Upcoming</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-icon cyan"><i className="fa-solid fa-flag" /></div>
+            <div className="kpi-value">{deadlines.length}</div>
+            <div className="kpi-label">Milestones Due</div>
+          </div>
+        </div>
+
+        {/* Main 2/3 + Side 1/3 */}
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--gap-standard)', alignItems: 'start' }}>
+
+          {/* Calendar grid */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
+            <div className="db-card" style={{ padding: '24px' }}>
+              {/* Month nav */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <h3 style={{ fontSize: 18, fontFamily: 'var(--font-display)' }}>{monthLabel}</h3>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {!isCurrentMonth && (
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      style={{ fontSize: 11, color: 'var(--blue)' }}
+                      onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); setSelectedDay(today.getDate()) }}
+                    >
+                      Today
+                    </button>
+                  )}
+                  <button className="btn btn-ghost btn-sm" onClick={prevMonth}>
+                    <i className="fa-solid fa-chevron-left" />
+                  </button>
+                  <button className="btn btn-ghost btn-sm" onClick={nextMonth}>
+                    <i className="fa-solid fa-chevron-right" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Day headers */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginBottom: 8 }}>
+                {DAY_NAMES.map(d => (
+                  <div key={d} style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textAlign: 'center', paddingBottom: 6 }}>
+                    {d}
+                  </div>
+                ))}
+              </div>
+
+              {/* Day cells */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+                {/* Offset */}
+                {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+                  <div key={`empty-${i}`} />
+                ))}
+
+                {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
+                  const events    = eventsByDay[day] ?? []
+                  const isToday   = isCurrentMonth && day === today.getDate()
+                  const isSelected = day === selectedDay
+                  const hasEvents = events.length > 0
+
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => setSelectedDay(day === selectedDay ? null : day)}
+                      style={{
+                        aspectRatio: '1 / 1',
+                        display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center',
+                        borderRadius: 'var(--r)',
+                        border: isSelected ? '2px solid var(--blue)' : isToday ? '1.5px solid var(--cyan)' : '1px solid var(--border)',
+                        background: isSelected ? 'var(--blue-light)' : isToday ? 'var(--surface)' : 'transparent',
+                        fontSize: 13, fontWeight: isToday || isSelected ? 800 : 500,
+                        color: isSelected ? 'var(--blue)' : isToday ? 'var(--cyan)' : 'var(--text)',
+                        cursor: 'pointer', position: 'relative', gap: 2,
+                        transition: 'all 0.12s ease',
+                      }}
+                    >
+                      {day}
+                      {hasEvents && (
+                        <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+                          {events.slice(0, 3).map((e, i) => (
+                            <div key={i} style={{
+                              width: 4, height: 4, borderRadius: '50%',
+                              background: TYPE_COLORS[e.type] ?? 'var(--blue)',
+                            }} />
+                          ))}
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Legend */}
+              <div style={{ display: 'flex', gap: 14, marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
+                {Object.entries(TYPE_COLORS).map(([type, color]) => (
+                  <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'var(--text3)', fontWeight: 600 }}>
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0 }} />
+                    {TYPE_LABELS[type]}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Selected day events */}
+            <AnimatePresence mode="wait">
+              {selectedDay !== null && (
+                <motion.div
+                  key={`day-${selectedDay}`}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.15 }}
+                  className="db-card"
+                  style={{ padding: '20px 24px' }}
+                >
+                  <div className="db-card-hd" style={{ marginBottom: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <i className="fa-solid fa-calendar-day" style={{ color: 'var(--blue)' }} />
+                      <h3>
+                        {new Date(viewYear, viewMonth, selectedDay).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                      </h3>
+                      {selectedEvents.length > 0 && (
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 100, background: 'var(--blue-light)', color: 'var(--blue)' }}>
+                          {selectedEvents.length}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      className="btn btn-outline btn-sm"
+                      style={{ fontSize: 11 }}
+                      onClick={() => setShowSchedule(true)}
+                    >
+                      <i className="fa-solid fa-plus" /> Add
+                    </button>
+                  </div>
+
+                  {selectedEvents.length === 0 ? (
+                    <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>
+                      <i className="fa-solid fa-calendar-xmark" style={{ fontSize: 22, display: 'block', marginBottom: 8, color: 'var(--border)' }} />
+                      No check-ins scheduled.{' '}
+                      <button
+                        style={{ background: 'none', border: 'none', color: 'var(--blue)', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0 }}
+                        onClick={() => setShowSchedule(true)}
+                      >
+                        Schedule one
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {selectedEvents.map(evt => (
+                        <div
+                          key={evt.id}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 14,
+                            padding: '12px 14px', borderRadius: 'var(--r)',
+                            border: '1px solid var(--border)',
+                            borderLeft: `3px solid ${TYPE_COLORS[evt.type] ?? 'var(--blue)'}`,
+                            background: 'var(--surface)',
+                          }}
+                        >
+                          {evt.employee && (
+                            <Avatar url={evt.employee.avatar_url} name={evt.employee.full_name} size={34} />
+                          )}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <strong style={{ display: 'block', fontSize: 13, color: 'var(--text)', marginBottom: 2 }}>
+                              {TYPE_LABELS[evt.type] ?? evt.type} — {evt.employee?.full_name ?? 'Team Member'}
+                            </strong>
+                            <span style={{ fontSize: 11, color: 'var(--text3)' }}>{evt.employee?.department}</span>
+                          </div>
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100,
+                            background: evt.completed_date ? 'var(--green-bg)' : 'var(--amber-bg)',
+                            color:      evt.completed_date ? 'var(--green)'    : 'var(--amber)',
+                          }}>
+                            {evt.completed_date ? 'Done' : 'Pending'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Sidebar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
+
+            {/* Today's schedule */}
+            <div className="db-card" style={{ padding: '24px' }}>
+              <div className="db-card-hd" style={{ marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <i className="fa-solid fa-calendar-day" style={{ color: 'var(--blue)' }} />
+                  <h3>Today's Schedule</h3>
+                </div>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)' }}>
+                  {today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+
+              {todayEvents.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text3)', fontSize: 12 }}>
+                  <i className="fa-solid fa-sun" style={{ fontSize: 20, display: 'block', marginBottom: 8, color: 'var(--amber)' }} />
+                  No check-ins today.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {todayEvents.map(evt => (
+                    <div key={evt.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 4, borderRadius: 2, alignSelf: 'stretch', background: TYPE_COLORS[evt.type] ?? 'var(--blue)', flexShrink: 0 }} />
+                      {evt.employee && (
+                        <Avatar url={evt.employee.avatar_url} name={evt.employee.full_name} size={28} />
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <strong style={{ fontSize: 12, color: 'var(--text)', display: 'block', marginBottom: 1 }}>
+                          {TYPE_LABELS[evt.type] ?? evt.type}
+                        </strong>
+                        <span style={{ fontSize: 11, color: 'var(--text3)' }}>{evt.employee?.full_name}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Upcoming milestones / deadlines */}
+            <div className="db-card" style={{ padding: '24px' }}>
+              <div className="db-card-hd" style={{ marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <i className="fa-solid fa-clock" style={{ color: 'var(--aqua)' }} />
+                  <h3>Upcoming Milestones</h3>
+                </div>
+              </div>
+
+              {deadlines.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text3)', fontSize: 12 }}>
+                  <i className="fa-solid fa-circle-check" style={{ fontSize: 20, display: 'block', marginBottom: 8, color: 'var(--green)' }} />
+                  No upcoming milestones.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {deadlines.map((dl: any, i: number) => {
+                    const diff   = daysFromNow(dl.dateStr)
+                    const urgent = diff <= 7
+                    return (
+                      <div key={i} style={{
+                        display: 'flex', gap: 10, alignItems: 'center',
+                        padding: '10px 12px', borderRadius: 'var(--r)',
+                        background: urgent ? 'var(--red-bg)' : 'var(--surface)',
+                        border: '1px solid var(--border)',
+                        borderLeft: `3px solid ${urgent ? 'var(--red)' : 'var(--blue)'}`,
+                      }}>
+                        <div style={{
+                          width: 32, height: 32, borderRadius: 'var(--r)',
+                          background: urgent ? 'var(--red-bg)' : 'var(--blue-light)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        }}>
+                          <i
+                            className={`fa-solid ${urgent ? 'fa-triangle-exclamation' : 'fa-flag'}`}
+                            style={{ fontSize: 12, color: urgent ? 'var(--red)' : 'var(--blue)' }}
+                          />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>
+                            {dl.employee?.full_name?.split(' ')[0]}: {dl.label}
+                          </div>
+                          <div style={{ fontSize: 11, color: urgent ? 'var(--red)' : 'var(--text3)', fontWeight: urgent ? 700 : 400 }}>
+                            {formatRelative(dl.dateStr)}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Upcoming check-ins (next 5) */}
+            <div className="db-card" style={{ padding: '24px' }}>
+              <div className="db-card-hd" style={{ marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <i className="fa-solid fa-list-ul" style={{ color: 'var(--blue)' }} />
+                  <h3>Next Check-ins</h3>
+                </div>
+                <button
+                  className="btn btn-outline btn-sm"
+                  style={{ fontSize: 10 }}
+                  onClick={() => setShowSchedule(true)}
+                >
+                  <i className="fa-solid fa-plus" /> Add
+                </button>
+              </div>
+
+              {checkIns.filter(c => !c.completed_date).length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '12px 0', color: 'var(--text3)', fontSize: 12 }}>
+                  No upcoming check-ins.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {checkIns
+                    .filter(c => !c.completed_date)
+                    .slice(0, 5)
+                    .map(evt => (
+                      <div key={evt.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        {evt.employee && (
+                          <Avatar url={evt.employee.avatar_url} name={evt.employee.full_name} size={28} />
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 1 }}>
+                            {evt.employee?.full_name?.split(' ')[0]} — {TYPE_LABELS[evt.type] ?? evt.type}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--text3)' }}>
+                            {formatRelative(evt.scheduled_date)} · {new Date(evt.scheduled_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </div>
+                        </div>
+                        <div style={{ width: 7, height: 7, borderRadius: '50%', background: TYPE_COLORS[evt.type] ?? 'var(--blue)', flexShrink: 0 }} />
+                      </div>
+                    ))
+                  }
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {showSchedule && (
+          <ScheduleCheckInModal
+            hirees={hirees}
+            onClose={() => setShowSchedule(false)}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  )
+}

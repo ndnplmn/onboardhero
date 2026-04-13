@@ -1,16 +1,16 @@
 'use server'
 
-import { createSupabaseAdmin } from '@/lib/db/supabase-server'
+import { createSupabaseServer } from '@/lib/db/supabase-server'
 import { getUser } from '@/lib/auth/get-user'
 import { revalidatePath } from 'next/cache'
 
 export async function toggleTaskComplete(taskId: string, completed: boolean) {
-  const supabase = createSupabaseAdmin()
+  const supabase = await createSupabaseServer()
 
   await supabase
     .from('journey_tasks')
     .update({
-      status: completed ? 'completed' : 'pending',
+      status:       completed ? 'completed' : 'pending',
       completed_at: completed ? new Date().toISOString() : null,
     })
     .eq('id', taskId)
@@ -36,7 +36,7 @@ export async function toggleTaskComplete(taskId: string, completed: boolean) {
           .update({ status: 'completed' })
           .eq('id', task.journey_id)
 
-        // Notify manager and HR
+        // Notify manager
         const { data: journey } = await supabase
           .from('journeys')
           .select('manager_id, employee:profiles!employee_id(full_name)')
@@ -44,28 +44,13 @@ export async function toggleTaskComplete(taskId: string, completed: boolean) {
           .single()
 
         if (journey) {
-          const employeeName = (journey as any).employee?.full_name || 'An employee'
-          const { data: hrUsers } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('role', 'hr')
-
-          const notifs = [
-            {
-              user_id: journey.manager_id,
-              type: 'milestone' as const,
-              title: 'Journey Completed',
-              message: `${employeeName} has completed their onboarding journey!`,
-            },
-            ...(hrUsers || []).map((hr: any) => ({
-              user_id: hr.id,
-              type: 'milestone' as const,
-              title: 'Journey Completed',
-              message: `${employeeName} has completed their onboarding journey!`,
-            })),
-          ]
-
-          await supabase.from('notifications').insert(notifs)
+          const employeeName = (journey as any).employee?.full_name || 'A team member'
+          await supabase.from('notifications').insert({
+            user_id: journey.manager_id,
+            type:    'milestone',
+            title:   'Journey Completed',
+            message: `${employeeName} has completed their onboarding journey!`,
+          })
         }
       }
     }
@@ -78,24 +63,26 @@ export async function toggleTaskComplete(taskId: string, completed: boolean) {
 }
 
 export async function updateProfile(formData: FormData) {
-  const supabase = createSupabaseAdmin()
+  const supabase = await createSupabaseServer()
 
-  const id = formData.get('id') as string
-  const fullName = formData.get('full_name') as string
-  const phone = formData.get('phone') as string
-  const bio = formData.get('bio') as string
-  const ecName = formData.get('ec_name') as string
-  const ecPhone = formData.get('ec_phone') as string
-  const ecRelationship = formData.get('ec_relationship') as string
+  const id              = formData.get('id')              as string
+  const fullName        = formData.get('full_name')       as string
+  const phone           = formData.get('phone')           as string
+  const bio             = formData.get('bio')             as string
+  const ecName          = formData.get('ec_name')         as string
+  const ecPhone         = formData.get('ec_phone')        as string
+  const ecRelationship  = formData.get('ec_relationship') as string
 
-  const emergencyContact = ecName ? { name: ecName, phone: ecPhone, relationship: ecRelationship } : {}
+  const emergencyContact = ecName
+    ? { name: ecName, phone: ecPhone, relationship: ecRelationship }
+    : {}
 
   await supabase
     .from('profiles')
     .update({
-      full_name: fullName,
-      phone: phone || null,
-      bio: bio || null,
+      full_name:         fullName,
+      phone:             phone || null,
+      bio:               bio   || null,
       emergency_contact: emergencyContact,
     })
     .eq('id', id)
@@ -105,15 +92,15 @@ export async function updateProfile(formData: FormData) {
 }
 
 export async function submitForm(formId: string, journeyId: string | null, answers: Record<string, string | boolean>) {
-  const supabase = createSupabaseAdmin()
-  const user = await getUser()
+  const supabase = await createSupabaseServer()
+  const user     = await getUser()
 
   await supabase
     .from('form_submissions')
     .insert({
-      form_id: formId,
+      form_id:    formId,
       employee_id: user.id,
-      journey_id: journeyId,
+      journey_id:  journeyId,
       answers,
     })
 
@@ -121,13 +108,13 @@ export async function submitForm(formId: string, journeyId: string | null, answe
 }
 
 export async function submitFeedback(journeyId: string, milestone: string, rating: number, comments: string) {
-  const supabase = createSupabaseAdmin()
-  const user = await getUser()
+  const supabase = await createSupabaseServer()
+  const user     = await getUser()
 
   await supabase
     .from('feedback_surveys')
     .insert({
-      journey_id: journeyId,
+      journey_id:  journeyId,
       employee_id: user.id,
       milestone,
       rating,
@@ -138,7 +125,7 @@ export async function submitFeedback(journeyId: string, milestone: string, ratin
 }
 
 export async function markResourceRead(resourceId: string, userId: string) {
-  const supabase = createSupabaseAdmin()
+  const supabase = await createSupabaseServer()
 
   const { data: resource } = await supabase
     .from('resources')

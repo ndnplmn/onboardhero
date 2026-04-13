@@ -1,28 +1,29 @@
 'use server'
 
-import { createSupabaseAdmin } from '@/lib/db/supabase-server'
+import { createSupabaseServer } from '@/lib/db/supabase-server'
 import { getUser } from '@/lib/auth/get-user'
 import { revalidatePath } from 'next/cache'
 
 export async function toggleManagerTask(taskId: string, completed: boolean) {
-  const user = await getUser()
-  const supabase = createSupabaseAdmin()
+  await getUser()
+  const supabase = await createSupabaseServer()
 
   await supabase
     .from('journey_tasks')
     .update({
-      status: completed ? 'completed' : 'pending',
+      status:       completed ? 'completed' : 'pending',
       completed_at: completed ? new Date().toISOString() : null,
     })
     .eq('id', taskId)
 
+  revalidatePath('/manager/tasks')
   revalidatePath('/manager/team')
   revalidatePath('/manager/dashboard')
 }
 
 export async function completeCheckIn(checkInId: string) {
   const user = await getUser()
-  const supabase = createSupabaseAdmin()
+  const supabase = await createSupabaseServer()
 
   await supabase
     .from('check_ins')
@@ -32,10 +33,12 @@ export async function completeCheckIn(checkInId: string) {
 
   revalidatePath('/manager/team')
   revalidatePath('/manager/dashboard')
+  revalidatePath('/manager/tasks')
 }
 
 export async function addTaskNote(taskId: string, notes: string) {
-  const supabase = createSupabaseAdmin()
+  await getUser()
+  const supabase = await createSupabaseServer()
 
   await supabase
     .from('journey_tasks')
@@ -43,11 +46,12 @@ export async function addTaskNote(taskId: string, notes: string) {
     .eq('id', taskId)
 
   revalidatePath('/manager/team')
+  revalidatePath('/manager/tasks')
 }
 
 export async function approveTask(taskId: string) {
   const user = await getUser()
-  const supabase = createSupabaseAdmin()
+  const supabase = await createSupabaseServer()
 
   await supabase
     .from('journey_tasks')
@@ -58,11 +62,12 @@ export async function approveTask(taskId: string) {
     .eq('id', taskId)
 
   revalidatePath('/manager/team')
+  revalidatePath('/manager/tasks')
 }
 
 export async function rescheduleCheckIn(checkInId: string, newDate: string) {
   const user = await getUser()
-  const supabase = createSupabaseAdmin()
+  const supabase = await createSupabaseServer()
 
   await supabase
     .from('check_ins')
@@ -72,4 +77,5 @@ export async function rescheduleCheckIn(checkInId: string, newDate: string) {
 
   revalidatePath('/manager/team')
   revalidatePath('/manager/dashboard')
+  revalidatePath('/manager/tasks')
 }

@@ -1,118 +1,84 @@
-import MeetingTimeline from '@/components/platform/MeetingTimeline'
+import { redirect } from 'next/navigation'
+import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { getManagerCalendarData } from '@/lib/db/queries/manager'
+import CalendarClient from './CalendarClient'
 
-export default function ManagerCalendarPage() {
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  const dates = Array.from({ length: 31 }, (_, i) => i + 1)
+export const dynamic = 'force-dynamic'
+
+// ── Mock fallback — uses real current date so calendar is always accurate ──
+
+function buildMockCheckIns() {
+  const now    = new Date()
+  const y      = now.getFullYear()
+  const m      = now.getMonth()
+
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const iso = (day: number) => `${y}-${pad(m + 1)}-${pad(day)}`
+
+  // Spread across days that exist this month
+  const daysInMonth = new Date(y, m + 1, 0).getDate()
+  const d1 = Math.min(5,  daysInMonth)
+  const d2 = Math.min(12, daysInMonth)
+  const d3 = Math.min(18, daysInMonth)
+  const d4 = Math.min(24, daysInMonth)
+
+  return [
+    { id: 'ci1', scheduled_date: iso(d1), completed_date: null, type: 'weekly',  notes: null, employee: { id: 'e1', full_name: 'Marcus Reed',  department: 'Product',     avatar_url: 'https://i.pravatar.cc/150?u=marcus' } },
+    { id: 'ci2', scheduled_date: iso(d2), completed_date: null, type: 'day30',   notes: null, employee: { id: 'e2', full_name: 'Priya Mehta',  department: 'Engineering', avatar_url: 'https://i.pravatar.cc/150?u=priya'  } },
+    { id: 'ci3', scheduled_date: iso(d3), completed_date: null, type: 'weekly',  notes: null, employee: { id: 'e3', full_name: 'James Wilson', department: 'Sales',       avatar_url: 'https://i.pravatar.cc/150?u=james'  } },
+    { id: 'ci4', scheduled_date: iso(d4), completed_date: null, type: 'day60',   notes: null, employee: { id: 'e4', full_name: 'Diana Torres', department: 'Design',      avatar_url: 'https://i.pravatar.cc/150?u=diana'  } },
+  ]
+}
+
+const MOCK_JOURNEYS = [
+  { id: 'j1', current_week: 3,  start_date: '2026-03-01', employee: { id: 'e1', full_name: 'Marcus Reed',  department: 'Product',     avatar_url: 'https://i.pravatar.cc/150?u=marcus' } },
+  { id: 'j2', current_week: 7,  start_date: '2026-01-15', employee: { id: 'e2', full_name: 'Priya Mehta',  department: 'Engineering', avatar_url: 'https://i.pravatar.cc/150?u=priya'  } },
+  { id: 'j3', current_week: 2,  start_date: '2026-03-15', employee: { id: 'e3', full_name: 'James Wilson', department: 'Sales',       avatar_url: 'https://i.pravatar.cc/150?u=james'  } },
+]
+
+export default async function ManagerCalendarPage() {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { checkIns: dbCheckIns, journeys: dbJourneys } = await getManagerCalendarData(user.id)
+
+  const checkIns = dbCheckIns.length > 0 ? dbCheckIns : buildMockCheckIns()
+  const journeys = dbJourneys.length > 0 ? dbJourneys : MOCK_JOURNEYS
+
+  // ── Derive upcoming deadlines from journeys (30/60/90-day milestones) ────
+  const today = new Date()
+  const deadlines = journeys.flatMap((j: any) => {
+    const start = new Date(j.start_date)
+    const milestones = [
+      { days: 30,  label: '30-Day Review',  employee: j.employee },
+      { days: 60,  label: '60-Day Review',  employee: j.employee },
+      { days: 90,  label: '90-Day Sign-off', employee: j.employee },
+    ]
+    return milestones
+      .map(m => {
+        const date = new Date(start)
+        date.setDate(date.getDate() + m.days)
+        return { ...m, date, dateStr: date.toISOString().split('T')[0] }
+      })
+      .filter(m => m.date >= today)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+  })
+  .sort((a: any, b: any) => new Date(a.dateStr).getTime() - new Date(b.dateStr).getTime())
+  .slice(0, 5)
+
+  // Hirees list for schedule modal
+  const hirees = journeys.map((j: any) => ({
+    id:   j.id,
+    name: j.employee?.full_name  ?? 'Unknown',
+    role: j.employee?.department ?? 'New Hire',
+  }))
 
   return (
-    <div className="container" style={{ paddingTop: '20px', paddingBottom: '60px' }}>
-      <header className="db-header" style={{ marginBottom: '40px' }}>
-        <div>
-          <span className="sec-tag">Schedule Managment</span>
-          <h1 className="hero-h1" style={{ fontSize: '32px', marginBottom: '8px' }}>Team Calendar</h1>
-          <p className="hero-sub" style={{ fontSize: '15px', marginBottom: 0 }}>
-            Oversee all onboarding-related check-ins, orientation sessions, and social events.
-          </p>
-        </div>
-        <div className="db-header-actions">
-           <button className="btn btn-primary btn-sm">
-             <i className="fa-solid fa-calendar-plus"></i> New Event
-           </button>
-        </div>
-      </header>
-
-      <div className="db-row col2-1">
-        <div className="db-card" style={{ padding: '24px' }}>
-          <div className="db-card-hd" style={{ marginBottom: '20px', justifyContent: 'space-between' }}>
-            <h3 style={{ fontSize: '18px' }}>October 2026</h3>
-            <div style={{ display: 'flex', gap: '4px' }}>
-               <button className="btn btn-ghost btn-sm"><i className="fa-solid fa-chevron-left"></i></button>
-               <button className="btn btn-ghost btn-sm"><i className="fa-solid fa-chevron-right"></i></button>
-            </div>
-          </div>
-          <div className="db-card-bd">
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(7, 1fr)', 
-              gap: '10px',
-              textAlign: 'center'
-            }}>
-              {days.map(d => (
-                <div key={d} style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text3)', paddingBottom: '10px' }}>
-                  {d}
-                </div>
-              ))}
-              {/* Offset for October 2026 (starts on Thursday) */}
-              <div style={{ pointerEvents: 'none', opacity: 0 }}></div>
-              <div style={{ pointerEvents: 'none', opacity: 0 }}></div>
-              <div style={{ pointerEvents: 'none', opacity: 0 }}></div>
-              <div style={{ pointerEvents: 'none', opacity: 0 }}></div>
-              
-              {dates.map(date => (
-                <div key={date} style={{
-                  aspectRatio: '1 / 1',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '12px',
-                  border: '1px solid var(--border)',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  backgroundColor: date === 12 ? 'var(--blue-light)' : 'transparent',
-                  borderColor: date === 12 ? 'var(--blue)' : 'var(--border)',
-                  color: date === 12 ? 'var(--blue)' : 'var(--text)',
-                }}>
-                  {date}
-                  {(date === 5 || date === 12 || date === 24) && (
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '6px',
-                      width: '4px',
-                      height: '4px',
-                      borderRadius: '50%',
-                      background: 'var(--cyan)'
-                    }}></div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <MeetingTimeline />
-          <div className="db-card" style={{ padding: '20px' }}>
-            <div className="db-card-hd" style={{ marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '15px' }}><i className="fa-solid fa-clock" style={{ color: 'var(--aqua)', marginRight: '8px' }}></i> Upcoming Deadlines</h3>
-            </div>
-            <div className="db-card-bd">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'var(--surface2)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                   <div style={{ background: 'var(--red-bg)', color: 'var(--red)', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
-                      <i className="fa-solid fa-triangle-exclamation" style={{ margin: 'auto' }}></i>
-                   </div>
-                   <div>
-                      <div style={{ fontSize: '13px', fontWeight: 600 }}>Marcus: Week 1 Approval</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text3)' }}>Due by 5:00 PM Today</div>
-                   </div>
-                </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'var(--surface2)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                   <div style={{ background: 'var(--cyan-light)', color: 'var(--blue)', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
-                      <i className="fa-solid fa-info-circle" style={{ margin: 'auto' }}></i>
-                   </div>
-                   <div>
-                      <div style={{ fontSize: '13px', fontWeight: 600 }}>Priya: Buddy Assigned</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text3)' }}>Due tomorrow</div>
-                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <CalendarClient
+      checkIns={checkIns as any}
+      deadlines={deadlines as any}
+      hirees={hirees}
+    />
   )
 }

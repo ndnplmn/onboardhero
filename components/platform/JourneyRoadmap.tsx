@@ -107,7 +107,7 @@ export default function JourneyRoadmap({ mutations = [], currentWeek = 3 }: Jour
                     <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--cyan)' }} />
                   )}
                   {isPending && (
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--border2)' }} />
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--border)' }} />
                   )}
                 </div>
 

@@ -1,44 +1,94 @@
 'use client'
 
 interface Meeting {
-  id: string
-  title: string
-  time: string
-  organizer: string
-  avatar: string
+  id:       string
+  title:    string
+  time:     string
+  person:   string
+  avatar:   string | null
+  joinUrl?: string
 }
 
-const MOCK_MEETINGS: Meeting[] = [
-  { id: '1', title: 'Coffee with Buddy', time: '10:00 AM', organizer: 'Sarah Miller', avatar: 'https://i.pravatar.cc/150?u=sarah' },
-  { id: '2', title: 'Team Standup', time: '11:15 AM', organizer: 'David Chen', avatar: 'https://i.pravatar.cc/150?u=david' },
-  { id: '3', title: 'IT Setup Sync', time: '2:30 PM', organizer: 'Tech Support', avatar: 'https://i.pravatar.cc/150?u=tech' },
+const DEFAULT_MEETINGS: Meeting[] = [
+  { id: '1', title: 'Weekly 1:1 — Marcus', time: '10:00 AM', person: 'Marcus Reed',  avatar: 'https://i.pravatar.cc/150?u=marcus' },
+  { id: '2', title: 'Team Standup',         time: '11:15 AM', person: 'All Hires',    avatar: null },
+  { id: '3', title: '30-Day Review — Priya', time: '2:30 PM', person: 'Priya Mehta',  avatar: 'https://i.pravatar.cc/150?u=priya' },
 ]
 
-export default function MeetingTimeline() {
+interface MeetingTimelineProps {
+  meetings?: Meeting[]
+}
+
+export default function MeetingTimeline({ meetings }: MeetingTimelineProps) {
+  const items = meetings && meetings.length > 0 ? meetings : DEFAULT_MEETINGS
+
   return (
-    <div className="db-card">
-      <div className="db-card-hd">
-        <h3><i className="fa-solid fa-calendar-alt" style={{ color: 'var(--blue)', marginRight: '6px' }}></i> Today&apos;s Schedule</h3>
+    <div className="db-card" style={{ padding: '24px' }}>
+      <div className="db-card-hd" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <i className="fa-solid fa-calendar-day" style={{ color: 'var(--blue)' }} />
+          <h3>Today's Schedule</h3>
+        </div>
       </div>
-      <div className="db-card-bd">
-        <div className="mt-list">
-          {MOCK_MEETINGS.map(meet => (
-            <div key={meet.id} className="mt-item">
-              <div className="mt-time">{meet.time}</div>
-              <div className="mt-info">
-                <strong>{meet.title}</strong>
-                <div className="mt-org">
-                  <img src={meet.avatar} alt={meet.organizer} />
-                  <span>{meet.organizer}</span>
+
+      {items.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text3)', fontSize: 12 }}>
+          <i className="fa-solid fa-sun" style={{ fontSize: 20, display: 'block', marginBottom: 8, color: 'var(--amber)' }} />
+          No meetings scheduled today.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {items.map(meet => (
+            <div
+              key={meet.id}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '10px 12px', borderRadius: 'var(--r)',
+                border: '1px solid var(--border)', background: 'var(--surface)',
+              }}
+            >
+              {/* Time */}
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', flexShrink: 0, minWidth: 56 }}>
+                {meet.time}
+              </span>
+
+              {/* Avatar */}
+              {meet.avatar ? (
+                <img src={meet.avatar} alt={meet.person} style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: 'var(--blue-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: 'var(--blue)' }}>
+                  {meet.person.charAt(0)}
                 </div>
+              )}
+
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <strong style={{ display: 'block', fontSize: 12, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {meet.title}
+                </strong>
+                <span style={{ fontSize: 11, color: 'var(--text3)' }}>{meet.person}</span>
               </div>
-              <button className="btn btn-primary btn-icon-sm">
-                <i className="fa-brands fa-microsoft"></i>
-              </button>
+
+              {/* Join button */}
+              {meet.joinUrl ? (
+                <a
+                  href={meet.joinUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-primary btn-sm"
+                  style={{ fontSize: 10, padding: '4px 10px', flexShrink: 0 }}
+                >
+                  <i className="fa-brands fa-microsoft" /> Join
+                </a>
+              ) : (
+                <button className="btn btn-ghost btn-sm" style={{ fontSize: 10, padding: '4px 10px', flexShrink: 0 }}>
+                  <i className="fa-solid fa-video" />
+                </button>
+              )}
             </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
   )
 }

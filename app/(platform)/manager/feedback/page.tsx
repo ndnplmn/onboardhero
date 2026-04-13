@@ -1,76 +1,151 @@
+import { redirect } from 'next/navigation'
+import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { getManagerFeedbackData } from '@/lib/db/queries/forms'
+import FeedbackClient from './FeedbackClient'
+
+export const dynamic = 'force-dynamic'
+
+// ── Mock fallback ──────────────────────────────────────────────────────────
+
 const MOCK_FEEDBACK = [
-  { id: 'f1', from: 'Marcus Reed', role: 'Senior Product Designer', date: 'Oct 12, 2026', content: 'The technical onboarding documentation is top-notch. I felt very supported by the IT team during the first week.', rating: 5, category: 'Technical' },
-  { id: 'f2', from: 'Priya Mehta', role: 'Frontend Engineer', date: 'Oct 10, 2026', content: 'The social buddy system is great, but I think the Week 2 orientation could be a bit more focused on architecture.', rating: 4, category: 'Social' },
-  { id: 'f3', from: 'Sarah Kim', role: 'HR Operations', date: 'Oct 05, 2026', content: 'The leadership simulation was incredibly helpful for understanding the company culture. Highly recommend it!', rating: 5, category: 'Culture' },
-  { id: 'f4', from: 'James Wilson', role: 'Sales Account Exec', date: 'Sep 28, 2026', content: 'Final onboarding process was smooth. The integration radar provided clear visibility into my progress.', rating: 5, category: 'Process' },
+  {
+    id: 'f1',
+    from: 'Marcus Reed',
+    department: 'Product',
+    avatar_url: 'https://i.pravatar.cc/150?u=marcus',
+    date: '2026-04-10',
+    content: 'The technical onboarding documentation is top-notch. I felt very supported by the IT team during the first week.',
+    rating: 5,
+    category: 'Technical',
+    sentiment: 'positive' as const,
+    source: 'form' as const,
+  },
+  {
+    id: 'f2',
+    from: 'Priya Mehta',
+    department: 'Engineering',
+    avatar_url: 'https://i.pravatar.cc/150?u=priya',
+    date: '2026-04-08',
+    content: 'The social buddy system is great, but I think the Week 2 orientation could be a bit more focused on architecture.',
+    rating: 4,
+    category: 'Social',
+    sentiment: 'mixed' as const,
+    source: 'form' as const,
+  },
+  {
+    id: 'f3',
+    from: 'James Wilson',
+    department: 'Sales',
+    avatar_url: 'https://i.pravatar.cc/150?u=james',
+    date: '2026-04-05',
+    content: 'The leadership simulation was incredibly helpful for understanding the company culture. Highly recommend it!',
+    rating: 5,
+    category: 'Culture',
+    sentiment: 'positive' as const,
+    source: 'check-in' as const,
+  },
+  {
+    id: 'f4',
+    from: 'Diana Torres',
+    department: 'Design',
+    avatar_url: 'https://i.pravatar.cc/150?u=diana',
+    date: '2026-04-01',
+    content: 'Final onboarding process was smooth. The integration radar provided clear visibility into my progress.',
+    rating: 5,
+    category: 'Process',
+    sentiment: 'positive' as const,
+    source: 'form' as const,
+  },
+  {
+    id: 'f5',
+    from: 'Priya Mehta',
+    department: 'Engineering',
+    avatar_url: 'https://i.pravatar.cc/150?u=priya',
+    date: '2026-03-28',
+    content: 'Week 3 felt overwhelming — too many tasks assigned at once. Would benefit from better pacing.',
+    rating: 2,
+    category: 'Process',
+    sentiment: 'negative' as const,
+    source: 'check-in' as const,
+  },
 ]
 
-export default function ManagerFeedbackPage() {
+export default async function ManagerFeedbackPage() {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { submissions, checkInFeedback } = await getManagerFeedbackData(user.id)
+
+  // ── Transform submissions into unified feedback shape ───────────────────
+  type Sentiment = 'positive' | 'mixed' | 'negative'
+
+  const fromForms = submissions.map((s: any) => {
+    const emp = Array.isArray(s.employee) ? s.employee[0] : s.employee
+    const form = Array.isArray(s.form) ? s.form[0] : s.form
+    const rating: number = s.responses?.rating ?? s.responses?.satisfaction ?? 4
+    const content: string = s.responses?.comments ?? s.responses?.feedback ?? s.responses?.text ?? 'No written response provided.'
+    const sentiment: Sentiment = rating >= 4 ? 'positive' : rating === 3 ? 'mixed' : 'negative'
+    return {
+      id:          s.id,
+      from:        emp?.full_name        ?? 'Unknown',
+      department:  emp?.department       ?? 'General',
+      avatar_url:  emp?.avatar_url       ?? null,
+      date:        s.submitted_at?.split('T')[0] ?? '',
+      content,
+      rating,
+      category:    form?.title           ?? 'General',
+      sentiment,
+      source:      'form' as const,
+    }
+  })
+
+  const fromCheckIns = checkInFeedback
+    .filter((c: any) => c.notes && c.notes.trim().length > 10)
+    .map((c: any) => {
+      const journey = Array.isArray(c.journey) ? c.journey[0] : c.journey
+      const emp = Array.isArray(journey?.employee) ? journey?.employee[0] : journey?.employee
+      return {
+        id:         c.id,
+        from:       emp?.full_name    ?? 'Team Member',
+        department: emp?.department   ?? 'General',
+        avatar_url: emp?.avatar_url   ?? null,
+        date:       c.completed_date  ?? '',
+        content:    c.notes,
+        rating:     3,
+        category:   c.type === 'day30' ? '30-Day Review' : c.type === 'day60' ? '60-Day Review' : c.type === 'day90' ? '90-Day Review' : 'Check-in',
+        sentiment:  'mixed' as Sentiment,
+        source:     'check-in' as const,
+      }
+    })
+
+  const allFeedback = [...fromForms, ...fromCheckIns]
+  const feedback = allFeedback.length > 0 ? allFeedback : MOCK_FEEDBACK
+
+  // ── Derive KPIs ──────────────────────────────────────────────────────────
+  const total         = feedback.length
+  const withRating    = feedback.filter(f => f.rating > 0)
+  const avgRating     = withRating.length > 0
+    ? Math.round((withRating.reduce((s, f) => s + f.rating, 0) / withRating.length) * 10) / 10
+    : 0
+  const positiveCount = feedback.filter(f => f.sentiment === 'positive').length
+  const positivePct   = total > 0 ? Math.round((positiveCount / total) * 100) : 0
+  const negativeCount = feedback.filter(f => f.sentiment === 'negative').length
+
+  // ── Category distribution ────────────────────────────────────────────────
+  const catMap: Record<string, number> = {}
+  feedback.forEach(f => {
+    catMap[f.category] = (catMap[f.category] ?? 0) + 1
+  })
+  const categories = Object.entries(catMap)
+    .map(([label, count]) => ({ label, count, pct: Math.round((count / total) * 100) }))
+    .sort((a, b) => b.count - a.count)
+
   return (
-    <div className="container" style={{ paddingTop: '20px', paddingBottom: '60px' }}>
-      <header className="db-header" style={{ marginBottom: '40px' }}>
-        <div>
-          <span className="sec-tag">Sentiment Analysis</span>
-          <h1 className="hero-h1" style={{ fontSize: '32px', marginBottom: '8px' }}>Team Feedback</h1>
-          <p className="hero-sub" style={{ fontSize: '15px', marginBottom: 0 }}>
-            Read and respond to feedback from your new hires to improve the onboarding experience.
-          </p>
-        </div>
-      </header>
-
-      <div className="db-row col3" style={{ marginBottom: '30px' }}>
-         <div className="db-card">
-            <div className="db-card-bd" style={{ textAlign: 'center', padding: '20px' }}>
-               <div style={{ fontSize: '32px', fontWeight: 800, color: 'var(--blue)', fontFamily: 'var(--font-display)' }}>4.8/5</div>
-               <div style={{ fontSize: '12px', color: 'var(--text3)' }}>Avg. Satisfaction Score</div>
-            </div>
-         </div>
-         <div className="db-card">
-            <div className="db-card-bd" style={{ textAlign: 'center', padding: '20px' }}>
-               <div style={{ fontSize: '32px', fontWeight: 800, color: 'var(--cyan)', fontFamily: 'var(--font-display)' }}>92%</div>
-               <div style={{ fontSize: '12px', color: 'var(--text3)' }}>Positive Sentiment</div>
-            </div>
-         </div>
-         <div className="db-card">
-            <div className="db-card-bd" style={{ textAlign: 'center', padding: '20px' }}>
-               <div style={{ fontSize: '32px', fontWeight: 800, color: 'var(--aqua)', fontFamily: 'var(--font-display)' }}>12</div>
-               <div style={{ fontSize: '12px', color: 'var(--text3)' }}>Responses this month</div>
-            </div>
-         </div>
-      </div>
-
-      <div className="db-row">
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {MOCK_FEEDBACK.map(f => (
-            <div key={f.id} className="db-card" style={{ padding: '24px' }}>
-               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                     <img src={`https://i.pravatar.cc/150?u=${f.from}`} alt={f.from} style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
-                     <div>
-                        <strong style={{ display: 'block', fontSize: '15px' }}>{f.from}</strong>
-                        <span style={{ fontSize: '12px', color: 'var(--text3)' }}>{f.role} • {f.category}</span>
-                     </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                     <div style={{ display: 'flex', gap: '2px', color: 'var(--amber)', marginBottom: '4px' }}>
-                        {[...Array(5)].map((_, i) => (
-                           <i key={i} className={`fa-solid fa-star ${i < f.rating ? '' : 'fa-regular'}`} style={{ fontSize: '12px' }}></i>
-                        ))}
-                     </div>
-                     <span style={{ fontSize: '11px', color: 'var(--text3)' }}>{f.date}</span>
-                  </div>
-               </div>
-               <p style={{ fontSize: '14px', color: 'var(--text2)', lineHeight: '1.6', marginBottom: '16px' }}>
-                  "{f.content}"
-               </p>
-               <div style={{ display: 'flex', gap: '8px' }}>
-                  <button className="btn btn-outline btn-sm">Respond</button>
-                  <button className="btn btn-ghost btn-sm">Flag for HR</button>
-               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    <FeedbackClient
+      feedback={feedback as any}
+      kpis={{ total, avgRating, positivePct, negativeCount }}
+      categories={categories}
+    />
   )
 }

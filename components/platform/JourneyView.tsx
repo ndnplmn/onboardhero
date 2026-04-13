@@ -50,25 +50,25 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
   return (
     <div className="jv-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div className="kpi-row" style={{ marginBottom: 0 }}>
-        <div className="kpi-box cyan">
-          <div className="kpi-icon-sm"><i className="fa-solid fa-calendar-day"></i></div>
-          <div className="kpi-n">{activeWeek.replace('week', 'Week ').replace('month', 'Month ')}</div>
-          <div className="kpi-l">Current Period</div>
+        <div className="kpi-card">
+          <div className="kpi-icon cyan"><i className="fa-solid fa-calendar-day" /></div>
+          <div className="kpi-value">{activeWeek.replace('week', 'Week ').replace('month', 'Month ')}</div>
+          <div className="kpi-label">Current Period</div>
         </div>
-        <div className="kpi-box blue">
-          <div className="kpi-icon-sm"><i className="fa-solid fa-spinner"></i></div>
-          <div className="kpi-n">{progress}%</div>
-          <div className="kpi-l">Overall Journey</div>
+        <div className="kpi-card">
+          <div className="kpi-icon blue"><i className="fa-solid fa-chart-line" /></div>
+          <div className="kpi-value">{progress}%</div>
+          <div className="kpi-label">Overall Journey</div>
         </div>
-        <div className="kpi-box aqua">
-          <div className="kpi-icon-sm"><i className="fa-solid fa-list-check"></i></div>
-          <div className="kpi-n">{displayTasks.filter(t => t.status === 'completed').length}/{displayTasks.length}</div>
-          <div className="kpi-l">Tasks Done</div>
+        <div className="kpi-card">
+          <div className="kpi-icon aqua"><i className="fa-solid fa-list-check" /></div>
+          <div className="kpi-value">{displayTasks.filter(t => t.status === 'completed').length}/{displayTasks.length || '—'}</div>
+          <div className="kpi-label">Tasks Done</div>
         </div>
-        <div className="kpi-box green">
-          <div className="kpi-icon-sm"><i className="fa-solid fa-award"></i></div>
-          <div className="kpi-n">Level 2</div>
-          <div className="kpi-l">Onboarding Rank</div>
+        <div className="kpi-card">
+          <div className="kpi-icon green"><i className="fa-solid fa-award" /></div>
+          <div className="kpi-value">Week {journey.current_week}</div>
+          <div className="kpi-label">Journey Stage</div>
         </div>
       </div>
 
@@ -88,7 +88,7 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
         {/* TASKS */}
         <div className="db-card">
           <div className="db-card-hd">
-            <h3><i className="fa-solid fa-tasks" style={{ color: 'var(--cyan)', marginRight: '6px' }}></i> {MOCK_JOURNEY[activeWeek].label} Tasks</h3>
+            <h3><i className="fa-solid fa-list-check" style={{ color: 'var(--cyan)', marginRight: '6px' }}></i> {MOCK_JOURNEY[activeWeek].label} Tasks</h3>
           </div>
           <div className="db-card-bd">
             <TaskList tasks={displayTasks} currentWeek={weekNumber} />
