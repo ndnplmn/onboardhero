@@ -76,20 +76,20 @@ export default function HRDashboardClient({
 
   return (
     <>
-      <header className="db-header">
+      <div className="db-header">
         <div className="db-header-left">
           <h1>HR Dashboard</h1>
           <p>Workforce health · integration analytics · active alerts</p>
         </div>
         <div className="db-header-actions">
-          <button className="btn btn-outline btn-sm" onClick={() => exportReportCSV(journeys)}>
-            <i className="fa-solid fa-download" /> Export Report
+          <button className="btn btn-outline btn-sm" onClick={() => exportReportCSV(journeys)} aria-label="Export onboarding report as CSV">
+            <i className="fa-solid fa-download" aria-hidden="true" /> Export Report
           </button>
-          <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowInvite(true)}>
-            <i className="fa-solid fa-user-plus" /> Invite New Hire
+          <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowInvite(true)} aria-label="Invite a new hire">
+            <i className="fa-solid fa-user-plus" aria-hidden="true" /> Invite New Hire
           </button>
         </div>
-      </header>
+      </div>
 
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 

@@ -72,7 +72,7 @@ export default function JourneysClient({ templates, tasksByTemplate }: Props) {
   return (
     <>
       {/* Page Header */}
-      <header className="db-header">
+      <div className="db-header">
         <div className="db-header-left">
           <h1>Journey Builder</h1>
           <p>
@@ -83,14 +83,14 @@ export default function JourneysClient({ templates, tasksByTemplate }: Props) {
           </p>
         </div>
         <div className="db-header-actions">
-          <button className="btn btn-outline btn-sm" onClick={() => setShowEditor(true)}>
-            <i className="fa-solid fa-plus" /> Create Template
+          <button className="btn btn-outline btn-sm" onClick={() => setShowEditor(true)} aria-label="Create a new journey template">
+            <i className="fa-solid fa-plus" aria-hidden="true" /> Create Template
           </button>
-          <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowAI(true)}>
-            <i className="fa-solid fa-sparkles" /> Generate with AI
+          <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowAI(true)} aria-label="Generate a journey template with AI">
+            <i className="fa-solid fa-sparkles" aria-hidden="true" /> Generate with AI
           </button>
         </div>
-      </header>
+      </div>
 
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 

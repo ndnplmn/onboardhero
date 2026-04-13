@@ -163,20 +163,20 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
   return (
     <>
       {/* Header */}
-      <header className="db-header">
+      <div className="db-header">
         <div className="db-header-left">
           <h1>All Employees</h1>
           <p>Manage your organization&apos;s people and their onboarding journeys.</p>
         </div>
         <div className="db-header-actions">
-          <button className="btn btn-outline btn-sm" onClick={() => exportEmployeesCSV(filtered, journeyMap)}>
-            <i className="fa-solid fa-download" /> Export
+          <button className="btn btn-outline btn-sm" onClick={() => exportEmployeesCSV(filtered, journeyMap)} aria-label="Export employee list as CSV">
+            <i className="fa-solid fa-download" aria-hidden="true" /> Export
           </button>
-          <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowInvite(true)}>
-            <i className="fa-solid fa-user-plus" /> Invite Member
+          <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowInvite(true)} aria-label="Invite a new team member">
+            <i className="fa-solid fa-user-plus" aria-hidden="true" /> Invite Member
           </button>
         </div>
-      </header>
+      </div>
 
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 

@@ -55,7 +55,7 @@ export default function LeadershipSimulation({ onClose, employeeData }: Leadersh
     }
   }, [status])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!input.trim() || status === 'submitted' || status === 'streaming') return
     const text = input
@@ -200,7 +200,7 @@ ${transcript}`
           {/* Metric bars */}
           {[
             { label: 'Empathy', value: metrics.empathy, color: 'var(--cyan)' },
-            { label: 'Authority', value: metrics.authority, color: '#f87171' },
+            { label: 'Authority', value: metrics.authority, color: 'var(--red)' },
             { label: 'Clarity', value: metrics.clarity, color: 'var(--blue)' },
           ].map(({ label, value, color }) => (
             <div key={label} style={{ marginBottom: 18 }}>
@@ -337,11 +337,7 @@ ${transcript}`
                     </div>
                     {isGeneratingFeedback ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text3)', padding: '12px 0' }}>
-                        <div style={{
-                          width: 16, height: 16, border: '2px solid var(--border2)',
-                          borderTopColor: 'var(--cyan)', borderRadius: '50%',
-                          animation: 'spin 0.6s linear infinite',
-                        }} />
+                        <i className="fa-solid fa-spinner fa-spin" style={{ color: 'var(--cyan)' }} />
                         Generating your coaching report...
                       </div>
                     ) : (
@@ -353,7 +349,6 @@ ${transcript}`
                   <button onClick={onClose} className="btn btn-primary btn-block">
                     Close Simulation
                   </button>
-                  <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                 </motion.div>
               )}
             </AnimatePresence>

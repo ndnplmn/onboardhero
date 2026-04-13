@@ -415,6 +415,18 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .db-header p { font-size: 12px; color: var(--text3); }
 .db-body { padding: 24px 28px; }
 
+/* kpi-card — compact dashboard KPI tile (used platform-wide) */
+.kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+.kpi-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 6px; flex-shrink: 0; }
+.kpi-icon.blue   { background: var(--blue-light);  color: var(--blue); }
+.kpi-icon.cyan   { background: var(--cyan-light);  color: var(--cyan); }
+.kpi-icon.green  { background: var(--green-bg);    color: var(--green); }
+.kpi-icon.amber  { background: var(--amber-bg);    color: var(--amber); }
+.kpi-icon.red    { background: var(--red-bg);      color: var(--red); }
+.kpi-icon.aqua   { background: var(--aqua-light);  color: var(--aqua); }
+.kpi-value { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+.kpi-label { font-size: 11px; color: var(--text3); font-weight: 600; }
+
 .kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px; }
 .kpi-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px 18px; position: relative; overflow: hidden; }
 .kpi-box::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: var(--grad); }
@@ -1020,3 +1032,21 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .chat-msg.assistant .chat-avatar { background: var(--cyan-light); color: var(--cyan); }
 .chat-msg.user .chat-avatar { background: var(--blue-light); color: var(--blue); }
 .chat-typing { color: var(--text3); font-size: 0.85rem; padding: 8px 0; }
+
+/* ── Radar scanline animation ─────────────────────────────────── */
+.radar-scanline-pro {
+  position: absolute;
+  width: 50%; height: 2px;
+  background: linear-gradient(to right, transparent, var(--cyan));
+  top: 50%; left: 50%;
+  transform-origin: left center;
+  animation: radar-sweep 4s linear infinite;
+  opacity: 0.3;
+  pointer-events: none;
+}
+@keyframes radar-sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ── Achievement badge hover ──────────────────────────────────── */
+.badge-item { transition: transform 0.25s var(--ease); }
+.badge-item:hover { transform: translateY(-3px); }
+.badge-item.locked { cursor: not-allowed; }
