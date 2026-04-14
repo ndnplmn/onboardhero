@@ -44,7 +44,7 @@ export default async function ManagerCoaching() {
     }
   }
 
-  const teamMembers = (journeys || []).map((j: any) => {
+  const dbTeamMembers = (journeys || []).map((j: any) => {
     const counts = taskCounts[j.id] || { total: 0, completed: 0 }
     const progress = counts.total > 0 ? Math.round((counts.completed / counts.total) * 100) : 0
     return {
@@ -61,6 +61,14 @@ export default async function ManagerCoaching() {
       totalTasks: counts.total,
     }
   })
+
+  const MOCK_TEAM_MEMBERS = [
+    { journeyId: 'j1', employeeId: 'e1', name: 'Marcus Reed',  department: 'Product',     status: 'in_progress', currentWeek: 3,  riskScore: 18, sentimentScore: 82, progress: 24, completedTasks: 3,  totalTasks: 12 },
+    { journeyId: 'j2', employeeId: 'e2', name: 'Priya Mehta',  department: 'Engineering', status: 'at_risk',     currentWeek: 7,  riskScore: 74, sentimentScore: 38, progress: 58, completedTasks: 7,  totalTasks: 12 },
+    { journeyId: 'j4', employeeId: 'e4', name: 'Diana Torres', department: 'Design',      status: 'in_progress', currentWeek: 2,  riskScore: 12, sentimentScore: 91, progress: 16, completedTasks: 2,  totalTasks: 12 },
+  ]
+
+  const teamMembers = dbTeamMembers.length > 0 ? dbTeamMembers : MOCK_TEAM_MEMBERS
 
   return <CoachingClient teamMembers={teamMembers} />
 }

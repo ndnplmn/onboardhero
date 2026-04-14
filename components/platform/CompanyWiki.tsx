@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 
 const CATEGORIES = [
   { id: 'all',         name: 'All Articles',         icon: 'fa-solid fa-th-large' },
@@ -96,6 +96,14 @@ const CATEGORY_COLOR: Record<string, string> = {
   product:     'var(--aqua)',
 }
 
+interface ArticleDraft {
+  title: string
+  category: string
+  excerpt: string
+  readTime: string
+  pinned: boolean
+}
+
 interface CompanyWikiProps {
   canManage?: boolean
 }
@@ -103,10 +111,13 @@ interface CompanyWikiProps {
 export default function CompanyWiki({ canManage = false }: CompanyWikiProps) {
   const [activeCategory, setActiveCategory] = useState('all')
   const [search, setSearch]                 = useState('')
+  const [articles, setArticles]             = useState(ARTICLES)
+  const [showAddModal, setShowAddModal]     = useState(false)
+  const [readArticleId, setReadArticleId]   = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
-    return ARTICLES.filter((a) => {
+    return articles.filter((a) => {
       const matchCat = activeCategory === 'all' || a.category === activeCategory
       const matchQ   = !q || a.title.toLowerCase().includes(q) || a.excerpt.toLowerCase().includes(q)
       return matchCat && matchQ
@@ -138,7 +149,7 @@ export default function CompanyWiki({ canManage = false }: CompanyWikiProps) {
         </div>
         <div className="db-header-actions">
           {canManage && (
-            <button className="btn btn-primary btn-sm btn-glow" aria-label="Add new wiki article">
+            <button className="btn btn-primary btn-sm btn-glow" aria-label="Add new wiki article" onClick={() => setShowAddModal(true)}>
               <i className="fa-solid fa-plus" aria-hidden="true" /> Add Article
             </button>
           )}
@@ -235,11 +246,11 @@ export default function CompanyWiki({ canManage = false }: CompanyWikiProps) {
                   <>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 12 }}>
                       <span style={{ color: 'var(--text2)' }}>Total articles</span>
-                      <span style={{ fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--cyan)' }}>{ARTICLES.length}</span>
+                      <span style={{ fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--cyan)' }}>{articles.length}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 12 }}>
                       <span style={{ color: 'var(--text2)' }}>Required reading</span>
-                      <span style={{ fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--amber)' }}>{ARTICLES.filter(a => a.pinned).length}</span>
+                      <span style={{ fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--amber)' }}>{articles.filter(a => a.pinned).length}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                       <span style={{ color: 'var(--text2)' }}>Categories</span>
@@ -250,7 +261,7 @@ export default function CompanyWiki({ canManage = false }: CompanyWikiProps) {
                   <>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12 }}>
                       <span style={{ color: 'var(--text2)' }}>Articles read</span>
-                      <span style={{ fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--cyan)' }}>2 / {ARTICLES.length}</span>
+                      <span style={{ fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--cyan)' }}>2 / {articles.length}</span>
                     </div>
                     <div style={{ height: 4, background: 'var(--border)', borderRadius: 100, overflow: 'hidden' }}>
                       <div style={{
@@ -287,7 +298,7 @@ export default function CompanyWiki({ canManage = false }: CompanyWikiProps) {
                       Required Reading
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      {pinned.map(a => <ArticleCard key={a.id} article={a} canManage={canManage} />)}
+                      {pinned.map(a => <ArticleCard key={a.id} article={a} canManage={canManage} onRead={() => setReadArticleId(a.id)} />)}
                     </div>
                   </div>
                 )}
@@ -299,7 +310,7 @@ export default function CompanyWiki({ canManage = false }: CompanyWikiProps) {
                       </div>
                     )}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      {regular.map(a => <ArticleCard key={a.id} article={a} canManage={canManage} />)}
+                      {regular.map(a => <ArticleCard key={a.id} article={a} canManage={canManage} onRead={() => setReadArticleId(a.id)} />)}
                     </div>
                   </div>
                 )}
@@ -308,11 +319,128 @@ export default function CompanyWiki({ canManage = false }: CompanyWikiProps) {
           </div>
         </div>
       </div>
+
+      {/* Add Article Modal */}
+      {showAddModal && (
+        <AddArticleModal
+          onClose={() => setShowAddModal(false)}
+          onSave={(draft) => {
+            const newArticle = {
+              id: `a${Date.now()}`,
+              title: draft.title,
+              date: 'Just now',
+              excerpt: draft.excerpt,
+              category: draft.category,
+              readTime: draft.readTime || '3 min read',
+              pinned: draft.pinned,
+            }
+            setArticles(prev => [newArticle, ...prev])
+            setShowAddModal(false)
+          }}
+        />
+      )}
+
+      {/* Read Article Modal */}
+      {readArticleId && (() => {
+        const article = articles.find(a => a.id === readArticleId)
+        if (!article) return null
+        const accentColor = CATEGORY_COLOR[article.category] ?? 'var(--blue)'
+        const catLabel = CATEGORIES.find(c => c.id === article.category)?.name ?? article.category
+        return (
+          <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && setReadArticleId(null)}>
+            <div className="modal-box" style={{ maxWidth: 680, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+              <button className="modal-close" onClick={() => setReadArticleId(null)}><i className="fa-solid fa-xmark" /></button>
+              <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: accentColor }}>{catLabel}</span>
+                {article.pinned && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', background: 'var(--amber-bg)', color: 'var(--amber)', borderRadius: 100 }}>Required</span>}
+              </div>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, marginBottom: 8, lineHeight: 1.3 }}>{article.title}</h2>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 20, display: 'flex', gap: 12 }}>
+                <span><i className="fa-regular fa-clock" style={{ marginRight: 4 }} />{article.readTime}</span>
+                <span>{article.date}</span>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.8, marginBottom: 16 }}>{article.excerpt}</p>
+                <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.8, marginBottom: 16 }}>
+                  This article provides detailed guidance to help you navigate this topic effectively at OnboardHero.
+                  Our team has compiled best practices, internal processes, and practical tips to make sure you have
+                  everything you need to get started and thrive.
+                </p>
+                <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.8 }}>
+                  If you have questions after reading this article, reach out to your manager or the HR team — we're here to help.
+                  You can also ask Aura, our AI assistant, for a quick summary or more context on any topic.
+                </p>
+              </div>
+              <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                <button className="btn btn-outline btn-sm" onClick={() => setReadArticleId(null)}>Close</button>
+                {canManage && <button className="btn btn-primary btn-sm"><i className="fa-solid fa-pen-to-square" style={{ marginRight: 6 }} />Edit Article</button>}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </>
   )
 }
 
-function ArticleCard({ article, canManage }: { article: typeof ARTICLES[0]; canManage: boolean }) {
+function AddArticleModal({ onClose, onSave }: { onClose: () => void; onSave: (draft: ArticleDraft) => void }) {
+  const [title, setTitle]     = useState('')
+  const [category, setCategory] = useState('culture')
+  const [excerpt, setExcerpt] = useState('')
+  const [readTime, setReadTime] = useState('3 min read')
+  const [pinned, setPinned]   = useState(false)
+  const [error, setError]     = useState('')
+
+  function handleSave() {
+    if (!title.trim()) { setError('Title is required.'); return }
+    if (!excerpt.trim()) { setError('Summary is required.'); return }
+    onSave({ title: title.trim(), category, excerpt: excerpt.trim(), readTime, pinned })
+  }
+
+  return (
+    <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{ maxWidth: 560 }}>
+        <button className="modal-close" onClick={onClose}><i className="fa-solid fa-xmark" /></button>
+        <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 4 }}>
+          <i className="fa-solid fa-plus" style={{ marginRight: 8, color: 'var(--blue)' }} />New Article
+        </h2>
+        <p style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>Add a new article to the company wiki.</p>
+
+        <div className="fg">
+          <label>Title <span style={{ color: 'var(--red)' }}>*</span></label>
+          <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Remote Work Best Practices" />
+        </div>
+        <div className="fg">
+          <label>Category</label>
+          <select value={category} onChange={e => setCategory(e.target.value)} style={{ padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 'var(--r)', background: 'var(--surface)', color: 'var(--text)', fontSize: 13, width: '100%' }}>
+            {CATEGORIES.filter(c => c.id !== 'all').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+        <div className="fg">
+          <label>Summary / Excerpt <span style={{ color: 'var(--red)' }}>*</span></label>
+          <textarea value={excerpt} onChange={e => setExcerpt(e.target.value)} placeholder="Brief description of what this article covers..." rows={3} style={{ padding: '10px', border: '1px solid var(--border)', borderRadius: 'var(--r)', background: 'var(--surface)', width: '100%', resize: 'vertical', fontSize: 13, color: 'var(--text)', fontFamily: 'var(--font-body)' }} />
+        </div>
+        <div className="fg">
+          <label>Read Time</label>
+          <input type="text" value={readTime} onChange={e => setReadTime(e.target.value)} placeholder="e.g. 4 min read" />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+          <input type="checkbox" id="pinned-check" checked={pinned} onChange={e => setPinned(e.target.checked)} style={{ width: 16, height: 16, cursor: 'pointer' }} />
+          <label htmlFor="pinned-check" style={{ fontSize: 13, color: 'var(--text2)', cursor: 'pointer', margin: 0 }}>
+            Mark as Required Reading
+          </label>
+        </div>
+        {error && <p style={{ fontSize: 12, color: 'var(--red)', marginBottom: 12 }}><i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 5 }} />{error}</p>}
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button className="btn btn-outline btn-sm" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={handleSave}><i className="fa-solid fa-floppy-disk" style={{ marginRight: 6 }} />Save Article</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ArticleCard({ article, canManage, onRead }: { article: typeof ARTICLES[0]; canManage: boolean; onRead: () => void }) {
   const catLabel   = CATEGORIES.find(c => c.id === article.category)?.name ?? article.category
   const accentColor = CATEGORY_COLOR[article.category] ?? 'var(--blue)'
 
@@ -323,6 +451,8 @@ function ArticleCard({ article, canManage }: { article: typeof ARTICLES[0]; canM
       role="button"
       aria-label={`Read article: ${article.title}`}
       style={{ cursor: 'pointer', transition: 'transform 0.15s var(--ease), box-shadow 0.15s var(--ease)' }}
+      onClick={onRead}
+      onKeyDown={e => e.key === 'Enter' && onRead()}
       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)' }}
       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '' }}
     >

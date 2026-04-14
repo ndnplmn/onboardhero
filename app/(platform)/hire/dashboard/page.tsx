@@ -33,7 +33,17 @@ function buildMockJourney() {
   } as any
 }
 
-const MOCK_TASKS: any[] = []
+const MOCK_TASKS: any[] = [
+  { id: 'mt1', title: 'Complete IT security training',   description: 'Finish the mandatory cybersecurity module and pass the quiz.',            week: 1, status: 'completed',  assigned_to_role: 'new_hire', due_date: null, completed_at: new Date(Date.now() - 12 * 86400000).toISOString() },
+  { id: 'mt2', title: 'Set up development environment',  description: 'Install required tools, configure VPN, and clone the main repos.',        week: 1, status: 'completed',  assigned_to_role: 'new_hire', due_date: null, completed_at: new Date(Date.now() - 11 * 86400000).toISOString() },
+  { id: 'mt3', title: 'Read the company culture guide',  description: 'Review the wiki: values, remote-work norms, and team rituals.',           week: 1, status: 'completed',  assigned_to_role: 'new_hire', due_date: null, completed_at: new Date(Date.now() - 10 * 86400000).toISOString() },
+  { id: 'mt4', title: 'Meet with your direct team',      description: '20-min intro 1:1s with each team member to learn about their work.',      week: 2, status: 'completed',  assigned_to_role: 'new_hire', due_date: null, completed_at: new Date(Date.now() - 7  * 86400000).toISOString() },
+  { id: 'mt5', title: 'Join weekly team standup',        description: 'Attend daily standup to get familiar with the team workflow and sprint.',  week: 2, status: 'in_progress', assigned_to_role: 'new_hire', due_date: null, completed_at: null },
+  { id: 'mt6', title: 'Submit benefits enrollment form', description: 'Complete health, dental, and 401k elections via the HR portal.',          week: 2, status: 'pending',    assigned_to_role: 'new_hire', due_date: null, completed_at: null },
+  { id: 'mt7', title: 'Shadow a senior team member',     description: 'Spend one full day observing how a senior colleague approaches their work.', week: 3, status: 'pending', assigned_to_role: 'new_hire', due_date: null, completed_at: null },
+  { id: 'mt8', title: 'Complete first independent task', description: 'Deliver your first solo contribution — reviewed and merged by the team.', week: 3, status: 'pending',    assigned_to_role: 'new_hire', due_date: null, completed_at: null },
+  { id: 'mt9', title: 'Write a 30-day reflection note',  description: 'Share first-month learnings and open questions with your manager.',       week: 4, status: 'pending',    assigned_to_role: 'new_hire', due_date: null, completed_at: null },
+]
 
 function buildMockCheckIns() {
   const now = new Date()
