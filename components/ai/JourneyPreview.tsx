@@ -62,13 +62,33 @@ export default function JourneyPreview({ onClose }: { onClose: () => void }) {
 
         <div style={{ flex: 1, overflowY: 'auto', marginBottom: '12px', minHeight: '300px' }}>
           {messages.length === 0 && (
-            <div style={{ textAlign: 'center', color: 'var(--text3)', padding: '40px 20px' }}>
-              <p style={{ fontSize: '0.95rem', marginBottom: '12px' }}>
-                Describe the role you want to create an onboarding journey for.
+            <div style={{ color: 'var(--text3)', padding: '20px 0' }}>
+              <p style={{ fontSize: '0.9rem', marginBottom: '16px', color: 'var(--text2)' }}>
+                Describe the role and I&apos;ll generate a complete 90-day onboarding journey.
               </p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text3)' }}>
-                Example: &quot;A senior frontend developer joining the Product team who will work with React and TypeScript.&quot;
-              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text3)', marginBottom: 4 }}>Quick start →</p>
+                {[
+                  'Frontend Engineer joining the Product team, working with React & TypeScript',
+                  'Sales Account Executive — first 90 days to first closed deal',
+                  'HR Operations Specialist focused on HRIS and compliance',
+                ].map(prompt => (
+                  <button
+                    key={prompt}
+                    onClick={() => { setInput(prompt) }}
+                    style={{
+                      textAlign: 'left', background: 'var(--surface)', border: '1px solid var(--border)',
+                      borderRadius: 'var(--r)', padding: '10px 14px', cursor: 'pointer',
+                      fontSize: '0.82rem', color: 'var(--text2)', transition: 'border-color 0.15s',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--cyan)')}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
+                  >
+                    <i className="fa-solid fa-bolt" style={{ color: 'var(--amber)', marginRight: 8, fontSize: 10 }} />
+                    {prompt}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -127,8 +147,12 @@ export default function JourneyPreview({ onClose }: { onClose: () => void }) {
             <div className="chat-typing">Generating...</div>
           )}
           {error && (
-            <div style={{ color: 'var(--red)', fontSize: '0.85rem', padding: '8px 0' }}>
-              Something went wrong. Please try again.
+            <div style={{ color: 'var(--red)', fontSize: '0.85rem', padding: '10px 14px', background: 'var(--red-bg)', borderRadius: 'var(--r)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }} />
+              {error.message?.includes('401') || error.message?.includes('Unauthorized')
+                ? 'Session expired — please log in again.'
+                : 'Something went wrong. Please try again.'
+              }
             </div>
           )}
           <div ref={messagesEndRef} />

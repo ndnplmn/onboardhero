@@ -1,7 +1,7 @@
 import { streamText, convertToModelMessages, stepCountIs } from 'ai'
 import { model } from '@/lib/ai/groq'
 import { createContentStudioConfig } from '@/lib/ai/presets/content-studio'
-import { createSupabaseServer, createSupabaseAdmin } from '@/lib/db/supabase-server'
+import { createSupabaseServer } from '@/lib/db/supabase-server'
 
 export async function POST(req: Request) {
   const supabase = await createSupabaseServer()
@@ -13,18 +13,6 @@ export async function POST(req: Request) {
 
   if (authError || !user) {
     return new Response('Unauthorized', { status: 401 })
-  }
-
-  // Verify HR role (admin bypasses RLS)
-  const admin = createSupabaseAdmin()
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || profile.role !== 'hr') {
-    return new Response('Forbidden: HR role required', { status: 403 })
   }
 
   const config = createContentStudioConfig()
