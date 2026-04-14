@@ -10,7 +10,8 @@ export default async function PlatformLayout({ children }: { children: React.Rea
     <div className="app-layout">
       <Sidebar user={user} />
       <main className="app-main">
-        <div className="app-topbar">
+        {/* Desktop topbar — hidden on mobile (mobile bar is inside Sidebar) */}
+        <div className="app-topbar app-topbar-desktop">
           <NotificationBell userId={user.id} />
         </div>
         {children}

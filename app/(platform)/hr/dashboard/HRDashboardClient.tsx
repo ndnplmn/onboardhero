@@ -94,11 +94,7 @@ export default function HRDashboardClient({
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 
         {/* Row 1 — 5 KPIs */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
-          gap: 14,
-        }}>
+        <div className="db-grid-kpi5">
           <div className="kpi-card">
             <div className="kpi-icon cyan"><i className="fa-solid fa-users" aria-hidden="true" /></div>
             <div className="kpi-value">{kpis.totalWorkforce.toLocaleString()}</div>
@@ -126,25 +122,15 @@ export default function HRDashboardClient({
           </div>
         </div>
 
-        {/* Row 2 — Analytics belt: 3 equal-weight cards, igual altura */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: 'var(--gap-standard)',
-          alignItems: 'stretch',
-        }}>
+        {/* Row 2 — Analytics belt: 3 equal-weight cards */}
+        <div className="db-grid-3col">
           <CompletionRateCard data={completionData} />
           <EngagementScoreCard data={engagementData} />
           <StageChecklist stages={stages} />
         </div>
 
-        {/* Row 3 — Main 2/3 + Side 1/3, columnas de igual altura */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '2fr 1fr',
-          gap: 'var(--gap-standard)',
-          alignItems: 'stretch',
-        }}>
+        {/* Row 3 — Main 2/3 + Side 1/3 */}
+        <div className="db-grid-2-1">
           {/* Columna principal */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
             <GlobalFrictionMap />

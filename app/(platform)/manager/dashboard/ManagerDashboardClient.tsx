@@ -56,24 +56,15 @@ export default function ManagerDashboardClient({
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 
         {/* Row 1 — 4 KPIs */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 14,
-        }}>
+        <div className="db-grid-kpi4">
           <KPICard value={journeys.length}         label="Active Hires"      colorClass="cyan"  icon="fa-solid fa-user-group" />
           <KPICard value={upcomingCheckIns.length}  label="Pending Check-ins" colorClass="blue"  icon="fa-solid fa-calendar-check" />
           <KPICard value={atRiskCount}              label="At Risk"           colorClass="red"   icon="fa-solid fa-triangle-exclamation" />
           <KPICard value="4.8/5"                    label="Team Feedback"     colorClass="green" icon="fa-solid fa-face-smile" />
         </div>
 
-        {/* Row 2 — Main 2/3 + Side 1/3, columnas de igual altura */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '2fr 1fr',
-          gap: 'var(--gap-standard)',
-          alignItems: 'stretch',
-        }}>
+        {/* Row 2 — Main 2/3 + Side 1/3 */}
+        <div className="db-grid-2-1">
 
           {/* Columna principal */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)', minWidth: 0 }}>

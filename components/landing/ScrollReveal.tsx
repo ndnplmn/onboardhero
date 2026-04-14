@@ -8,9 +8,10 @@ export default function ScrollReveal() {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('revealed')
+          observer.unobserve(entry.target)
         }
       })
-    }, { threshold: 0.1 })
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' })
 
     const targets = document.querySelectorAll('.reveal, .section-reveal, .price-card, .bene-card')
     targets.forEach(t => observer.observe(t))

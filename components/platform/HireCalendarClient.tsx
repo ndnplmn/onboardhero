@@ -141,7 +141,7 @@ export default function HireCalendarClient({ milestones, checkIns, tasks, startD
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 
         {/* KPI strip */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+        <div className="db-grid-kpi4">
           <div className="kpi-card">
             <div className="kpi-icon blue"><i className="fa-solid fa-calendar-check" aria-hidden="true" /></div>
             <div className="kpi-value">{daysSinceStart}</div>
@@ -165,7 +165,7 @@ export default function HireCalendarClient({ milestones, checkIns, tasks, startD
         </div>
 
         {/* Main grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--gap-standard)', alignItems: 'start' }}>
+        <div className="db-grid-2-1" style={{ alignItems: 'start' }}>
 
           {/* Calendar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>

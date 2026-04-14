@@ -144,7 +144,7 @@ export default function CalendarClient({ checkIns, deadlines, hirees }: Calendar
       <div className="db-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
 
         {/* KPI strip */}
-        <div className="kpi-row">
+        <div className="db-grid-kpi4">
           <div className="kpi-card">
             <div className="kpi-icon blue"><i className="fa-solid fa-calendar-check" /></div>
             <div className="kpi-value">{checkIns.length}</div>
@@ -168,7 +168,7 @@ export default function CalendarClient({ checkIns, deadlines, hirees }: Calendar
         </div>
 
         {/* Main 2/3 + Side 1/3 */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--gap-standard)', alignItems: 'start' }}>
+        <div className="db-grid-2-1" style={{ alignItems: 'start' }}>
 
           {/* Calendar grid */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>

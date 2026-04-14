@@ -60,7 +60,7 @@ export default function EmployeeTable({ onInviteNew }: EmployeeTableProps) {
           </button>
         </div>
       </div>
-      <div className="db-card-bd" style={{ padding: 0, flex: 1, overflow: 'auto' }}>
+      <div className="db-card-bd emp-tbl-wrap" style={{ padding: 0, flex: 1, overflow: 'auto' }}>
         <table className="emp-tbl">
           <thead>
             <tr>

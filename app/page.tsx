@@ -8,10 +8,12 @@ import Pricing from '@/components/landing/Pricing'
 import FAQ from '@/components/landing/FAQ'
 import CTAStrip from '@/components/landing/CTAStrip'
 import Footer from '@/components/landing/Footer'
+import ScrollReveal from '@/components/landing/ScrollReveal'
 
 export default function LandingPage() {
   return (
-    <div id="page-landing" className="page active">
+    <div id="page-landing" className="landing-page">
+      <ScrollReveal />
       <Navbar />
       <Hero />
       <div className="section-reveal"><LogosBar /></div>

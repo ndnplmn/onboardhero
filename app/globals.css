@@ -66,8 +66,7 @@ html { scroll-behavior: smooth; }
 body { font-family: var(--font-body); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
 
 /* ── PAGE SYSTEM ─────────────────────────────────────────────── */
-.page { display: none; }
-.page.active { display: block; }
+.landing-page { display: block; }
 
 /* ── UTILITY ─────────────────────────────────────────────────── */
 .container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
@@ -382,8 +381,13 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 @keyframes loadbar { from{width:0} to{width:100%} }
 
 /* ── APP LAYOUT ──────────────────────────────────────────────── */
-.app-layout { display: flex; height: 100vh; overflow: hidden; }
-.app-sidebar { width: 240px; background: var(--sb-bg); flex-shrink: 0; display: flex; flex-direction: column; overflow-y: auto; }
+.app-layout { display: flex; height: 100dvh; overflow: hidden; }
+.app-sidebar {
+  width: 240px; background: var(--sb-bg); flex-shrink: 0;
+  display: flex; flex-direction: column; overflow-y: auto;
+  position: relative; z-index: 200;
+  transition: transform 0.28s cubic-bezier(0.16,1,0.3,1);
+}
 .sb-logo { padding: 18px 18px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
 .sb-logo-img { width: 160px; height: auto; }
 
@@ -395,9 +399,19 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 
 .role-btn.active { background: rgba(0,200,224,0.14); color: var(--cyan); }
 .sb-nav { flex: 1; padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; }
-.sb-nav a { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 8px; color: rgba(255,255,255,0.38); text-decoration: none; font-size: 12px; font-weight: 500; transition: all 0.2s; }
+/* unified nav link class (used alongside bare <a> rules) */
+.sb-nav-item,
+.sb-nav a {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 12px; border-radius: 8px;
+  color: rgba(255,255,255,0.38); text-decoration: none;
+  font-size: 12px; font-weight: 500; transition: all 0.2s;
+}
+.sb-nav-item:hover,
 .sb-nav a:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); }
+.sb-nav-item.active,
 .sb-nav a.active { background: rgba(255,255,255,0.08); color: #fff; }
+.sb-nav-item i,
 .sb-nav a i { width: 14px; text-align: center; font-size: 12px; }
 .sb-nav-sec { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.18); padding: 12px 12px 5px; }
 .sb-user { padding: 14px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 9px; }
@@ -407,7 +421,13 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .sb-user span { font-size: 10px; color: rgba(255,255,255,0.3); display: block; }
 .sb-logout { background: none; border: none; color: rgba(255,255,255,0.28); cursor: pointer; font-size: 13px; padding: 6px; border-radius: 6px; transition: all 0.2s; }
 .sb-logout:hover { color: #fff; background: rgba(255,255,255,0.06); }
-.app-main { flex: 1; overflow-y: auto; background: var(--bg); }
+
+/* Mobile-only elements — hidden on desktop */
+.sb-mobile-bar { display: none; }
+.sb-close      { display: none; }
+.sb-overlay    { display: none; }
+
+.app-main { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--bg); min-width: 0; }
 
 /* ── DASHBOARD COMPONENTS ────────────────────────────────────── */
 .db-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; position: sticky; top: 0; z-index: 10; }
@@ -489,13 +509,21 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 
 /* ── DASHBOARD LAYOUT UTILITIES ──────────────────────────────── */
 .db-header-left { display: flex; flex-direction: column; gap: 2px; }
-.db-header-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.db-header-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-wrap: wrap; }
 
 .db-col-main { display: flex; flex-direction: column; gap: var(--gap-standard); min-width: 0; }
 .db-col-side  { display: flex; flex-direction: column; gap: var(--gap-standard); min-width: 0; }
 .db-bottom-full { margin-top: var(--gap-standard); }
-
 .analytics-belt { margin-bottom: var(--gap-standard); }
+
+/* ── PLATFORM RESPONSIVE GRID HELPERS ───────────────────────── */
+/* These replace inline gridTemplateColumns so media queries can override them */
+.db-grid-kpi4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+.db-grid-kpi5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; }
+.db-grid-kpi3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.db-grid-2-1  { display: grid; grid-template-columns: 2fr 1fr; gap: var(--gap-standard); align-items: stretch; }
+.db-grid-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--gap-standard); align-items: stretch; }
+.db-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-standard); align-items: stretch; }
 
 /* AI badge */
 .badge-ai {
@@ -741,39 +769,173 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 
 
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
+
+/* ── Tablet (≤1024px) ────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .feat-grid { grid-template-columns: repeat(2,1fr); }
-  .kpi-row { grid-template-columns: repeat(2,1fr); }
-  .footer-grid { grid-template-columns: 1fr 1fr; }
+  /* Landing */
+  .feat-grid    { grid-template-columns: repeat(2,1fr); }
+  .kpi-row      { grid-template-columns: repeat(2,1fr); }
+  .footer-grid  { grid-template-columns: 1fr 1fr; }
+
+  /* Platform — reduce sidebar width */
+  .app-sidebar  { width: 220px; }
+
+  /* Platform — 2-col grids stay but with tighter gap */
+  .db-body      { padding: 20px 24px; }
 }
+
+/* ── Small tablet (≤860px) ───────────────────────────────────── */
 @media (max-width: 860px) {
-  .hero-grid { grid-template-columns: 1fr; }
-  .hero-right { display: none; }
-  .how-grid { grid-template-columns: 1fr; }
-  .how-arrow { display: none; }
-  .bene-grid { grid-template-columns: 1fr; }
-  .price-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
-  .price-card.featured { transform: none; }
-  .checkout-shell { grid-template-columns: 1fr; }
-  .checkout-left { display: none; }
-  .db-row.col2, .db-row.col3 { grid-template-columns: 1fr; }
-  .contact-grid { grid-template-columns: 1fr; }
+  /* Landing */
+  .hero-grid                    { grid-template-columns: 1fr; }
+  .hero-right                   { display: none; }
+  .how-grid                     { grid-template-columns: 1fr; }
+  .how-arrow                    { display: none; }
+  .bene-grid                    { grid-template-columns: 1fr; }
+  .price-grid                   { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+  .price-card.featured          { transform: none; }
+  .checkout-shell               { grid-template-columns: 1fr; }
+  .checkout-left                { display: none; }
+  .db-row.col2, .db-row.col3    { grid-template-columns: 1fr; }
+  .contact-grid                 { grid-template-columns: 1fr; }
+
+  /* Platform — switch to mobile sidebar drawer */
+  .app-layout   { flex-direction: column; height: 100dvh; }
+
+  /* Sidebar becomes a fixed off-screen drawer */
+  .app-sidebar  {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 500;
+    width: 280px; max-width: 85vw;
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+  .app-sidebar.sb-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 40px rgba(0,0,0,0.4);
+  }
+
+  /* Backdrop overlay */
+  .sb-overlay {
+    display: block;
+    position: fixed; inset: 0; z-index: 499;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+  /* Mobile top bar (hamburger) */
+  .sb-mobile-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 56px;
+    background: var(--sb-bg);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .sb-mobile-logo { height: 28px; width: auto; }
+  .sb-hamburger {
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px;
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,255,255,0.7); font-size: 18px;
+    border-radius: 8px; transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sb-hamburger:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+  /* Close button inside sidebar on mobile */
+  .sb-close {
+    display: flex; align-items: center; justify-content: center;
+    position: absolute; top: 14px; right: 14px;
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.07); border: none; cursor: pointer;
+    color: rgba(255,255,255,0.6); font-size: 16px;
+    border-radius: 8px; transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 1;
+  }
+  .sb-close:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+  /* app-main takes full viewport below mobile bar */
+  .app-main { flex: 1; overflow-y: auto; overflow-x: hidden; }
+
+  /* Dashboard header wraps on tablet */
+  .db-header {
+    padding: 14px 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .db-header-actions { margin-left: 0; flex-wrap: wrap; }
+  .db-body { padding: 16px 20px; }
+
+  /* KPI rows */
+  .kpi-row       { grid-template-columns: repeat(2,1fr); margin-bottom: 16px; }
+  .db-grid-kpi4  { grid-template-columns: repeat(2,1fr); }
+  .db-grid-kpi5  { grid-template-columns: repeat(3,1fr); }
+  .db-grid-kpi3  { grid-template-columns: repeat(2,1fr); }
+
+  /* 2/3+1/3 layout → side-by-side still fine at 860px, but collapses at 640 */
 }
+
+/* ── Mobile (≤640px) ─────────────────────────────────────────── */
 @media (max-width: 640px) {
+  /* Landing */
   .nav-links, .nav-actions { display: none; }
-  .hamburger { display: flex; }
-  .section { padding: 64px 0; }
-  .feat-grid { grid-template-columns: 1fr; }
+  .hamburger    { display: flex; }
+  .section      { padding: 64px 0; }
+  .feat-grid    { grid-template-columns: 1fr; }
   .form-row.two { grid-template-columns: 1fr; }
-  .footer-grid { grid-template-columns: 1fr; }
-  .app-layout { flex-direction: column; }
-  .app-sidebar { width: 100%; height: auto; }
-  .sb-nav { display: none; }
-  .sb-roles { flex-direction: row; }
-  .role-btn { flex: 1; justify-content: center; }
-  .db-body { padding: 14px; }
-  .res-grid { grid-template-columns: 1fr; }
-  .week-tabs { gap: 6px; }
+  .footer-grid  { grid-template-columns: 1fr; }
+  .res-grid     { grid-template-columns: 1fr; }
+  .week-tabs    { gap: 6px; }
+
+  /* Platform layout */
+  .app-sidebar  { width: 100%; max-width: 100%; }
+  .db-header    { padding: 12px 16px; gap: 10px; }
+  .db-header h1 { font-size: 16px; }
+  .db-header p  { font-size: 11px; }
+  .db-body      { padding: 12px 16px; }
+  .db-body > *  { min-width: 0; }
+
+  /* All platform grid helpers → single column */
+  .db-grid-kpi4, .db-grid-kpi5, .db-grid-kpi3 { grid-template-columns: repeat(2,1fr); gap: 10px; }
+  .db-grid-2-1, .db-grid-3col, .db-grid-2col   { grid-template-columns: 1fr; gap: 12px; }
+
+  /* KPI cards → 2-col on small mobile */
+  .kpi-row { grid-template-columns: repeat(2,1fr); gap: 10px; }
+  .kpi-card { padding: 12px 14px; }
+  .kpi-value { font-size: 18px; }
+
+  /* Tables — horizontal scroll */
+  .emp-tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .emp-tbl      { min-width: 560px; }
+
+  /* Prog cell */
+  .prog-cell { min-width: 70px; }
+
+  /* Notif dropdown — full width on mobile */
+  .notif-dropdown { width: calc(100vw - 32px); right: -8px; }
+
+  /* Chat */
+  .chat-container { padding: 0 16px 16px; height: calc(100dvh - 160px); }
+
+  /* Wiki sidebar hidden on mobile, full-width content */
+  .wiki-sidebar { display: none; }
+  .wiki-content-full { grid-column: 1 / -1 !important; }
+
+  /* Topbar */
+  .app-topbar { padding: 10px 16px; }
+}
+
+/* ── Very small (≤380px) ─────────────────────────────────────── */
+@media (max-width: 380px) {
+  .kpi-row { grid-template-columns: 1fr; }
+  .db-header-actions .btn { font-size: 12px; padding: 8px 12px; }
 }
 
 /* ── AUTH PAGES ──────────────────────────────────────────────── */
@@ -962,6 +1124,10 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .app-topbar {
   display: flex; justify-content: flex-end; align-items: center;
   padding: 16px 32px; border-bottom: 1px solid var(--border);
+}
+/* Desktop topbar hidden on mobile — mobile bar in sidebar handles it */
+@media (max-width: 860px) {
+  .app-topbar-desktop { display: none; }
 }
 
 /* ── NOTIFICATIONS ────────────────────────────────────────── */

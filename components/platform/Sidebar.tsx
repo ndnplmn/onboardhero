@@ -1,9 +1,11 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/db/supabase-client'
 import type { Profile } from '@/lib/db/types'
 import Link from 'next/link'
+import NotificationBell from '@/components/platform/NotificationBell'
 
 const NAV_SCHEMA = {
   hr: [
@@ -19,9 +21,9 @@ const NAV_SCHEMA = {
       { icon: 'fa-solid fa-book-open',           label: 'Company Wiki',   href: '/hr/wiki'    },
     ]},
     { section: 'Analytics', items: [
-      { icon: 'fa-solid fa-chart-bar', label: 'Reports', href: '/hr/analytics' },
-      { icon: 'fa-solid fa-bell',      label: 'Alerts',  href: '/hr/alerts'    },
-      { icon: 'fa-solid fa-calendar',  label: 'Calendar',href: '/hr/calendar'  },
+      { icon: 'fa-solid fa-chart-bar', label: 'Reports',  href: '/hr/analytics' },
+      { icon: 'fa-solid fa-bell',      label: 'Alerts',   href: '/hr/alerts'    },
+      { icon: 'fa-solid fa-calendar',  label: 'Calendar', href: '/hr/calendar'  },
     ]},
     { section: 'Account', items: [
       { icon: 'fa-solid fa-robot',       label: 'AI Assistant', href: '/hr/chat'    },
@@ -41,7 +43,7 @@ const NAV_SCHEMA = {
       { icon: 'fa-solid fa-calendar',     label: 'Calendar',     href: '/manager/calendar'  },
     ]},
     { section: 'Resources', items: [
-      { icon: 'fa-solid fa-book-open', label: 'Company Wiki', href: '/manager/wiki' },
+      { icon: 'fa-solid fa-book-open', label: 'Company Wiki', href: '/manager/wiki'   },
       { icon: 'fa-solid fa-bell',      label: 'Alerts',       href: '/manager/alerts' },
     ]},
     { section: 'Account', items: [
@@ -51,15 +53,15 @@ const NAV_SCHEMA = {
   ],
   new_hire: [
     { section: 'My Journey', items: [
-      { icon: 'fa-solid fa-house',      label: 'Home',     href: '/hire/dashboard' },
-      { icon: 'fa-solid fa-list-check', label: 'My Tasks', href: '/hire/tasks'     },
-      { icon: 'fa-solid fa-file-pen',   label: 'Forms',    href: '/hire/forms'     },
-      { icon: 'fa-solid fa-calendar-days', label: 'My Schedule', href: '/hire/calendar' },
+      { icon: 'fa-solid fa-house',         label: 'Home',        href: '/hire/dashboard' },
+      { icon: 'fa-solid fa-list-check',    label: 'My Tasks',    href: '/hire/tasks'     },
+      { icon: 'fa-solid fa-file-pen',      label: 'Forms',       href: '/hire/forms'     },
+      { icon: 'fa-solid fa-calendar-days', label: 'My Schedule', href: '/hire/calendar'  },
     ]},
     { section: 'Resources', items: [
-      { icon: 'fa-solid fa-book-open',    label: 'Company Wiki',  href: '/hire/resources/wiki'     },
-      { icon: 'fa-solid fa-address-book', label: 'Key Contacts',  href: '/hire/resources/contacts' },
-      { icon: 'fa-solid fa-folder-open',  label: 'Resources',     href: '/hire/resources'          },
+      { icon: 'fa-solid fa-book-open',    label: 'Company Wiki', href: '/hire/resources/wiki'     },
+      { icon: 'fa-solid fa-address-book', label: 'Key Contacts', href: '/hire/resources/contacts' },
+      { icon: 'fa-solid fa-folder-open',  label: 'Resources',    href: '/hire/resources'          },
     ]},
     { section: 'Account', items: [
       { icon: 'fa-solid fa-user-circle', label: 'My Profile',   href: '/hire/profile' },
@@ -74,17 +76,28 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ user }: SidebarProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const supabase = createSupabaseBrowser()
+  const pathname  = usePathname()
+  const router    = useRouter()
+  const supabase  = createSupabaseBrowser()
+  const [open, setOpen] = useState(false)
+
   const currentRole = pathname.startsWith('/hr') ? 'hr' : pathname.startsWith('/manager') ? 'manager' : 'new_hire'
-  const sections = (NAV_SCHEMA as any)[currentRole] || []
+  const sections    = (NAV_SCHEMA as any)[currentRole] || []
 
   const roleLabel: Record<string, string> = {
-    hr: 'HR Manager',
-    manager: 'Team Manager',
+    hr:       'HR Manager',
+    manager:  'Team Manager',
     new_hire: 'New Hire',
   }
+
+  // Close drawer on route change
+  useEffect(() => { setOpen(false) }, [pathname])
+
+  // Prevent body scroll when drawer is open on mobile
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [open])
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -92,58 +105,102 @@ export default function Sidebar({ user }: SidebarProps) {
   }
 
   return (
-    <aside className="app-sidebar">
-      <div className="sb-logo">
-        <img src="/ONBOARD_HERO_LOGO.png" alt="OnboardHero" className="sb-logo-img" />
-      </div>
-      <div className="sb-role-switcher">
-        <label>View Mode</label>
-        <select
-          value={currentRole}
-          onChange={(e) => {
-            const role = e.target.value
-            if (role === 'hr') router.push('/hr/dashboard')
-            else if (role === 'manager') router.push('/manager/dashboard')
-            else router.push('/hire/dashboard')
-          }}
+    <>
+      {/* Mobile top bar (visible only on mobile) */}
+      <div className="sb-mobile-bar">
+        <button
+          className="sb-hamburger"
+          onClick={() => setOpen(true)}
+          aria-label="Open navigation menu"
+          aria-expanded={open}
         >
-          <option value="hr">HR Manager</option>
-          <option value="manager">Team Manager</option>
-          <option value="new_hire">New Hire</option>
-        </select>
+          <i className="fa-solid fa-bars" aria-hidden="true" />
+        </button>
+        <img src="/ONBOARD_HERO_LOGO.png" alt="OnboardHero" className="sb-mobile-logo" />
+        <NotificationBell userId={user.id} />
       </div>
 
-      <nav className="sb-nav">
-        {sections.map((sec: any) => (
-          <div key={sec.section}>
-            <div className="sb-nav-sec">{sec.section}</div>
-            {sec.items.map((item: any) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`sb-nav-item${isActive ? ' active' : ''}`}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  <i className={item.icon} aria-hidden="true"></i>
-                  <span>{item.label}</span>
-                </Link>
-              )
-            })}
-          </div>
-        ))}
-      </nav>
-      <div className="sb-user">
-        <img src={user.avatar_url || `https://i.pravatar.cc/34?u=${user.id}`} alt={user.full_name} />
-        <div>
-          <strong>{user.full_name}</strong>
-          <span>{roleLabel[currentRole]}</span>
-        </div>
-        <button className="sb-logout" onClick={handleLogout} aria-label="Log out">
-          <i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+      {/* Backdrop overlay */}
+      {open && (
+        <div
+          className="sb-overlay"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar panel */}
+      <aside className={`app-sidebar${open ? ' sb-open' : ''}`} aria-label="Main navigation">
+
+        {/* Close button (mobile only) */}
+        <button
+          className="sb-close"
+          onClick={() => setOpen(false)}
+          aria-label="Close navigation menu"
+        >
+          <i className="fa-solid fa-xmark" aria-hidden="true" />
         </button>
-      </div>
-    </aside>
+
+        <div className="sb-logo">
+          <img src="/ONBOARD_HERO_LOGO.png" alt="OnboardHero" className="sb-logo-img" />
+        </div>
+
+        <div className="sb-role-switcher">
+          <label htmlFor="sb-role-select">View Mode</label>
+          <select
+            id="sb-role-select"
+            value={currentRole}
+            onChange={(e) => {
+              const role = e.target.value
+              if (role === 'hr')       router.push('/hr/dashboard')
+              else if (role === 'manager') router.push('/manager/dashboard')
+              else                     router.push('/hire/dashboard')
+            }}
+          >
+            <option value="hr">HR Manager</option>
+            <option value="manager">Team Manager</option>
+            <option value="new_hire">New Hire</option>
+          </select>
+        </div>
+
+        <nav className="sb-nav" aria-label="Site navigation">
+          {sections.map((sec: any) => (
+            <div key={sec.section}>
+              <div className="sb-nav-sec">{sec.section}</div>
+              {sec.items.map((item: any) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`sb-nav-item${isActive ? ' active' : ''}`}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    <i className={item.icon} aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          ))}
+        </nav>
+
+        <div className="sb-user">
+          <img
+            src={user.avatar_url || `https://i.pravatar.cc/34?u=${user.id}`}
+            alt={user.full_name ?? 'User avatar'}
+            width={32}
+            height={32}
+          />
+          <div>
+            <strong>{user.full_name}</strong>
+            <span>{roleLabel[currentRole]}</span>
+          </div>
+          <button className="sb-logout" onClick={handleLogout} aria-label="Log out">
+            <i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" />
+          </button>
+        </div>
+      </aside>
+    </>
   )
 }
