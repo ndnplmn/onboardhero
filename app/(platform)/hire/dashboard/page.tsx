@@ -32,6 +32,7 @@ import MilestoneCelebration from '@/components/platform/MilestoneCelebration'
 import CompletionCertificate from '@/components/platform/CompletionCertificate'
 import AuraNudgeBanner from './AuraNudgeBanner'
 import PeopleConnect, { type PersonMatch } from '@/components/platform/PeopleConnect'
+import SectionDivider from '@/components/platform/SectionDivider'
 
 export const dynamic = 'force-dynamic'
 
@@ -369,7 +370,7 @@ export default async function HireDashboard() {
           ),
           journey: (
             <>
-              <SectionDivider label="Your Journey" icon="fa-solid fa-map" />
+              <SectionDivider labelKey="components.hireDashboard.yourJourney" icon="fa-solid fa-map" />
               <SuccessPlaybookCard
                 dayNumber={dayNumber}
                 goals={goals}
@@ -403,7 +404,7 @@ export default async function HireDashboard() {
                   <IntegrationRadar data={radarData} currentWeek={journey.current_week} journeyId={journey.id} initialHistory={radarHistory} />
                   <ActivityFeed entries={activityEntries} />
                   <MoodArc pulses={(pulseChecks ?? []).map((p: any) => ({ week: p.week, score: p.score }))} currentWeek={journey.current_week} />
-                  <CollapseSection label="People & Achievements" count={3}>
+                  <CollapseSection labelKey="components.hireDashboard.peopleAchievements" count={3}>
                     <SocialBridge contacts={[
                       ...(journey.manager?.full_name ? [{
                         name:            journey.manager.full_name,
@@ -435,7 +436,7 @@ export default async function HireDashboard() {
           ),
           goals: (
             <>
-              <SectionDivider label="Goals & Growth" icon="fa-solid fa-flag" />
+              <SectionDivider labelKey="components.hireDashboard.goalsGrowth" icon="fa-solid fa-flag" />
               <GoalsBoard
                 journeyId={journey.id}
                 goals={goals}
@@ -609,19 +610,6 @@ function ManagerFeedbackCard({ feedback }: { feedback: ManagerFeedbackEntry[] })
   )
 }
 
-// ── SectionDivider ────────────────────────────────────────────────────────
-
-function SectionDivider({ label, icon }: { label: string; icon: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 -4px' }}>
-      <i className={icon} style={{ fontSize: 12, color: 'var(--cyan)', flexShrink: 0 }} aria-hidden="true" />
-      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text3)' }}>
-        {label}
-      </span>
-      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-    </div>
-  )
-}
 
 // ── SuccessPlaybookCard ────────────────────────────────────────────────────
 

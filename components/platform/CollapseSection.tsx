@@ -1,15 +1,17 @@
 'use client'
 
 import { useState } from 'react'
+import { useT } from '@/lib/i18n/context'
 
 interface CollapseSectionProps {
-  label: string
+  labelKey: string
   count?: number
   defaultOpen?: boolean
   children: React.ReactNode
 }
 
-export default function CollapseSection({ label, count, defaultOpen = false, children }: CollapseSectionProps) {
+export default function CollapseSection({ labelKey, count, defaultOpen = false, children }: CollapseSectionProps) {
+  const { t } = useT()
   const [open, setOpen] = useState(defaultOpen)
 
   return (
@@ -36,7 +38,7 @@ export default function CollapseSection({ label, count, defaultOpen = false, chi
       >
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
         <span style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>
-          {open ? 'Hide' : 'Show'} {label}
+          {open ? t('components.collapseSection.hide') : t('components.collapseSection.show')} {t(labelKey)}
           {count != null && (
             <span style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 100, padding: '1px 6px', fontSize: 10 }}>
               {count}

@@ -11,17 +11,6 @@ interface Props {
   onSuccess?: () => void
 }
 
-// Fallback mock data if DB returns nothing (demo / empty DB)
-const MOCK_HIRES = [
-  { id: 'mock-1', full_name: 'Jordan Blake',   department: 'Product' },
-  { id: 'mock-2', full_name: 'Wei Li',          department: 'Data Science' },
-  { id: 'mock-3', full_name: 'Alex Nguyen',     department: 'Engineering' },
-]
-const MOCK_MANAGERS = [
-  { id: 'mgr-1', full_name: 'Alex Johnson' },
-  { id: 'mgr-2', full_name: 'Maria Garcia' },
-]
-
 export default function AssignJourneyModal({ templateId, templateName, onClose, onSuccess }: Props) {
   const [isPending, startTransition] = useTransition()
   const [hires, setHires]       = useState<{ id: string; full_name: string; department: string }[]>([])
@@ -32,8 +21,8 @@ export default function AssignJourneyModal({ templateId, templateName, onClose, 
 
   useEffect(() => {
     Promise.all([getAvailableHires(), getManagersList()]).then(([h, m]) => {
-      setHires(h.length > 0 ? h : MOCK_HIRES)
-      setManagers(m.length > 0 ? m : MOCK_MANAGERS)
+      setHires(h)
+      setManagers(m)
       setLoading(false)
     })
   }, [])

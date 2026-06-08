@@ -74,6 +74,7 @@ function DailyActionCard({ journeys, managerTasks, upcomingCheckIns, onSchedule,
   onSchedule:       () => void
   onNudge:          (hire: { name: string; week: number; riskScore: number; email?: string }) => void
 }) {
+  const { t } = useT()
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1)
@@ -169,8 +170,7 @@ function DailyActionCard({ journeys, managerTasks, upcomingCheckIns, onSchedule,
             <i className="fa-solid fa-circle-check" style={{ fontSize: 15, color: 'var(--green)' }} />
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>All clear — great work!</div>
-            <div style={{ fontSize: 11, color: 'var(--text3)' }}>No urgent actions today. Check back tomorrow.</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{t('components.dailyActions.noActions')}</div>
           </div>
         </div>
       </div>
@@ -178,9 +178,9 @@ function DailyActionCard({ journeys, managerTasks, upcomingCheckIns, onSchedule,
   }
 
   const PRIORITY_STYLE = {
-    urgent: { color: 'var(--red)',   bg: 'color-mix(in srgb, var(--red) 10%, transparent)',   border: 'color-mix(in srgb, var(--red) 25%, transparent)',   label: 'Urgent' },
-    today:  { color: 'var(--amber)', bg: 'color-mix(in srgb, var(--amber) 10%, transparent)', border: 'color-mix(in srgb, var(--amber) 25%, transparent)', label: 'Today'  },
-    watch:  { color: 'var(--blue)',  bg: 'color-mix(in srgb, var(--blue) 10%, transparent)',  border: 'color-mix(in srgb, var(--blue) 25%, transparent)',  label: 'Watch'  },
+    urgent: { color: 'var(--red)',   bg: 'color-mix(in srgb, var(--red) 10%, transparent)',   border: 'color-mix(in srgb, var(--red) 25%, transparent)',   label: t('components.dailyActions.urgent') },
+    today:  { color: 'var(--amber)', bg: 'color-mix(in srgb, var(--amber) 10%, transparent)', border: 'color-mix(in srgb, var(--amber) 25%, transparent)', label: t('components.dailyActions.today')  },
+    watch:  { color: 'var(--blue)',  bg: 'color-mix(in srgb, var(--blue) 10%, transparent)',  border: 'color-mix(in srgb, var(--blue) 25%, transparent)',  label: t('components.dailyActions.watch')  },
   }
 
   return (
@@ -231,7 +231,7 @@ function DailyActionCard({ journeys, managerTasks, upcomingCheckIns, onSchedule,
                     title="Practice this conversation with Aura Roleplay"
                   >
                     <i className="fa-solid fa-masks-theater" style={{ marginRight: 4, fontSize: 9 }} />
-                    Practice
+                    {t('components.dailyActions.practice')}
                   </a>
                 )}
                 {action.href ? (
@@ -269,6 +269,7 @@ interface BriefingHire {
 }
 
 function ManagerBriefingCard({ hire }: { hire: BriefingHire }) {
+  const { t } = useT()
   const [bullets,  setBullets]  = useState<string[]>([])
   const [loading,  setLoading]  = useState(true)
   const [error,    setError]    = useState(false)
@@ -314,7 +315,7 @@ function ManagerBriefingCard({ hire }: { hire: BriefingHire }) {
       <div className="db-card-hd">
         <h3>
           <i className="fa-solid fa-brain" style={{ color: 'var(--blue)', marginRight: 7 }} aria-hidden="true" />
-          Manager Briefing — {hire.name}
+          {t('components.managerBriefing.title')} — {hire.name}
         </h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span className="badge-ai">AI</span>
@@ -375,6 +376,7 @@ interface NudgeHire {
 }
 
 function NudgeModal({ hire, onClose }: { hire: NudgeHire; onClose: () => void }) {
+  const { t } = useT()
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
   const [message, setMessage] = useState('')
   const [toast, setToast] = useState('')
@@ -416,15 +418,15 @@ function NudgeModal({ hire, onClose }: { hire: NudgeHire; onClose: () => void })
 
         <div style={{ marginBottom: 4 }}>
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 700, marginBottom: 4 }}>
-            Send Nudge to {hire.name}
+            {t('components.nudgeModal.title')} {hire.name}
           </h3>
           <p style={{ fontSize: 12, color: 'var(--text3)' }}>
-            Week {hire.week} · Risk Score {hire.riskScore}
+            {t('components.nudgeModal.week')} {hire.week} · {t('components.nudgeModal.risk')} {hire.riskScore}
           </p>
         </div>
 
         <p style={{ fontSize: 12, color: 'var(--text2)', margin: '14px 0 10px' }}>
-          Choose a message template:
+          {t('components.nudgeModal.suggestions')}
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
@@ -474,7 +476,7 @@ function NudgeModal({ hire, onClose }: { hire: NudgeHire; onClose: () => void })
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button className="btn btn-primary btn-sm" style={{ flex: 1 }} onClick={copyToClipboard}>
-                  <i className="fa-solid fa-copy" /> Copy Message
+                  <i className="fa-solid fa-copy" /> {t('common.copy')}
                 </button>
                 {hire.email && (
                   <a

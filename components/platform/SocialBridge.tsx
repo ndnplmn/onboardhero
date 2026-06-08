@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useT } from '@/lib/i18n/context'
 
 export interface SocialContact {
   name: string
@@ -22,6 +23,7 @@ interface SocialBridgeProps {
 const INITIAL_SHOW = 3
 
 function ContactRow({ c }: { c: SocialContact }) {
+  const { t } = useT()
   const isBuddy = c.isBuddy === true
 
   return (
@@ -70,7 +72,7 @@ function ContactRow({ c }: { c: SocialContact }) {
               fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 100,
               background: 'color-mix(in srgb, var(--violet) 15%, transparent)',
               color: 'var(--violet)', textTransform: 'uppercase', letterSpacing: '0.05em', flexShrink: 0,
-            }}>Buddy</span>
+            }}>{t('components.socialBridge.buddy')}</span>
           )}
         </div>
         <div style={{ fontSize: 11, color: 'var(--text3)' }}>{c.role}</div>
@@ -126,6 +128,7 @@ function ContactRow({ c }: { c: SocialContact }) {
 }
 
 export default function SocialBridge({ contacts = [] }: SocialBridgeProps) {
+  const { t } = useT()
   const [showAll, setShowAll] = useState(false)
 
   // Buddies always shown first, regardless of INITIAL_SHOW
@@ -148,7 +151,7 @@ export default function SocialBridge({ contacts = [] }: SocialBridgeProps) {
             color: 'var(--violet)', border: '1px solid color-mix(in srgb, var(--violet) 25%, transparent)',
           }}>
             <i className="fa-solid fa-star" style={{ fontSize: 8, marginRight: 4 }} />
-            Buddy assigned
+            {t('components.socialBridge.buddyAssigned')}
           </span>
         )}
       </div>
@@ -157,8 +160,8 @@ export default function SocialBridge({ contacts = [] }: SocialBridgeProps) {
         {displayed.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text3)' }}>
             <i className="fa-solid fa-users" style={{ fontSize: 22, display: 'block', marginBottom: 8, opacity: 0.35 }} />
-            <p style={{ fontSize: 12, fontWeight: 500 }}>No contacts assigned yet.</p>
-            <p style={{ fontSize: 11, marginTop: 4 }}>Your manager and buddy will appear here.</p>
+            <p style={{ fontSize: 12, fontWeight: 500 }}>{t('components.socialBridgeEmpty.noContactsTitle')}</p>
+            <p style={{ fontSize: 11, marginTop: 4 }}>{t('components.socialBridgeEmpty.noContactsDesc')}</p>
           </div>
         ) : (
           <>
@@ -172,13 +175,15 @@ export default function SocialBridge({ contacts = [] }: SocialBridgeProps) {
                 style={{ marginTop: 12, width: '100%', fontSize: 11, fontWeight: 700, padding: '6px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--r)', color: 'var(--text3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
               >
                 <i className={`fa-solid fa-chevron-${showAll ? 'up' : 'down'}`} style={{ fontSize: 9 }} />
-                {showAll ? 'Show less' : `Show ${contacts.length - INITIAL_SHOW} more`}
+                {showAll
+                  ? t('components.socialBridge.showLess')
+                  : t('components.socialBridge.showMore').replace('{n}', String(contacts.length - INITIAL_SHOW))}
               </button>
             )}
 
             <Link href="/hire/resources/contacts" className="btn btn-outline btn-sm w-full mt-4" style={{ fontSize: 12, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 10 }}>
               <i className="fa-solid fa-users-viewfinder" />
-              View Full Team
+              {t('components.socialBridgeEmpty.viewFullTeam')}
             </Link>
           </>
         )}

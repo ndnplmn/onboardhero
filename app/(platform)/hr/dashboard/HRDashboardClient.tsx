@@ -109,6 +109,7 @@ function computeManagerStats(journeys: any[]) {
 type ManagerStat = ReturnType<typeof computeManagerStats>[number]
 
 function ManagerEffectivenessCard({ journeys }: { journeys: any[] }) {
+  const { t } = useT()
   const stats: ManagerStat[] = computeManagerStats(journeys)
   const uniqueManagers = stats.filter(s => s.id !== 'unknown').length
   const showComparison = uniqueManagers > 1
@@ -118,19 +119,19 @@ function ManagerEffectivenessCard({ journeys }: { journeys: any[] }) {
       <div className="db-card-header">
         <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
           <i className="fa-solid fa-shield-halved" style={{ color: 'var(--blue)' }} aria-hidden="true" />
-          Manager Effectiveness
+          {t('components.managerEffectiveness.title')}
         </h3>
-        <span className="badge-ai">AI Scored</span>
+        <span className="badge-ai">{t('components.managerEffectiveness.aiScored')}</span>
       </div>
 
       <div className="db-card-body">
         {journeys.length === 0 ? (
           <p style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center', padding: '16px 0' }}>
-            No journeys yet. Invite new hires to see manager effectiveness.
+            {t('components.managerEffectiveness.noJourneys')}
           </p>
         ) : !showComparison ? (
           <p style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center', padding: '16px 0' }}>
-            Add more managers to see effectiveness comparisons.
+            {t('components.managerEffectiveness.noManagers')}
           </p>
         ) : (
           <>
@@ -150,7 +151,7 @@ function ManagerEffectivenessCard({ journeys }: { journeys: any[] }) {
                       color: 'var(--text2)',
                       whiteSpace: 'nowrap',
                     }}>
-                      {mgr.hires} {mgr.hires === 1 ? 'hire' : 'hires'}
+                      {mgr.hires} {t('components.managerEffectiveness.hires')}
                     </span>
                     {mgr.atRisk > 0 && (
                       <span style={{
@@ -162,7 +163,7 @@ function ManagerEffectivenessCard({ journeys }: { journeys: any[] }) {
                         color: 'var(--red)',
                         whiteSpace: 'nowrap',
                       }}>
-                        {mgr.atRisk} at risk
+                        {mgr.atRisk} {t('components.managerEffectiveness.atRisk')}
                       </span>
                     )}
                   </div>
@@ -208,6 +209,7 @@ function ROIDashboard({ journeys, kpis }: {
   journeys: any[]
   kpis: HRDashboardClientProps['kpis']
 }) {
+  const { t } = useT()
   const total      = kpis.totalWorkforce || journeys.length
   const completed  = kpis.completedJourneys
   const active     = kpis.activeJourneys
@@ -231,33 +233,33 @@ function ROIDashboard({ journeys, kpis }: {
 
   const metrics = [
     {
-      label: 'Estimated Cost Avoided',
+      label: t('components.roiDashboard.costAvoided'),
       value: `$${costAvoided >= 1000 ? `${(costAvoided / 1000).toFixed(0)}k` : costAvoided}`,
-      sub: `${prevented} early exits prevented vs industry avg`,
+      sub: `${prevented} ${t('components.roiDashboard.costAvoidedDesc')}`,
       icon: 'fa-solid fa-sack-dollar',
       color: 'var(--green)',
       bg: 'color-mix(in srgb, var(--green) 10%, transparent)',
     },
     {
-      label: 'Platform Retention Rate',
+      label: t('components.roiDashboard.retentionRate'),
       value: `${retentionRate}%`,
-      sub: `${retentionRate - industryRate > 0 ? `+${retentionRate - industryRate}pp` : `${retentionRate - industryRate}pp`} vs ${industryRate}% industry avg`,
+      sub: `${retentionRate - industryRate > 0 ? `+${retentionRate - industryRate}pp` : `${retentionRate - industryRate}pp`} ${t('components.roiDashboard.retentionRateDesc')}`,
       icon: 'fa-solid fa-shield-check',
       color: retentionRate >= industryRate ? 'var(--blue)' : 'var(--amber)',
       bg: 'color-mix(in srgb, var(--blue) 10%, transparent)',
     },
     {
-      label: 'Avg Onboarding Morale',
+      label: t('components.roiDashboard.avgMorale'),
       value: avgPulse != null ? `${avgPulse}/5` : '—',
-      sub: avgPulse != null ? (avgPulse >= 4 ? 'Excellent — top quartile' : avgPulse >= 3 ? 'Good — room to improve' : 'Needs attention') : 'No pulse data yet',
+      sub: avgPulse != null ? t('components.roiDashboard.avgMoraleDesc') : '—',
       icon: 'fa-solid fa-face-smile',
       color: avgPulse != null ? (avgPulse >= 4 ? 'var(--green)' : avgPulse >= 3 ? 'var(--amber)' : 'var(--red)') : 'var(--text3)',
       bg: 'color-mix(in srgb, var(--cyan) 10%, transparent)',
     },
     {
-      label: 'Hires on Track',
+      label: t('components.roiDashboard.onTrack'),
       value: `${Math.max(0, active - atRisk)}`,
-      sub: `${atRisk} at risk · ${completed} completed`,
+      sub: t('components.roiDashboard.onTrackDesc'),
       icon: 'fa-solid fa-chart-line',
       color: 'var(--cyan)',
       bg: 'color-mix(in srgb, var(--cyan) 10%, transparent)',
@@ -269,7 +271,7 @@ function ROIDashboard({ journeys, kpis }: {
       <div className="db-card-hd">
         <h3>
           <i className="fa-solid fa-trophy" style={{ color: 'var(--amber)', marginRight: 7 }} aria-hidden="true" />
-          Program ROI
+          {t('components.roiDashboard.title')}
         </h3>
         <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
           vs. ${Math.round(INDUSTRY_REPLACEMENT_COST / 1000)}k industry replacement cost
@@ -304,6 +306,7 @@ function ROIDashboard({ journeys, kpis }: {
 // ── Template Performance Analytics ────────────────────────────────────────
 
 function TemplatePerformance({ journeys }: { journeys: any[] }) {
+  const { t } = useT()
   const templateMap = new Map<string, { name: string; count: number; totalCompletion: number; totalRisk: number; totalPulse: number; pulseCount: number }>()
 
   for (const j of journeys) {
@@ -336,7 +339,7 @@ function TemplatePerformance({ journeys }: { journeys: any[] }) {
       <div className="db-card-hd">
         <h3>
           <i className="fa-solid fa-chart-bar" style={{ color: 'var(--aqua)', marginRight: 7 }} />
-          Template Performance
+          {t('components.templatePerformance.title')}
         </h3>
         <span style={{ fontSize: 11, color: 'var(--text3)' }}>{rows.length} templates · {journeys.length} journeys</span>
       </div>
@@ -472,6 +475,7 @@ function InboxDraftPanel({ item, onDismiss }: { item: InboxItem; onDismiss: () =
 }
 
 function HRInbox({ items, wins = [] }: { items: InboxItem[]; wins?: InterventionWin[] }) {
+  const { t } = useT()
   const [dismissed, setDismissed]   = useState<Set<string>>(new Set())
   const [expanded,  setExpanded]    = useState<string | null>(null)
   const [, startTransition]         = useTransition()
@@ -504,7 +508,7 @@ function HRInbox({ items, wins = [] }: { items: InboxItem[]; wins?: Intervention
       <div className="db-card-hd">
         <h3>
           <i className="fa-solid fa-inbox" style={{ color: 'var(--blue)' }} />
-          Actions Needed Today
+          {t('components.hrInbox.title')}
         </h3>
         <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>
           {visible.filter(i => i.priority === 'high').length} urgent · {visible.filter(i => i.priority === 'medium').length} today
@@ -542,7 +546,7 @@ function HRInbox({ items, wins = [] }: { items: InboxItem[]; wins?: Intervention
       {visible.length === 0 ? (
         <div style={{ padding: '20px 20px 24px', textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>
           <i className="fa-solid fa-circle-check" style={{ fontSize: 20, color: 'var(--green)', display: 'block', marginBottom: 8 }} />
-          All clear for today
+          {t('components.hrInbox.empty')}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>

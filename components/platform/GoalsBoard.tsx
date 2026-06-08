@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { upsertGoal, updateGoalStatus, deleteGoal } from '@/app/(platform)/hire/actions'
+import { useT } from '@/lib/i18n/context'
 
 export interface JourneyGoal {
   id:          string
@@ -20,19 +21,20 @@ interface GoalsBoardProps {
   currentWeek?: number
 }
 
-const MILESTONES: { key: 'day_30' | 'day_60' | 'day_90'; label: string; day: number; color: string; icon: string }[] = [
-  { key: 'day_30', label: '30-Day Goals',  day: 30,  color: 'var(--cyan)',   icon: 'fa-solid fa-seedling'    },
-  { key: 'day_60', label: '60-Day Goals',  day: 60,  color: 'var(--blue)',   icon: 'fa-solid fa-chart-line'  },
-  { key: 'day_90', label: '90-Day Goals',  day: 90,  color: 'var(--violet)', icon: 'fa-solid fa-rocket'      },
+const MILESTONES: { key: 'day_30' | 'day_60' | 'day_90'; tKey: string; day: number; color: string; icon: string }[] = [
+  { key: 'day_30', tKey: 'day30', day: 30,  color: 'var(--cyan)',   icon: 'fa-solid fa-seedling'    },
+  { key: 'day_60', tKey: 'day60', day: 60,  color: 'var(--blue)',   icon: 'fa-solid fa-chart-line'  },
+  { key: 'day_90', tKey: 'day90', day: 90,  color: 'var(--violet)', icon: 'fa-solid fa-rocket'      },
 ]
 
 const STATUS_CONFIG = {
-  not_started: { label: 'Not started', color: 'var(--text3)',  bg: 'var(--surface2)',  icon: 'fa-solid fa-circle'            },
-  in_progress: { label: 'In progress', color: 'var(--amber)',  bg: 'var(--amber-bg)',  icon: 'fa-solid fa-circle-half-stroke' },
-  completed:   { label: 'Completed',   color: 'var(--green)',  bg: 'var(--green-bg)',  icon: 'fa-solid fa-circle-check'      },
+  not_started: { tKey: 'notStarted', color: 'var(--text3)',  bg: 'var(--surface2)',  icon: 'fa-solid fa-circle'            },
+  in_progress: { tKey: 'inProgress', color: 'var(--amber)',  bg: 'var(--amber-bg)',  icon: 'fa-solid fa-circle-half-stroke' },
+  completed:   { tKey: 'completed',  color: 'var(--green)',  bg: 'var(--green-bg)',  icon: 'fa-solid fa-circle-check'      },
 }
 
 export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role, department, currentWeek }: GoalsBoardProps) {
+  const { t } = useT()
   const [isPending, startTransition]         = useTransition()
   const [addingFor, setAddingFor]            = useState<string | null>(null)
   const [newTitle, setNewTitle]              = useState('')
@@ -100,17 +102,17 @@ export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role,
       <div className="db-card-hd">
         <h3>
           <i className="fa-solid fa-bullseye-arrow" style={{ color: 'var(--violet)' }} />
-          30 / 60 / 90 Day Goals
+          {t('components.goalsBoard.title')}
         </h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {totalGoals > 0 && (
             <span style={{ fontSize: 11, fontWeight: 700, color: completedTotal === totalGoals ? 'var(--green)' : 'var(--text3)' }}>
-              {completedTotal}/{totalGoals} complete
+              {t('components.goalsBoard.complete').replace('{done}', String(completedTotal)).replace('{total}', String(totalGoals))}
             </span>
           )}
           <span className="badge-ai">
             <i className="fa-solid fa-wand-magic-sparkles" style={{ marginRight: 3 }} />
-            AI-assisted
+            {t('components.goalsBoard.aiAssisted')}
           </span>
         </div>
       </div>
@@ -135,11 +137,11 @@ export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role,
                     <i className={ms.icon} style={{ fontSize: 11, color: ms.color }} />
                   </div>
                   <span style={{ fontSize: 13, fontWeight: 700, color: isLocked ? 'var(--text3)' : 'var(--text)' }}>
-                    {ms.label}
+                    {t(`components.goalsBoard.milestones.${ms.tKey}`)}
                   </span>
                   {isLocked && (
                     <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--text3)', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 100, padding: '1px 6px' }}>
-                      Unlocks day {ms.day - 7}
+                      {t('components.goalsBoard.unlocksDay').replace('{day}', String(ms.day - 7))}
                     </span>
                   )}
                   {msGoals.length > 0 && (
@@ -160,7 +162,7 @@ export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role,
                     }}
                   >
                     <i className="fa-solid fa-plus" style={{ fontSize: 9 }} />
-                    Add goal
+                    {t('components.goalsBoard.addGoal')}
                   </button>
                 )}
               </div>
@@ -168,7 +170,7 @@ export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role,
               {/* Goal cards */}
               {msGoals.length === 0 && !isActive && !isLocked && (
                 <div style={{ fontSize: 12, color: 'var(--text3)', padding: '8px 0', fontStyle: 'italic' }}>
-                  No goals set yet. Add your first goal for this milestone.
+                  {t('components.goalsBoard.noGoals')}
                 </div>
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -189,7 +191,7 @@ export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role,
                       <button
                         onClick={() => handleStatusCycle(goal)}
                         disabled={isPending}
-                        title={`Mark as: ${STATUS_CONFIG[goal.status === 'completed' ? 'not_started' : goal.status === 'in_progress' ? 'completed' : 'in_progress'].label}`}
+                        title={`Mark as: ${t(`components.goalsBoard.status.${STATUS_CONFIG[goal.status === 'completed' ? 'not_started' : goal.status === 'in_progress' ? 'completed' : 'in_progress'].tKey}`)}`}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: s.color, padding: 0, flexShrink: 0, marginTop: 1, fontSize: 14 }}
                       >
                         <i className={s.icon} />
@@ -211,7 +213,7 @@ export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role,
                         borderRadius: 100, background: s.bg, color: s.color,
                         flexShrink: 0, whiteSpace: 'nowrap',
                       }}>
-                        {s.label}
+                        {t(`components.goalsBoard.status.${s.tKey}`)}
                       </span>
                       {deleteConfirmId === goal.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
@@ -220,13 +222,13 @@ export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role,
                             disabled={isPending}
                             style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100, background: 'var(--red-bg)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.3)', cursor: 'pointer' }}
                           >
-                            Delete
+                            {t('common.delete')}
                           </button>
                           <button
                             onClick={() => setDeleteConfirmId(null)}
                             style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 100, background: 'var(--surface)', color: 'var(--text3)', border: '1px solid var(--border)', cursor: 'pointer' }}
                           >
-                            Cancel
+                            {t('components.goalsBoard.cancel')}
                           </button>
                         </div>
                       ) : (
@@ -251,13 +253,13 @@ export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role,
                   {loadingSuggestions ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>
                       <i className="fa-solid fa-wand-magic-sparkles" style={{ color: 'var(--blue)', fontSize: 10 }} />
-                      Generating AI suggestions…
+                      {t('components.goalsBoard.generatingSuggestions')}
                     </div>
                   ) : suggestions.length > 0 && (
                     <div style={{ marginBottom: 10 }}>
                       <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
                         <i className="fa-solid fa-wand-magic-sparkles" style={{ color: 'var(--blue)', fontSize: 9 }} />
-                        AI suggestions — click to use
+                        {t('components.goalsBoard.aiSuggestions')}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {suggestions.map((s, i) => (
@@ -283,7 +285,7 @@ export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role,
                   <input
                     autoFocus
                     type="text"
-                    placeholder="Goal title…"
+                    placeholder={t('components.goalsBoard.goalTitlePlaceholder')}
                     value={newTitle}
                     onChange={e => setNewTitle(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') handleAdd(ms.key); if (e.key === 'Escape') setAddingFor(null) }}
@@ -296,7 +298,7 @@ export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role,
                   />
                   <input
                     type="text"
-                    placeholder="Description (optional)…"
+                    placeholder={t('components.goalsBoard.goalDescPlaceholder')}
                     value={newDesc}
                     onChange={e => setNewDesc(e.target.value)}
                     style={{
@@ -317,7 +319,7 @@ export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role,
                         opacity: newTitle.trim() ? 1 : 0.5,
                       }}
                     >
-                      {isPending ? 'Saving…' : 'Add'}
+                      {isPending ? t('components.goalsBoard.saving') : t('components.goalsBoard.add')}
                     </button>
                     <button
                       onClick={() => { setAddingFor(null); setSuggestions([]) }}
@@ -328,7 +330,7 @@ export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role,
                         color: 'var(--text3)',
                       }}
                     >
-                      Cancel
+                      {t('components.goalsBoard.cancel')}
                     </button>
                   </div>
                 </div>
@@ -343,7 +345,7 @@ export default function GoalsBoard({ journeyId, goals = [], dayNumber = 1, role,
         {/* Footer */}
         <p style={{ fontSize: 11, color: 'var(--text3)', textAlign: 'center', marginTop: -8 }}>
           <i className="fa-solid fa-people-arrows" style={{ marginRight: 5, color: 'var(--violet)' }} />
-          Goals are shared with your manager and revisited at each milestone check-in.
+          {t('components.goalsBoard.footer')}
         </p>
       </div>
     </div>

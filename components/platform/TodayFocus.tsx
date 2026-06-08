@@ -3,6 +3,7 @@
 import { useState, useTransition, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { toggleTaskComplete } from '@/app/(platform)/hire/actions'
+import { useT } from '@/lib/i18n/context'
 
 interface Task {
   id: string
@@ -63,7 +64,7 @@ function ConfettiLayer() {
 }
 
 // +XP toast
-function XPToast() {
+function XPToast({ label }: { label: string }) {
   return (
     <div style={{
       position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)',
@@ -83,12 +84,13 @@ function XPToast() {
         }
       `}</style>
       <i className="fa-solid fa-bolt-lightning" style={{ marginRight: 5 }} />
-      +10 XP — Task Complete!
+      {label}
     </div>
   )
 }
 
 export default function TodayFocus({ tasks, currentWeek, dayNumber, recommendedResource, goals }: TodayFocusProps) {
+  const { t } = useT()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [doneId, setDoneId]   = useState<string | null>(null)
@@ -164,7 +166,7 @@ export default function TodayFocus({ tasks, currentWeek, dayNumber, recommendedR
     >
       {/* Confetti */}
       {doneId && <ConfettiLayer />}
-      {showXP  && <XPToast />}
+      {showXP  && <XPToast label={t('components.todayFocus.xpToast')} />}
 
       {/* Glow top-right */}
       <div aria-hidden style={{ position: 'absolute', top: -60, right: -60, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,200,224,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
@@ -200,10 +202,10 @@ export default function TodayFocus({ tasks, currentWeek, dayNumber, recommendedR
           </div>
           <div>
             <div style={{ fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-display)', marginBottom: 4 }}>
-              All tasks for Week {currentWeek} complete! 🎉
+              {t('components.todayFocus.allDoneTitle').replace('{week}', String(currentWeek))}
             </div>
             <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 1.5 }}>
-              You&apos;re ahead of the game. Check back next week for new tasks.
+              {t('components.todayFocus.allDoneDesc')}
             </p>
           </div>
         </div>
@@ -246,7 +248,7 @@ export default function TodayFocus({ tasks, currentWeek, dayNumber, recommendedR
                     <div style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: 'rgba(168,139,250,0.9)', background: 'rgba(168,139,250,0.12)', borderRadius: 100, padding: '3px 10px', border: '1px solid rgba(168,139,250,0.25)', maxWidth: '100%', overflow: 'hidden' }}>
                       <i className="fa-solid fa-flag" style={{ fontSize: 9, flexShrink: 0 }} />
                       <span style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                        Toward: {activeGoal.title}
+                        {t('components.todayFocus.towardGoal')} {activeGoal.title}
                       </span>
                     </div>
                   )
@@ -258,7 +260,7 @@ export default function TodayFocus({ tasks, currentWeek, dayNumber, recommendedR
               {doneId === focusTask.id ? (
                 <span style={{ fontSize: 13, fontWeight: 700, color: '#4ade80', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <i className="fa-solid fa-circle-check" style={{ fontSize: 14 }} aria-hidden />
-                  Marked as done!
+                  {t('components.todayFocus.markedDone')}
                 </span>
               ) : (
                 <button
@@ -277,7 +279,7 @@ export default function TodayFocus({ tasks, currentWeek, dayNumber, recommendedR
                   onMouseLeave={e => { if (!isPending) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.12)' }}
                 >
                   <i className="fa-solid fa-circle-check" style={{ fontSize: 13 }} aria-hidden />
-                  {isPending ? 'Saving…' : 'Mark as done'}
+                  {isPending ? t('components.todayFocus.saving') : t('components.todayFocus.markDone')}
                 </button>
               )}
             </div>
@@ -289,12 +291,14 @@ export default function TodayFocus({ tasks, currentWeek, dayNumber, recommendedR
             <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 'var(--r)', display: 'flex', alignItems: 'center', gap: 10, position: 'relative', zIndex: 1 }}>
               <i className="fa-solid fa-book-open" style={{ fontSize: 12, color: 'var(--cyan)', flexShrink: 0 }} aria-hidden />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Recommended for Week {currentWeek}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
+                  {t('components.todayFocus.recommendedLabel').replace('{week}', String(currentWeek))}
+                </div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{recommendedResource.title}</div>
               </div>
               {recommendedResource.url && (
                 <a href={recommendedResource.url} style={{ fontSize: 11, fontWeight: 700, color: 'var(--cyan)', textDecoration: 'none', flexShrink: 0 }}>
-                  Read <i className="fa-solid fa-arrow-right" style={{ fontSize: 9 }} />
+                  {t('components.todayFocus.readLink')} <i className="fa-solid fa-arrow-right" style={{ fontSize: 9 }} />
                 </a>
               )}
             </div>
@@ -302,7 +306,7 @@ export default function TodayFocus({ tasks, currentWeek, dayNumber, recommendedR
         </div>
       ) : (
         <div style={{ position: 'relative', zIndex: 1, fontSize: 15, color: 'rgba(255,255,255,0.70)', padding: '8px 0' }}>
-          No pending tasks found. Check back soon!
+          {t('components.todayFocus.noTasks')}
         </div>
       )}
     </div>
@@ -310,14 +314,15 @@ export default function TodayFocus({ tasks, currentWeek, dayNumber, recommendedR
 }
 
 function ProgressBar({ completedCount, totalCount, progressPct, currentWeek }: { completedCount: number; totalCount: number; progressPct: number; currentWeek: number }) {
+  const { t } = useT()
   return (
     <div style={{ position: 'relative', zIndex: 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>
-          {completedCount} of {totalCount} tasks complete this week
+          {t('components.todayFocus.progressLabel').replace('{done}', String(completedCount)).replace('{total}', String(totalCount))}
         </span>
         <span style={{ fontSize: 12, fontWeight: 700, color: progressPct >= 80 ? '#4ade80' : 'var(--cyan)', fontFamily: 'var(--font-display)' }}>
-          Week {currentWeek} · {progressPct}%
+          {t('components.todayFocus.weekProgress').replace('{week}', String(currentWeek)).replace('{pct}', String(progressPct))}
         </span>
       </div>
       <div style={{ height: 6, borderRadius: 99, background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>

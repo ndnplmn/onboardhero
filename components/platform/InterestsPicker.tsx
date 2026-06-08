@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useT } from '@/lib/i18n/context'
 
 const INTEREST_GROUPS = [
-  { group: 'Sports & Fitness', icon: 'fa-dumbbell',           tags: ['Running', 'Cycling', 'Gym', 'Yoga', 'Hiking', 'Swimming', 'Tennis', 'Basketball', 'Football', 'Climbing'] },
-  { group: 'Arts & Culture',   icon: 'fa-palette',            tags: ['Reading', 'Music', 'Movies', 'Art', 'Photography', 'Writing', 'Cooking', 'Travel', 'Dance', 'Theater'] },
-  { group: 'Tech & Gaming',    icon: 'fa-gamepad',            tags: ['Gaming', 'Coding', 'AI', 'Open Source', '3D Printing', 'Podcasts', 'Streaming'] },
-  { group: 'Community',        icon: 'fa-hand-holding-heart', tags: ['Volunteering', 'Mentoring', 'Language Learning', 'Board Games', 'Meditation', 'Sustainability'] },
+  { groupKey: 'sports', icon: 'fa-dumbbell',           tags: ['Running', 'Cycling', 'Gym', 'Yoga', 'Hiking', 'Swimming', 'Tennis', 'Basketball', 'Football', 'Climbing'] },
+  { groupKey: 'arts',   icon: 'fa-palette',            tags: ['Reading', 'Music', 'Movies', 'Art', 'Photography', 'Writing', 'Cooking', 'Travel', 'Dance', 'Theater'] },
+  { groupKey: 'tech',   icon: 'fa-gamepad',            tags: ['Gaming', 'Coding', 'AI', 'Open Source', '3D Printing', 'Podcasts', 'Streaming'] },
+  { groupKey: 'community', icon: 'fa-hand-holding-heart', tags: ['Volunteering', 'Mentoring', 'Language Learning', 'Board Games', 'Meditation', 'Sustainability'] },
 ]
 
 const MAX_INTERESTS = 12
@@ -18,6 +19,7 @@ interface InterestsPickerProps {
 }
 
 export default function InterestsPicker({ selected, onChange, name }: InterestsPickerProps) {
+  const { t } = useT()
   const [customInput, setCustomInput] = useState('')
   const [showWarning, setShowWarning] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -67,7 +69,7 @@ export default function InterestsPicker({ selected, onChange, name }: InterestsP
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>
           <i className="fa-solid fa-tags" style={{ marginRight: 6, color: 'var(--violet)' }} />
-          {selected.length} / {MAX_INTERESTS} selected
+          {t('components.interestsPicker.selectedCount').replace('{count}', String(selected.length)).replace('{max}', String(MAX_INTERESTS))}
         </span>
         {selected.length > 0 && (
           <button
@@ -78,7 +80,7 @@ export default function InterestsPicker({ selected, onChange, name }: InterestsP
               cursor: 'pointer', padding: '2px 6px',
             }}
           >
-            Clear all
+            {t('components.interestsPicker.clearAll')}
           </button>
         )}
       </div>
@@ -96,20 +98,20 @@ export default function InterestsPicker({ selected, onChange, name }: InterestsP
           gap: 8,
         }}>
           <i className="fa-solid fa-triangle-exclamation" />
-          You can select up to {MAX_INTERESTS} interests. Remove one to add another.
+          {t('components.interestsPicker.maxWarning').replace('{max}', String(MAX_INTERESTS))}
         </div>
       )}
 
       {/* Groups */}
-      {INTEREST_GROUPS.map(({ group, icon, tags }) => (
-        <div key={group}>
+      {INTEREST_GROUPS.map(({ groupKey, icon, tags }) => (
+        <div key={groupKey}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
             <i
               className={`fa-solid ${icon}`}
               style={{ fontSize: 11, color: 'var(--violet)', width: 14, textAlign: 'center' }}
             />
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-              {group}
+              {t(`components.interestsPicker.groups.${groupKey}`)}
             </span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -158,7 +160,7 @@ export default function InterestsPicker({ selected, onChange, name }: InterestsP
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
           <i className="fa-solid fa-plus" style={{ fontSize: 11, color: 'var(--violet)', width: 14, textAlign: 'center' }} />
           <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Add Custom
+            {t('components.interestsPicker.addCustomLabel')}
           </span>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -168,7 +170,7 @@ export default function InterestsPicker({ selected, onChange, name }: InterestsP
             value={customInput}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="e.g. Rock climbing, Baking..."
+            placeholder={t('components.interestsPicker.customPlaceholder')}
             style={{
               flex: 1,
               padding: '8px 12px',
@@ -197,14 +199,14 @@ export default function InterestsPicker({ selected, onChange, name }: InterestsP
               flexShrink: 0,
             }}
           >
-            Add
+            {t('components.interestsPicker.add')}
           </button>
         </div>
       </div>
 
       {/* Custom pills (interests not in predefined groups) */}
       {(() => {
-        const allPredefined = INTEREST_GROUPS.flatMap((g: { group: string; icon: string; tags: string[] }) => g.tags)
+        const allPredefined = INTEREST_GROUPS.flatMap((g: { groupKey: string; icon: string; tags: string[] }) => g.tags)
         const customOnes = selected.filter((s: string) => !allPredefined.includes(s))
         if (customOnes.length === 0) return null
         return (
@@ -212,7 +214,7 @@ export default function InterestsPicker({ selected, onChange, name }: InterestsP
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
               <i className="fa-solid fa-star" style={{ fontSize: 11, color: 'var(--violet)', width: 14, textAlign: 'center' }} />
               <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                Your Custom Interests
+                {t('components.interestsPicker.yourCustomInterests')}
               </span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>

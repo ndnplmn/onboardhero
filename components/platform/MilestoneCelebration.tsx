@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useT } from '@/lib/i18n/context'
 
 interface MilestoneCelebrationProps {
   journeyId:       string
@@ -13,12 +14,12 @@ interface MilestoneCelebrationProps {
   goalsSet:        number
 }
 
-const MILESTONES: Record<number, { icon: string; headline: string; sub: string; color: string; glow: string }> = {
-  1:  { icon: '🚀', headline: 'Day One — You Made It!',              sub: 'Your journey has officially begun. First steps are the hardest, and you\'ve taken yours.',    color: '#00C8E0', glow: 'rgba(0,200,224,0.35)' },
-  7:  { icon: '🏅', headline: 'One Week Strong!',                    sub: 'Seven days in — you\'ve learned names, navigated systems, and built your first routines.',     color: '#8B5CF6', glow: 'rgba(139,92,246,0.35)' },
-  30: { icon: '🎯', headline: '30-Day Milestone Unlocked!',          sub: 'One month down. You\'ve established your foundation — the hardest part is behind you.',       color: '#F59E0B', glow: 'rgba(245,158,11,0.35)' },
-  60: { icon: '📈', headline: 'Two Months of Growth!',               sub: 'At 60 days, you\'ve moved from learning to contributing. Your impact is growing every week.', color: '#10B981', glow: 'rgba(16,185,129,0.35)' },
-  90: { icon: '🏆', headline: 'Onboarding Complete — You\'re Here!', sub: 'Ninety days. You\'re no longer the new hire — you\'re fully part of this team.',              color: '#EF4444', glow: 'rgba(239,68,68,0.35)' },
+const MILESTONES: Record<number, { icon: string; dayKey: string; color: string; glow: string }> = {
+  1:  { icon: '🚀', dayKey: 'day1',  color: '#00C8E0', glow: 'rgba(0,200,224,0.35)' },
+  7:  { icon: '🏅', dayKey: 'day7',  color: '#8B5CF6', glow: 'rgba(139,92,246,0.35)' },
+  30: { icon: '🎯', dayKey: 'day30', color: '#F59E0B', glow: 'rgba(245,158,11,0.35)' },
+  60: { icon: '📈', dayKey: 'day60', color: '#10B981', glow: 'rgba(16,185,129,0.35)' },
+  90: { icon: '🏆', dayKey: 'day90', color: '#EF4444', glow: 'rgba(239,68,68,0.35)' },
 }
 
 const MILESTONE_DAYS = [1, 7, 30, 60, 90]
@@ -98,21 +99,21 @@ function StatPill({ icon, value, label, color }: { icon: string; value: string |
 export default function MilestoneCelebration({
   journeyId, dayNumber, userName, tasksCompleted, totalTasks, checkInsCompleted, goalsSet,
 }: MilestoneCelebrationProps) {
+  const { t } = useT()
   const [milestoneDay, setMilestoneDay] = useState<number | null>(null)
   const checked = useRef(false)
 
   useEffect(() => {
     if (checked.current) return
     checked.current = true
-    // Small delay so the dashboard renders first
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       const day = shouldShow(journeyId, dayNumber)
       if (day !== null) {
         markShown(journeyId, day)
         setMilestoneDay(day)
       }
     }, 1600)
-    return () => clearTimeout(t)
+    return () => clearTimeout(timer)
   }, [journeyId, dayNumber])
 
   const config = milestoneDay !== null ? MILESTONES[milestoneDay] : null
@@ -170,7 +171,7 @@ export default function MilestoneCelebration({
               marginBottom: 20,
             }}>
               <i className="fa-solid fa-flag-checkered" style={{ fontSize: 9 }} />
-              Day {milestoneDay} Milestone
+              {t('components.milestoneCelebration.dayMilestone').replace('{day}', String(milestoneDay))}
             </div>
 
             {/* Big emoji */}
@@ -186,19 +187,19 @@ export default function MilestoneCelebration({
               fontSize: 26, fontWeight: 900, fontFamily: 'var(--font-display)',
               color: '#fff', marginBottom: 12, lineHeight: 1.2,
             }}>
-              {config.headline}
+              {t(`components.milestoneCelebration.milestones.${config.dayKey}.headline`)}
             </h2>
 
             <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', lineHeight: 1.65, marginBottom: 28, maxWidth: 360, margin: '0 auto 28px' }}>
-              {config.sub}
+              {t(`components.milestoneCelebration.milestones.${config.dayKey}.sub`)}
             </p>
 
             {/* Stats row */}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 32 }}>
-              <StatPill icon="fa-solid fa-list-check"  value={tasksCompleted}    label="Tasks Done"    color={config.color} />
-              <StatPill icon="fa-solid fa-calendar-check" value={checkInsCompleted} label="Check-ins"  color={config.color} />
+              <StatPill icon="fa-solid fa-list-check"     value={tasksCompleted}    label={t('components.milestoneCelebration.tasksDone')} color={config.color} />
+              <StatPill icon="fa-solid fa-calendar-check" value={checkInsCompleted} label={t('components.milestoneCelebration.checkIns')}  color={config.color} />
               {goalsSet > 0 && (
-                <StatPill icon="fa-solid fa-flag"      value={goalsSet}          label="Goals Set"     color={config.color} />
+                <StatPill icon="fa-solid fa-flag"         value={goalsSet}          label={t('components.milestoneCelebration.goalsSet')} color={config.color} />
               )}
             </div>
 
@@ -217,11 +218,11 @@ export default function MilestoneCelebration({
               }}
             >
               <i className="fa-solid fa-arrow-right" />
-              Continue My Journey
+              {t('components.milestoneCelebration.continueJourney')}
             </motion.button>
 
             <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 14 }}>
-              Keep it up, {userName.split(' ')[0]}!
+              {t('components.milestoneCelebration.keepItUp').replace('{name}', userName.split(' ')[0])}
             </p>
           </motion.div>
         </motion.div>

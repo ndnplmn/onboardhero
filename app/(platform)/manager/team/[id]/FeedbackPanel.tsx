@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useT } from '@/lib/i18n/context'
 
 interface FeedbackPanelProps {
   journeyId: string
@@ -40,6 +41,7 @@ const SBI_TEMPLATES = {
 }
 
 export default function FeedbackPanel({ journeyId, hireName }: FeedbackPanelProps) {
+  const { t } = useT()
   const [type, setType]           = useState<'positive' | 'constructive'>('positive')
   const [content, setContent]     = useState('')
   const [loading, setLoading]     = useState(false)
@@ -71,13 +73,13 @@ export default function FeedbackPanel({ journeyId, hireName }: FeedbackPanelProp
           <i className="fa-solid fa-check" style={{ color: '#fff', fontSize: 18 }} aria-hidden="true" />
         </div>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', margin: 0 }}>
-          Feedback sent to {hireName}&apos;s profile
+          {t('components.feedbackPanel.sentToPre')} {hireName}{t('components.feedbackPanel.sentToPost')}
         </p>
         <button
           className="btn btn-sm btn-outline"
           onClick={() => { setSent(false); setContent(''); setType('positive') }}
         >
-          Send another
+          {t('components.feedbackPanel.sendAnother')}
         </button>
       </div>
     )
@@ -91,7 +93,7 @@ export default function FeedbackPanel({ journeyId, hireName }: FeedbackPanelProp
       {/* Title */}
       <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)', margin: 0, display: 'flex', alignItems: 'center', gap: 7 }}>
         <i className="fa-solid fa-comment-dots" style={{ color: 'var(--blue)' }} aria-hidden="true" />
-        Leave Feedback for {hireName}
+        {t('components.feedbackPanel.leaveFeedbackFor')} {hireName}
       </p>
 
       {/* Toggle */}
@@ -102,7 +104,7 @@ export default function FeedbackPanel({ journeyId, hireName }: FeedbackPanelProp
           style={type === 'positive' ? { background: 'var(--green)', borderColor: 'var(--green)' } : {}}
         >
           <i className="fa-solid fa-circle-check" style={{ color: type === 'positive' ? '#fff' : 'var(--green)', marginRight: 5 }} aria-hidden="true" />
-          Positive
+          {t('components.feedbackPanel.positive')}
         </button>
         <button
           className={`btn btn-sm ${type === 'constructive' ? 'btn-primary' : 'btn-outline'}`}
@@ -110,7 +112,7 @@ export default function FeedbackPanel({ journeyId, hireName }: FeedbackPanelProp
           style={type === 'constructive' ? { background: 'var(--amber)', borderColor: 'var(--amber)' } : {}}
         >
           <i className="fa-solid fa-lightbulb" style={{ color: type === 'constructive' ? '#fff' : 'var(--amber)', marginRight: 5 }} aria-hidden="true" />
-          Constructive
+          {t('components.feedbackPanel.constructive')}
         </button>
       </div>
 
@@ -125,7 +127,7 @@ export default function FeedbackPanel({ journeyId, hireName }: FeedbackPanelProp
           }}
         >
           <i className={`fa-solid fa-chevron-${showSBI ? 'down' : 'right'}`} style={{ fontSize: 9 }} />
-          Use SBI Framework (Situation · Behavior · Impact)
+          {t('components.feedbackPanel.sbiToggle')}
         </button>
 
         {showSBI && (
@@ -137,7 +139,7 @@ export default function FeedbackPanel({ journeyId, hireName }: FeedbackPanelProp
             borderRadius: 'var(--r)',
           }}>
             <p style={{ fontSize: 10, color: 'var(--text3)', margin: '0 0 8px', lineHeight: 1.5 }}>
-              SBI produces specific, actionable feedback. Click a template to pre-fill — then replace the brackets.
+              {t('components.feedbackPanel.sbiDesc')}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               {templates.map((tpl, i) => (
@@ -167,8 +169,8 @@ export default function FeedbackPanel({ journeyId, hireName }: FeedbackPanelProp
         onChange={e => setContent(e.target.value)}
         placeholder={
           type === 'positive'
-            ? "What's going well? Be specific and sincere."
-            : "What could improve? Keep it actionable and supportive."
+            ? t('components.feedbackPanel.positivePlaceholder')
+            : t('components.feedbackPanel.constructivePlaceholder')
         }
         rows={4}
         style={{
@@ -200,7 +202,7 @@ export default function FeedbackPanel({ journeyId, hireName }: FeedbackPanelProp
           ) : (
             <i className="fa-solid fa-paper-plane" aria-hidden="true" />
           )}
-          Send Feedback
+          {loading ? t('components.feedbackPanel.sending') : t('components.feedbackPanel.submit')}
         </button>
       </div>
     </div>

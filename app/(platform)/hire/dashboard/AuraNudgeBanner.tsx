@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useT } from '@/lib/i18n/context'
 
 interface AuraNudgeBannerProps {
   dayNumber: number
@@ -21,13 +22,14 @@ export default function AuraNudgeBanner({
   managerName,
   proactiveMessage,
 }: AuraNudgeBannerProps) {
+  const { t } = useT()
   const [dismissed, setDismissed] = useState(false)
 
   if (dismissed) return null
 
   // Determine which message to show (most relevant first)
   let message: React.ReactNode = null
-  let buttonLabel = 'Open Aura'
+  let buttonLabel = t('components.auraNudgeBanner.openAura')
   let isProactive = false
 
   // Check if nextCheckIn is within 24 hours from now
@@ -41,19 +43,19 @@ export default function AuraNudgeBanner({
 
   if (isCheckInWithin24h) {
     const mgr = managerName ?? 'your manager'
-    message = <>Your check-in with <strong>{mgr}</strong> is today — Aura can help you prepare.</>
-    buttonLabel = 'Open Aura'
+    message = <>{t('components.auraNudgeBanner.checkInPre')} <strong>{mgr}</strong> {t('components.auraNudgeBanner.checkInPost')}</>
+    buttonLabel = t('components.auraNudgeBanner.openAura')
   } else if (pendingTasks >= 3) {
-    message = <>You have <strong>{pendingTasks} tasks</strong> this week. Ask Aura to prioritize them for you.</>
-    buttonLabel = 'Ask now'
+    message = <>{t('components.auraNudgeBanner.tasksPre')} <strong>{pendingTasks} {t('components.welcomeBanner.tasks')}</strong> {t('components.auraNudgeBanner.tasksPost')}</>
+    buttonLabel = t('components.auraNudgeBanner.askNow')
   } else if (proactiveMessage) {
     // AI-generated personalized daily message (highest value when no urgent signal)
     message = <>{proactiveMessage}</>
-    buttonLabel = 'Ask Aura'
+    buttonLabel = t('components.auraNudgeBanner.askAura')
     isProactive = true
   } else if (dayNumber >= 28 && dayNumber <= 32) {
-    message = <>Your 30-day milestone is approaching. Ask Aura what to focus on.</>
-    buttonLabel = 'Open Aura'
+    message = <>{t('components.auraNudgeBanner.milestone30')}</>
+    buttonLabel = t('components.auraNudgeBanner.openAura')
   } else {
     return null
   }
@@ -106,7 +108,7 @@ export default function AuraNudgeBanner({
 
       <button
         onClick={() => setDismissed(true)}
-        aria-label="Dismiss Aura nudge"
+        aria-label={t('components.auraNudgeBanner.dismiss')}
         style={{
           background: 'none',
           border: 'none',

@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import TemplateCard from '@/components/platform/TemplateCard'
 import TemplateEditor from '@/components/platform/TemplateEditor'
-import JourneyPreview from '@/components/ai/JourneyPreview'
-import { seedStarterTemplate } from './actions'
+import { seedStarterTemplate, saveGeneratedTemplate } from './actions'
 
 const STARTER_TEMPLATES = [
   {
@@ -53,7 +52,6 @@ interface Props {
 export default function JourneysClient({ templates, tasksByTemplate, perfByTemplate = {} }: Props) {
   const router = useRouter()
   const [showEditor, setShowEditor] = useState(false)
-  const [showAI, setShowAI] = useState(false)
   const [showAIBuilder, setShowAIBuilder] = useState(false)
   const [seedingKey, setSeedingKey] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -85,17 +83,14 @@ export default function JourneysClient({ templates, tasksByTemplate, perfByTempl
           </p>
         </div>
         <div className="db-header-actions">
+          <button className="btn btn-outline btn-sm" onClick={() => setShowEditor(true)} aria-label="Create a new journey template">
+            <i className="fa-solid fa-plus" aria-hidden="true" /> Create Template
+          </button>
           <button
             className="btn btn-primary btn-sm btn-glow"
             onClick={() => setShowAIBuilder(true)}
             aria-label="Generate a journey template with AI builder"
           >
-            <i className="fa-solid fa-sparkles" aria-hidden="true" /> Generate with AI
-          </button>
-          <button className="btn btn-outline btn-sm" onClick={() => setShowEditor(true)} aria-label="Create a new journey template">
-            <i className="fa-solid fa-plus" aria-hidden="true" /> Create Template
-          </button>
-          <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowAI(true)} aria-label="Generate a journey template with AI">
             <i className="fa-solid fa-sparkles" aria-hidden="true" /> Generate with AI
           </button>
         </div>
@@ -309,10 +304,6 @@ export default function JourneysClient({ templates, tasksByTemplate, perfByTempl
       <AnimatePresence>
         {showEditor && <TemplateEditor onClose={() => { setShowEditor(false); router.refresh() }} />}
       </AnimatePresence>
-      <AnimatePresence>
-        {showAI && <JourneyPreview onClose={() => { setShowAI(false); router.refresh() }} />}
-      </AnimatePresence>
-
       {showAIBuilder && (
         <AIJourneyBuilderModal
           onClose={() => setShowAIBuilder(false)}
@@ -534,6 +525,8 @@ function AIJourneyBuilderModal({ onClose, onSaved }: AIJourneyBuilderModalProps)
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0)
   const [journey, setJourney] = useState<GeneratedJourney | null>(null)
   const [toast, setToast] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const loadingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const [form, setForm] = useState<AIBuilderForm>({
@@ -584,12 +577,40 @@ function AIJourneyBuilderModal({ onClose, onSaved }: AIJourneyBuilderModalProps)
     }, 3000)
   }
 
-  function handleSave() {
+  async function handleSave() {
+    if (!journey) return
+    setSaving(true)
+    setSaveError(null)
+
+    const roleMap: Record<AssignedRole, string> = { HR: 'hr', Manager: 'manager', 'New Hire': 'new_hire' }
+
+    const result = await saveGeneratedTemplate({
+      name: journey.title,
+      description: journey.description,
+      role_type: form.department,
+      department: form.department,
+      duration_days: 90,
+      tasks: journey.tasks.map((t, i) => ({
+        title: t.title,
+        description: t.description,
+        week: t.week,
+        assigned_to_role: roleMap[t.assignedRole] ?? 'new_hire',
+        order: i,
+      })),
+    })
+
+    setSaving(false)
+
+    if (result.error) {
+      setSaveError(result.error)
+      return
+    }
+
     setToast(true)
     setTimeout(() => {
       setToast(false)
       onSaved()
-    }, 1800)
+    }, 1500)
   }
 
   function handleRegenerate() {
@@ -963,11 +984,19 @@ function AIJourneyBuilderModal({ onClose, onSaved }: AIJourneyBuilderModalProps)
             display: 'flex', gap: 10, justifyContent: 'flex-end',
             flexShrink: 0, background: 'var(--surface)',
           }}>
-            <button className="btn btn-outline btn-sm" onClick={handleRegenerate}>
+            {saveError && (
+              <span style={{ fontSize: 12, color: 'var(--red)', alignSelf: 'center', marginRight: 'auto' }}>
+                <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 4 }} />{saveError}
+              </span>
+            )}
+            <button className="btn btn-outline btn-sm" onClick={handleRegenerate} disabled={saving}>
               <i className="fa-solid fa-rotate" /> Regenerate
             </button>
-            <button className="btn btn-primary btn-sm btn-glow" onClick={handleSave}>
-              <i className="fa-solid fa-floppy-disk" /> Save as Template
+            <button className="btn btn-primary btn-sm btn-glow" onClick={handleSave} disabled={saving}>
+              {saving
+                ? <><i className="fa-solid fa-spinner fa-spin" /> Saving...</>
+                : <><i className="fa-solid fa-floppy-disk" /> Save as Template</>
+              }
             </button>
           </div>
         )}

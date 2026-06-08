@@ -1,5 +1,7 @@
 'use client'
 
+import { useT } from '@/lib/i18n/context'
+
 export interface PersonMatch {
   id: string
   name: string
@@ -99,6 +101,7 @@ function Avatar({ name, avatarUrl, size }: { name: string; avatarUrl?: string | 
 }
 
 function PersonCard({ person }: { person: PersonMatch }) {
+  const { t } = useT()
   const primaryInterest = person.sharedInterests[0] ?? ''
   const mailtoLink = person.email
     ? `mailto:${person.email}?subject=Hey! Saw we share a love for ${encodeURIComponent(primaryInterest)}`
@@ -184,7 +187,7 @@ function PersonCard({ person }: { person: PersonMatch }) {
         {mailtoLink && (
           <a
             href={mailtoLink}
-            title="Say hi"
+            title={t('components.peopleConnect.sayHi')}
             style={{
               display: 'flex', alignItems: 'center', gap: 5, flex: 1,
               justifyContent: 'center',
@@ -195,7 +198,7 @@ function PersonCard({ person }: { person: PersonMatch }) {
             }}
           >
             <i className="fa-solid fa-hand-wave" style={{ fontSize: 10 }} />
-            Say hi
+            {t('components.peopleConnect.sayHi')}
           </a>
         )}
       </div>
@@ -204,6 +207,8 @@ function PersonCard({ person }: { person: PersonMatch }) {
 }
 
 export default function PeopleConnect({ myInterests, matches }: PeopleConnectProps) {
+  const { t } = useT()
+
   // Empty state — no interests set
   if (myInterests.length === 0) {
     return (
@@ -211,7 +216,7 @@ export default function PeopleConnect({ myInterests, matches }: PeopleConnectPro
         <div className="db-card-hd">
           <h3>
             <i className="fa-solid fa-sparkles" style={{ color: 'var(--violet)', marginRight: 7 }} aria-hidden="true" />
-            Find Your People
+            {t('components.peopleConnect.title')}
           </h3>
         </div>
         <div className="db-card-bd">
@@ -228,7 +233,7 @@ export default function PeopleConnect({ myInterests, matches }: PeopleConnectPro
               <i className="fa-solid fa-users" style={{ color: 'var(--violet)' }} aria-hidden="true" />
             </div>
             <p style={{ fontSize: 13, color: 'var(--text3)', maxWidth: 380, lineHeight: 1.65, margin: 0 }}>
-              Add your interests in your profile to find teammates who share your passions.
+              {t('components.peopleConnect.noInterestsDesc')}
             </p>
             <a
               href="/hire/profile"
@@ -242,7 +247,7 @@ export default function PeopleConnect({ myInterests, matches }: PeopleConnectPro
               }}
             >
               <i className="fa-solid fa-user-pen" style={{ fontSize: 12 }} />
-              Update my profile
+              {t('components.peopleConnect.updateProfile')}
             </a>
           </div>
         </div>
@@ -257,7 +262,7 @@ export default function PeopleConnect({ myInterests, matches }: PeopleConnectPro
         <div className="db-card-hd">
           <h3>
             <i className="fa-solid fa-sparkles" style={{ color: 'var(--violet)', marginRight: 7 }} aria-hidden="true" />
-            Find Your People
+            {t('components.peopleConnect.title')}
           </h3>
         </div>
         <div className="db-card-bd">
@@ -274,7 +279,7 @@ export default function PeopleConnect({ myInterests, matches }: PeopleConnectPro
               <i className="fa-solid fa-person-running" style={{ color: 'var(--amber)' }} aria-hidden="true" />
             </div>
             <p style={{ fontSize: 13, color: 'var(--text3)', maxWidth: 380, lineHeight: 1.65, margin: 0 }}>
-              No matches yet — you might be the first runner here! Tell your teammates about your passions.
+              {t('components.peopleConnect.noMatchesDesc')}
             </p>
           </div>
         </div>
@@ -298,7 +303,7 @@ export default function PeopleConnect({ myInterests, matches }: PeopleConnectPro
       <div className="db-card-hd">
         <h3>
           <i className="fa-solid fa-sparkles" style={{ color: 'var(--violet)', marginRight: 7 }} aria-hidden="true" />
-          Find Your People
+          {t('components.peopleConnect.title')}
         </h3>
         <span style={{
           fontSize: 11, fontWeight: 700,
@@ -307,7 +312,7 @@ export default function PeopleConnect({ myInterests, matches }: PeopleConnectPro
           border: '1px solid color-mix(in srgb, var(--violet) 30%, transparent)',
           color: 'var(--violet)',
         }}>
-          {matches.length} {matches.length === 1 ? 'match' : 'matches'}
+          {matches.length} {matches.length === 1 ? t('components.peopleConnect.match') : t('components.peopleConnect.matches')}
         </span>
       </div>
       <div className="db-card-bd" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -333,7 +338,7 @@ export default function PeopleConnect({ myInterests, matches }: PeopleConnectPro
                   />
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
-                  {people.length} {people.length === 1 ? 'person' : 'people'} who love{people.length === 1 ? 's' : ''} {interest}
+                  {people.length} {people.length === 1 ? t('components.peopleConnect.personSingular') : t('components.peopleConnect.peoplePlural')} {people.length === 1 ? t('components.peopleConnect.whoLoves') : t('components.peopleConnect.whoLove')} {interest}
                 </span>
               </div>
 
@@ -360,7 +365,7 @@ export default function PeopleConnect({ myInterests, matches }: PeopleConnectPro
             }}
           >
             <i className="fa-solid fa-users" style={{ fontSize: 11 }} />
-            See all people
+            {t('components.peopleConnect.seeAllPeople')}
             <i className="fa-solid fa-arrow-right" style={{ fontSize: 10 }} />
           </a>
         </div>

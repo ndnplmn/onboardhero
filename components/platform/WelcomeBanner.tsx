@@ -27,34 +27,36 @@ interface JourneyArc {
   phaseProgress: number  // 0-100 within the current phase
 }
 
-function getJourneyArc(dayNumber: number): JourneyArc {
+type GetJourneyArcFn = (dayNumber: number, t: (key: string) => string) => JourneyArc
+
+const getJourneyArc: GetJourneyArcFn = (dayNumber, t) => {
   if (dayNumber <= 7) {
     return {
-      phase: 'Orientation',
-      narrative: 'Your first week is about absorbing, not performing. Every question you ask now saves you weeks later.',
+      phase: t('components.welcomeBanner.phase.orientationLabel'),
+      narrative: t('components.welcomeBanner.phase.orientationNarrative'),
       phaseColor: '#00C8E0',
       phaseProgress: Math.round((dayNumber / 7) * 100),
     }
   }
   if (dayNumber <= 30) {
     return {
-      phase: 'Foundation',
-      narrative: 'This is the phase that separates thriving hires from struggling ones. Build habits, not just tasks.',
+      phase: t('components.welcomeBanner.phase.foundationLabel'),
+      narrative: t('components.welcomeBanner.phase.foundationNarrative'),
       phaseColor: '#1a6cf6',
       phaseProgress: Math.round(((dayNumber - 7) / 23) * 100),
     }
   }
   if (dayNumber <= 60) {
     return {
-      phase: 'Integration',
-      narrative: 'You\'re past the hardest part. Focus on relationships and impact — this is where your reputation forms.',
+      phase: t('components.welcomeBanner.phase.integrationLabel'),
+      narrative: t('components.welcomeBanner.phase.integrationNarrative'),
       phaseColor: '#a855f7',
       phaseProgress: Math.round(((dayNumber - 30) / 30) * 100),
     }
   }
   return {
-    phase: 'Mastery',
-    narrative: 'You\'re no longer a new hire — you\'re a contributor. This phase is about owning outcomes, not just tasks.',
+    phase: t('components.welcomeBanner.phase.masteryLabel'),
+    narrative: t('components.welcomeBanner.phase.masteryNarrative'),
     phaseColor: '#22c55e',
     phaseProgress: Math.min(100, Math.round(((dayNumber - 60) / 30) * 100)),
   }
@@ -191,7 +193,7 @@ export default function WelcomeBanner({
   const { t } = useT()
   const briefing     = getBriefing({ userName, dayNumber, avatarUrl, pendingTaskCount, completedThisWeek, totalThisWeek, nextCheckInDate, managerName, focusTaskTitle })
   const dailyInsight = getDailyInsight({ userName, dayNumber, completedThisWeek, totalThisWeek, overallCompletionPct, lastPulseScore, prevPulseScore, cohortRankPct, completedLastWeek })
-  const arc          = getJourneyArc(dayNumber)
+  const arc          = getJourneyArc(dayNumber, t)
 
   const weekPct = totalThisWeek && totalThisWeek > 0
     ? Math.round(((completedThisWeek ?? 0) / totalThisWeek) * 100)
@@ -232,7 +234,7 @@ export default function WelcomeBanner({
               {t('components.welcomeBanner.greeting')}, {userName}
             </h2>
             <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.04em' }}>
-              Day {dayNumber} · Onboarding Journey
+              {t('components.welcomeBanner.dayOnboarding').replace('{day}', String(dayNumber))}
             </span>
           </div>
         </div>
@@ -247,7 +249,7 @@ export default function WelcomeBanner({
               color: arc.phaseColor,
               border: `1px solid color-mix(in srgb, ${arc.phaseColor} 35%, transparent)`,
             }}>
-              {arc.phase} Phase
+              {arc.phase} {t('components.welcomeBanner.phase.phaseLabel')}
             </span>
             <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 100, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${arc.phaseProgress}%`, background: arc.phaseColor, borderRadius: 100, transition: 'width 0.8s ease' }} />
@@ -271,8 +273,8 @@ export default function WelcomeBanner({
         {weekPct !== null && (
           <div style={{ marginTop: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'rgba(255,255,255,0.5)', marginBottom: 4, fontWeight: 600 }}>
-              <span>Week progress</span>
-              <span>{completedThisWeek}/{totalThisWeek} tasks · {weekPct}%</span>
+              <span>{t('components.welcomeBanner.weekProgress')}</span>
+              <span>{completedThisWeek}/{totalThisWeek} {t('components.welcomeBanner.tasks')} · {weekPct}%</span>
             </div>
             <div style={{ height: 4, background: 'rgba(255,255,255,0.12)', borderRadius: 100, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${weekPct}%`, background: weekPct >= 80 ? 'linear-gradient(90deg,#22c55e,#4ade80)' : 'var(--grad)', borderRadius: 100, transition: 'width 0.6s var(--ease)' }} />

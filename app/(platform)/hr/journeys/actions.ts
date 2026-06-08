@@ -26,7 +26,7 @@ export async function createTemplate(formData: FormData) {
 
   if (tasksJson) {
     const tasks = JSON.parse(tasksJson) as Array<{ title: string; description: string; week: number; assigned_to_role: string; order: number }>
-    await supabase.from('template_tasks').insert(
+    const { error: tasksError } = await supabase.from('template_tasks').insert(
       tasks.map(t => ({
         template_id: template.id,
         title: t.title,
@@ -36,6 +36,10 @@ export async function createTemplate(formData: FormData) {
         order: t.order || 0,
       }))
     )
+    if (tasksError) {
+      await supabase.from('journey_templates').delete().eq('id', template.id)
+      return { error: tasksError.message }
+    }
   }
 
   revalidatePath('/hr/journeys')
@@ -91,23 +95,23 @@ export async function cloneTemplate(templateId: string) {
 
 // ── Assign journey to a hire ───────────────────────────────────────────────
 
-const TEMPLATE_DEFAULT_GOALS: Record<string, { milestone: '30' | '60' | '90'; title: string; description: string }[]> = {
+const TEMPLATE_DEFAULT_GOALS: Record<string, { milestone: 'day_30' | 'day_60' | 'day_90'; title: string; description: string }[]> = {
   Engineering: [
-    { milestone: '30', title: 'Dev environment & first PR', description: 'Set up local environment, complete codebase walkthrough, and merge first PR.' },
-    { milestone: '60', title: 'Own a full feature end-to-end', description: 'Design, implement, and ship a production feature with full test coverage.' },
-    { milestone: '90', title: 'Lead sprint planning independently', description: 'Drive sprint ceremonies, write technical specs, and mentor a peer.' },
+    { milestone: 'day_30', title: 'Dev environment & first PR', description: 'Set up local environment, complete codebase walkthrough, and merge first PR.' },
+    { milestone: 'day_60', title: 'Own a full feature end-to-end', description: 'Design, implement, and ship a production feature with full test coverage.' },
+    { milestone: 'day_90', title: 'Lead sprint planning independently', description: 'Drive sprint ceremonies, write technical specs, and mentor a peer.' },
   ],
   Sales: [
-    { milestone: '30', title: 'CRM setup & product certification', description: 'Complete CRM onboarding, pass demo certification, and shadow 3 customer calls.' },
-    { milestone: '60', title: 'First solo prospect pipeline', description: 'Build a personal pipeline of 10+ prospects and run 5 solo discovery calls.' },
-    { milestone: '90', title: 'Close first deal', description: 'Close a deal independently, hitting first quota milestone.' },
+    { milestone: 'day_30', title: 'CRM setup & product certification', description: 'Complete CRM onboarding, pass demo certification, and shadow 3 customer calls.' },
+    { milestone: 'day_60', title: 'First solo prospect pipeline', description: 'Build a personal pipeline of 10+ prospects and run 5 solo discovery calls.' },
+    { milestone: 'day_90', title: 'Close first deal', description: 'Close a deal independently, hitting first quota milestone.' },
   ],
 }
 
-const DEFAULT_GOALS: { milestone: '30' | '60' | '90'; title: string; description: string }[] = [
-  { milestone: '30', title: 'Complete onboarding checklist', description: 'Finish all required tasks, meet the team, and complete IT + benefits setup.' },
-  { milestone: '60', title: 'Deliver first contribution', description: 'Complete a meaningful project or deliverable with manager sign-off.' },
-  { milestone: '90', title: 'Operate independently', description: 'Work autonomously on core responsibilities with minimal guidance.' },
+const DEFAULT_GOALS: { milestone: 'day_30' | 'day_60' | 'day_90'; title: string; description: string }[] = [
+  { milestone: 'day_30', title: 'Complete onboarding checklist', description: 'Finish all required tasks, meet the team, and complete IT + benefits setup.' },
+  { milestone: 'day_60', title: 'Deliver first contribution', description: 'Complete a meaningful project or deliverable with manager sign-off.' },
+  { milestone: 'day_90', title: 'Operate independently', description: 'Work autonomously on core responsibilities with minimal guidance.' },
 ]
 
 export async function assignJourneyToEmployee(templateId: string, employeeId: string, managerId: string) {
@@ -146,7 +150,7 @@ export async function assignJourneyToEmployee(templateId: string, employeeId: st
         milestone:  g.milestone,
         title:      g.title,
         description: g.description,
-        status:     'pending',
+        status:     'not_started',
       }))
     )
   }
@@ -309,6 +313,53 @@ const STARTER_DEFINITIONS: Record<string, {
   },
 }
 
+export async function saveGeneratedTemplate(data: {
+  name: string
+  description: string
+  role_type: string
+  department: string
+  duration_days: number
+  tasks: { title: string; description: string; week: number; assigned_to_role: string; order: number }[]
+}) {
+  const supabase = await createSupabaseServer()
+  const user = await getUser()
+
+  const { data: template, error } = await supabase
+    .from('journey_templates')
+    .insert({
+      name: data.name,
+      description: data.description,
+      role_type: data.role_type,
+      department: data.department,
+      duration_days: data.duration_days,
+      ai_generated: true,
+      created_by: user.id,
+    })
+    .select()
+    .single()
+
+  if (error) return { error: error.message }
+
+  const { error: tasksError } = await supabase.from('template_tasks').insert(
+    data.tasks.map((t, i) => ({
+      template_id: template.id,
+      title: t.title,
+      description: t.description,
+      week: t.week,
+      assigned_to_role: t.assigned_to_role,
+      order: t.order ?? i,
+    }))
+  )
+
+  if (tasksError) {
+    await supabase.from('journey_templates').delete().eq('id', template.id)
+    return { error: tasksError.message }
+  }
+
+  revalidatePath('/hr/journeys')
+  return { success: true, templateId: template.id }
+}
+
 export async function seedStarterTemplate(key: string) {
   const supabase = await createSupabaseServer()
   const user = await getUser()
@@ -330,7 +381,7 @@ export async function seedStarterTemplate(key: string) {
 
   if (error) return { error: error.message }
 
-  await supabase.from('template_tasks').insert(
+  const { error: tasksError } = await supabase.from('template_tasks').insert(
     def.tasks.map((t, i) => ({
       template_id: template.id,
       title: t.title,
@@ -340,6 +391,11 @@ export async function seedStarterTemplate(key: string) {
       order: i,
     }))
   )
+
+  if (tasksError) {
+    await supabase.from('journey_templates').delete().eq('id', template.id)
+    return { error: tasksError.message }
+  }
 
   revalidatePath('/hr/journeys')
   return { success: true, templateId: template.id }

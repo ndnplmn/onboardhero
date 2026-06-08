@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useT } from '@/lib/i18n/context'
 
 interface ActivityEntry {
   id:          string
@@ -52,50 +53,61 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-const MANAGER_LABEL_MAP: Record<string, string> = {
-  progress_reviewed:       'Your manager reviewed your progress',
-  check_in_scheduled:      'Your manager scheduled a check-in with you',
-  check_in_completed:      'Your manager completed a check-in',
-  nudge_sent:              'Your manager sent you a nudge',
-  ai_suggestion_accepted:  'Your manager accepted an AI coaching suggestion',
-  goal_status_changed:     'Your manager updated a goal status',
-  friction_resolved:       'Your manager addressed one of your concerns',
+const MANAGER_KEY_MAP: Record<string, string> = {
+  progress_reviewed:       'managerReviewedProgress',
+  check_in_scheduled:      'managerScheduledCheckIn',
+  check_in_completed:      'managerCompletedCheckIn',
+  nudge_sent:              'managerSentNudge',
+  ai_suggestion_accepted:  'managerAcceptedAI',
+  goal_status_changed:     'managerUpdatedGoal',
+  friction_resolved:       'managerResolvedConcern',
 }
 
-const HR_LABEL_MAP: Record<string, string> = {
-  progress_reviewed:  'HR reviewed your onboarding progress',
-  check_in_scheduled: 'HR scheduled a check-in with you',
-  nudge_sent:         'HR sent you a notification',
+const HR_KEY_MAP: Record<string, string> = {
+  progress_reviewed:  'hrReviewedProgress',
+  check_in_scheduled: 'hrScheduledCheckIn',
+  nudge_sent:         'hrSentNudge',
 }
 
-const BUDDY_LABEL_MAP: Record<string, string> = {
-  check_in_completed: 'Your buddy completed a check-in with you',
-  check_in_scheduled: 'Your buddy scheduled a meeting',
+const BUDDY_KEY_MAP: Record<string, string> = {
+  check_in_completed: 'buddyCompletedCheckIn',
+  check_in_scheduled: 'buddyScheduledMeeting',
 }
 
 type FilterTab = 'all' | 'tasks' | 'checkins' | 'manager'
-const FILTER_TABS: { key: FilterTab; label: string; icon: string }[] = [
-  { key: 'all',      label: 'All',        icon: 'fa-solid fa-timeline' },
-  { key: 'tasks',    label: 'Tasks',      icon: 'fa-solid fa-circle-check' },
-  { key: 'checkins', label: 'Check-ins',  icon: 'fa-solid fa-calendar-check' },
-  { key: 'manager',  label: 'Manager',    icon: 'fa-solid fa-user-tie' },
-]
 
 const TASK_TYPES    = new Set(['task_completed', 'task_uncompleted', 'ai_suggestion_accepted'])
 const CHECKIN_TYPES = new Set(['check_in_completed', 'check_in_scheduled'])
 
-function resolveLabel(entry: ActivityEntry): string {
-  if (entry.actor_role === 'manager') return MANAGER_LABEL_MAP[entry.action_type] ?? entry.label
-  if (entry.actor_role === 'hr')      return HR_LABEL_MAP[entry.action_type]      ?? entry.label
-  if (entry.actor_role === 'buddy')   return BUDDY_LABEL_MAP[entry.action_type]   ?? entry.label
-  return entry.label
-}
-
 const PAGE_SIZE = 10
 
 export default function ActivityFeed({ entries }: ActivityFeedProps) {
+  const { t } = useT()
   const [visible, setVisible]   = useState(PAGE_SIZE)
   const [filter, setFilter]     = useState<FilterTab>('all')
+
+  const FILTER_TABS: { key: FilterTab; labelKey: string; icon: string }[] = [
+    { key: 'all',      labelKey: 'components.activityFeed.filterAll',      icon: 'fa-solid fa-timeline' },
+    { key: 'tasks',    labelKey: 'components.activityFeed.filterTasks',    icon: 'fa-solid fa-circle-check' },
+    { key: 'checkins', labelKey: 'components.activityFeed.filterCheckIns', icon: 'fa-solid fa-calendar-check' },
+    { key: 'manager',  labelKey: 'components.activityFeed.filterManager',  icon: 'fa-solid fa-user-tie' },
+  ]
+
+  function resolveLabel(entry: ActivityEntry): string {
+    if (entry.actor_role === 'manager') {
+      const key = MANAGER_KEY_MAP[entry.action_type]
+      return key ? t(`components.activityFeed.${key}`) : entry.label
+    }
+    if (entry.actor_role === 'hr') {
+      const key = HR_KEY_MAP[entry.action_type]
+      return key ? t(`components.activityFeed.${key}`) : entry.label
+    }
+    if (entry.actor_role === 'buddy') {
+      const key = BUDDY_KEY_MAP[entry.action_type]
+      return key ? t(`components.activityFeed.${key}`) : entry.label
+    }
+    return entry.label
+  }
 
   const filtered = useMemo(() => {
     if (filter === 'tasks')    return entries.filter(e => TASK_TYPES.has(e.action_type))
@@ -114,10 +126,10 @@ export default function ActivityFeed({ entries }: ActivityFeedProps) {
       <div className="db-card-hd">
         <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <i className="fa-solid fa-timeline" style={{ color: 'var(--cyan)', fontSize: 13 }} aria-hidden="true" />
-          Recent Activity
+          {t('components.activityFeed.title')}
         </h3>
         <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>
-          {entries.length} events
+          {entries.length} {t('components.activityFeed.events')}
         </span>
       </div>
 
@@ -137,7 +149,7 @@ export default function ActivityFeed({ entries }: ActivityFeedProps) {
             }}
           >
             <i className={tab.icon} style={{ fontSize: 9 }} />
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>
@@ -165,7 +177,7 @@ export default function ActivityFeed({ entries }: ActivityFeedProps) {
                     {label}
                     {isManager && (
                       <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, background: 'rgba(0,200,224,0.12)', color: 'var(--cyan)', padding: '1px 6px', borderRadius: 4 }}>
-                        Manager
+                        {t('components.activityFeed.managerBadge')}
                       </span>
                     )}
                   </p>
@@ -190,7 +202,7 @@ export default function ActivityFeed({ entries }: ActivityFeedProps) {
             onMouseEnter={e => (e.currentTarget.style.color = 'var(--text)')}
             onMouseLeave={e => (e.currentTarget.style.color = 'var(--text3)')}
           >
-            Show {Math.min(PAGE_SIZE, entries.length - visible)} more
+            {t('components.activityFeed.showMore').replace('{n}', String(Math.min(PAGE_SIZE, entries.length - visible)))}
             <i className="fa-solid fa-chevron-down" style={{ marginLeft: 6, fontSize: 10 }} />
           </button>
         )}

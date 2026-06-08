@@ -24,7 +24,7 @@ export async function getHireDashboardData(userId: string) {
       .order('assigned_to_role'),
     supabase
       .from('check_ins')
-      .select('id, type, scheduled_date, completed_date, notes, manager_notes')
+      .select('id, milestone, scheduled_date, completed_date, notes, manager_notes')
       .eq('journey_id', journey.id)
       .order('scheduled_date', { ascending: true }),
     supabase
@@ -46,11 +46,14 @@ export async function getHireDashboardData(userId: string) {
   if (Array.isArray(journeyData.manager))  journeyData.manager  = journeyData.manager[0]
   if (Array.isArray(journeyData.template)) journeyData.template = journeyData.template[0]
 
+  // Expose milestone as 'type' so page components can use c.type uniformly
+  const checkIns = (checkInsRes.data || []).map((c: any) => ({ ...c, type: c.milestone }))
+
   return {
-    journey:      journeyData,
-    tasks:        tasksRes.data    || [],
-    checkIns:     checkInsRes.data || [],
-    resources:    resourcesRes.data || [],
-    pulseChecks:  pulseRes.data    || [],
+    journey:     journeyData,
+    tasks:       tasksRes.data  || [],
+    checkIns,
+    resources:   resourcesRes.data || [],
+    pulseChecks: pulseRes.data  || [],
   }
 }

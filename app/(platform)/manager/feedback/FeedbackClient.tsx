@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useTransition } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useT } from '@/lib/i18n/context'
+import { saveFeedbackResponse } from './actions'
 
 type Sentiment = 'positive' | 'mixed' | 'negative'
 type Source    = 'form' | 'check-in'
@@ -208,12 +209,22 @@ function CategoryTrends({ feedback }: { feedback: FeedbackItem[] }) {
 function RespondModal({ item, onClose }: { item: FeedbackItem; onClose: () => void }) {
   const [sent, setSent] = useState(false)
   const [text, setText] = useState('')
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   function handleSend(e: React.FormEvent) {
     e.preventDefault()
     if (!text.trim()) return
-    setSent(true)
-    setTimeout(onClose, 1800)
+    setSaveError(null)
+    startTransition(async () => {
+      const result = await saveFeedbackResponse(item.id, item.source, text)
+      if (result.error) {
+        setSaveError(result.error)
+        return
+      }
+      setSent(true)
+      setTimeout(onClose, 1500)
+    })
   }
 
   return (
@@ -275,10 +286,18 @@ function RespondModal({ item, onClose }: { item: FeedbackItem; onClose: () => vo
               </div>
             </div>
 
+            {saveError && (
+              <div style={{ padding: '0 24px 12px', fontSize: 12, color: 'var(--red)' }}>
+                <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }} />{saveError}
+              </div>
+            )}
             <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border)', display: 'flex', gap: 10, background: 'var(--surface2)' }}>
               <button type="button" className="btn btn-outline btn-sm" onClick={onClose} style={{ flex: 1 }}>Cancel</button>
-              <button type="submit" className="btn btn-primary btn-sm" disabled={!text.trim()} style={{ flex: 2 }}>
-                <i className="fa-solid fa-paper-plane" /> Send Response
+              <button type="submit" className="btn btn-primary btn-sm" disabled={!text.trim() || isPending} style={{ flex: 2 }}>
+                {isPending
+                  ? <><i className="fa-solid fa-spinner fa-spin" /> Saving...</>
+                  : <><i className="fa-solid fa-paper-plane" /> Send Response</>
+                }
               </button>
             </div>
           </form>
