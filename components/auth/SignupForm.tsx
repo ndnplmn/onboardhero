@@ -4,8 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/db/supabase-client'
 import Link from 'next/link'
+import { useT } from '@/lib/i18n/context'
 
 export default function SignupForm() {
+  const { t } = useT()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -48,17 +50,17 @@ export default function SignupForm() {
         alt="OnboardHero"
         className="auth-logo"
       />
-      <h2 className="auth-title">Create your account</h2>
-      <p className="auth-subtitle">Get started with OnboardHero</p>
+      <h2 className="auth-title">{t('auth.signup.title')}</h2>
+      <p className="auth-subtitle">{t('auth.signup.subtitle')}</p>
 
       {error && <div className="auth-error">{error}</div>}
 
       <form onSubmit={handleSignup}>
         <div className="fg">
-          <label>Full name</label>
+          <label>{t('auth.signup.fullNameLabel')}</label>
           <input
             type="text"
-            placeholder="Jane Doe"
+            placeholder={t('auth.signup.fullNamePlaceholder')}
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
@@ -66,10 +68,10 @@ export default function SignupForm() {
         </div>
 
         <div className="fg">
-          <label>Email</label>
+          <label>{t('auth.signup.emailLabel')}</label>
           <input
             type="email"
-            placeholder="you@company.com"
+            placeholder={t('auth.signup.emailPlaceholder')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -77,10 +79,10 @@ export default function SignupForm() {
         </div>
 
         <div className="fg">
-          <label>Password</label>
+          <label>{t('auth.signup.passwordLabel')}</label>
           <input
             type="password"
-            placeholder="At least 6 characters"
+            placeholder={t('auth.signup.passwordPlaceholder')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -89,10 +91,10 @@ export default function SignupForm() {
         </div>
 
         <div className="fg">
-          <label>Department</label>
+          <label>{t('auth.signup.departmentLabel')}</label>
           <input
             type="text"
-            placeholder="e.g. Engineering"
+            placeholder={t('auth.signup.departmentPlaceholder')}
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
           />
@@ -103,12 +105,12 @@ export default function SignupForm() {
           className="btn btn-primary btn-block btn-lg"
           disabled={loading}
         >
-          {loading ? 'Creating account...' : 'Create account'}
+          {loading ? t('auth.signup.loadingBtn') : t('auth.signup.submitBtn')}
         </button>
       </form>
 
       <p className="auth-link">
-        Already have an account? <Link href="/login">Log in</Link>
+        {t('auth.signup.hasAccount')} <Link href="/login">{t('auth.signup.loginLink')}</Link>
       </p>
     </div>
   )

@@ -62,10 +62,10 @@ export default async function HireAlertsPage() {
       .order('created_at', { ascending: false })
       .limit(20),
     journey ? supabase
-      .from('tasks')
-      .select('id, title, due_date, completed')
-      .eq('employee_id', user.id)
-      .eq('completed', false)
+      .from('journey_tasks')
+      .select('id, title, due_date, status')
+      .eq('journey_id', journey.id)
+      .in('status', ['pending', 'in_progress'])
       .order('due_date', { ascending: true }) : Promise.resolve({ data: null }),
     journey ? supabase
       .from('check_ins')
@@ -86,10 +86,10 @@ export default async function HireAlertsPage() {
   const now = new Date()
   const pendingTasks = (tasksRes.data && tasksRes.data.length > 0)
     ? tasksRes.data.map((t: any) => ({
-        id: t.id,
-        title: t.title,
+        id:       t.id,
+        title:    t.title,
         due_date: t.due_date ?? '',
-        overdue: t.due_date ? new Date(t.due_date) < now : false,
+        overdue:  t.due_date ? new Date(t.due_date) < now : false,
       }))
     : mock.pendingTasks
 

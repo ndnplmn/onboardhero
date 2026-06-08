@@ -521,9 +521,11 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .db-grid-kpi4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
 .db-grid-kpi5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; }
 .db-grid-kpi3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
-.db-grid-2-1  { display: grid; grid-template-columns: 2fr 1fr; gap: var(--gap-standard); align-items: stretch; }
-.db-grid-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--gap-standard); align-items: stretch; }
-.db-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-standard); align-items: stretch; }
+.db-grid-2-1     { display: grid; grid-template-columns: 2fr 1fr; gap: var(--gap-standard); align-items: stretch; }
+.db-grid-3col    { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--gap-standard); align-items: stretch; }
+.db-grid-2col    { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-standard); align-items: stretch; }
+.db-grid-nav-1fr { display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: start; }
+.db-grid-1-360   { display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
 
 /* AI badge */
 .badge-ai {
@@ -878,6 +880,11 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   .db-grid-kpi4  { grid-template-columns: repeat(2,1fr); }
   .db-grid-kpi5  { grid-template-columns: repeat(3,1fr); }
   .db-grid-kpi3  { grid-template-columns: repeat(2,1fr); }
+  .db-grid-3col  { grid-template-columns: 1fr 1fr; }
+
+  /* fixed-col layouts → relax at tablet */
+  .db-grid-nav-1fr { grid-template-columns: 180px 1fr; }
+  .db-grid-1-360   { grid-template-columns: 1fr 280px; }
 
   /* 2/3+1/3 layout → side-by-side still fine at 860px, but collapses at 640 */
 }
@@ -905,6 +912,8 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   /* All platform grid helpers → single column */
   .db-grid-kpi4, .db-grid-kpi5, .db-grid-kpi3 { grid-template-columns: repeat(2,1fr); gap: 10px; }
   .db-grid-2-1, .db-grid-3col, .db-grid-2col   { grid-template-columns: 1fr; gap: 12px; }
+  /* Settings/alerts fixed-col layouts → stack */
+  .db-grid-nav-1fr, .db-grid-1-360 { grid-template-columns: 1fr !important; gap: 12px !important; }
 
   /* KPI cards → 2-col on small mobile */
   .kpi-row { grid-template-columns: repeat(2,1fr); gap: 10px; }
@@ -930,12 +939,198 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 
   /* Topbar */
   .app-topbar { padding: 10px 16px; }
+
+  /* WelcomeBanner — stack vertically on mobile */
+  .wb { flex-direction: column-reverse; padding: 20px; text-align: center; gap: 16px; margin-bottom: 16px; }
+  .wb-info h2 { font-size: 18px; }
+  .wb-info p  { font-size: 13px; }
+  .wb-ava { width: 64px; height: 64px; }
+
+  /* Resource hub quick-link grid → single col */
+  .rh-grid { grid-template-columns: 1fr; gap: 10px; }
+
+  /* Auth card padding reduction */
+  .auth-card { padding: 24px 20px; }
+
+  /* Prevent iOS input zoom (needs 16px+ font) */
+  .fg input, .fg select, .fg textarea { font-size: 16px; }
+
+  /* Journey tracker horizontal scroll on mobile */
+  .jt-track-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
+  .jr-track-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
+
+  /* Meeting/task items — no overlap on narrow screens */
+  .mt-item { flex-wrap: wrap; }
+  .mt-time { width: auto; flex-shrink: 0; }
 }
 
 /* ── Very small (≤380px) ─────────────────────────────────────── */
 @media (max-width: 380px) {
   .kpi-row { grid-template-columns: 1fr; }
+  .db-grid-kpi4, .db-grid-kpi5, .db-grid-kpi3 { grid-template-columns: 1fr; }
   .db-header-actions .btn { font-size: 12px; padding: 8px 12px; }
+  .wb { padding: 16px; }
+  .wb-info h2 { font-size: 16px; }
+}
+
+/* ── New Hire Mobile Enhancements ────────────────────────────── */
+
+/* Bottom nav bar for hire views on mobile */
+.hire-mobile-nav {
+  display: none;
+}
+@media (max-width: 860px) {
+  .hire-mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--sb-bg);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    z-index: 200;
+    padding: 0 8px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .hire-mobile-nav a {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: rgba(255,255,255,0.45);
+    text-decoration: none;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-family: var(--font-display);
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 44px;
+  }
+  .hire-mobile-nav a i { font-size: 18px; }
+  .hire-mobile-nav a.active { color: var(--cyan); }
+  .hire-mobile-nav a:hover { color: rgba(255,255,255,0.75); }
+
+  /* Add bottom padding to hire pages so content isn't hidden under nav */
+  .hire-page-content { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+}
+
+/* Pulse check emojis — larger touch targets on mobile */
+@media (max-width: 640px) {
+  .pulse-emoji-btn {
+    width: 52px !important;
+    height: 52px !important;
+    font-size: 28px !important;
+  }
+
+  /* Day1Banner first-hour checklist — full width items */
+  .day1-checklist-item {
+    padding: 14px 16px !important;
+  }
+
+  /* Command Palette — full width on mobile */
+  .cmd-palette-box {
+    max-width: 100% !important;
+    border-radius: var(--r-lg) var(--r-lg) 0 0 !important;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    top: auto !important;
+    max-height: 75vh !important;
+  }
+}
+
+/* Task cards — minimum tap target */
+.task-item-row {
+  min-height: 52px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Hire Dashboard Mobile ────────────────────────────────────── */
+
+/* Hire dashboard 2-col layout → single col at tablet */
+@media (max-width: 860px) {
+  .hire-dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+  /* Side column reorders to come after main on mobile */
+  .hire-dashboard-sidebar {
+    order: 2;
+  }
+  .hire-dashboard-main {
+    order: 1;
+  }
+  /* WelcomeBanner + PulseCheck side-by-side → stack at 860 */
+  .hire-briefing-row {
+    flex-direction: column !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* GoalsBoard milestones — scrollable horizontal tabs instead of columns */
+  .goals-milestones-row {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    gap: 10px !important;
+  }
+  .goals-milestone-col {
+    min-width: 260px;
+    flex-shrink: 0;
+  }
+
+  /* CollapseSection header — larger tap target */
+  .collapse-section-hd {
+    padding: 14px 16px !important;
+    min-height: 48px;
+  }
+
+  /* IntegrationRadar — prevent overflow */
+  .integration-radar-wrap {
+    overflow: hidden;
+  }
+  .integration-radar-wrap svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* FrictionMap event list — full-width tap targets */
+  .friction-event-row {
+    padding: 12px 14px !important;
+    min-height: 48px;
+  }
+
+  /* ActivityFeed entries — tighter on small screens */
+  .activity-feed-item {
+    padding: 8px 0 !important;
+  }
+
+  /* MeetingTimeline — stack meeting info */
+  .meeting-item-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* AchievementWall — 2 columns on mobile */
+  .achievement-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* DB card padding reduction */
+  .db-card .db-card-hd,
+  .db-card .db-card-bd,
+  .db-card .db-card-header,
+  .db-card .db-card-body {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+/* Hire journey cards — better touch feedback */
+@media (max-width: 860px) {
+  .db-card { -webkit-tap-highlight-color: transparent; }
+  .db-card:active { transform: scale(0.995); }
 }
 
 /* ── AUTH PAGES ──────────────────────────────────────────────── */
@@ -1088,7 +1283,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .ring-info span { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 
 /* ── RECRUIT DASHBOARD COMPONENTS ──────────────────────────── */
-.wb { display: flex; justify-content: space-between; align-items: center; padding: 32px; background: var(--grad-main); border-radius: var(--r-lg); color: #fff; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0, 163, 255, 0.2); }
+.wb { display: flex; justify-content: space-between; align-items: center; padding: 30px 40px; background: var(--grad-main); border-radius: var(--r-lg); color: #fff; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0, 163, 255, 0.2); }
 .wb-info h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
 .wb-info p { font-size: 14px; opacity: 0.9; }
 .wb-ava { width: 80px; height: 80px; border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.3); }
@@ -1218,3 +1413,120 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .badge-item { transition: transform 0.25s var(--ease); }
 .badge-item:hover { transform: translateY(-3px); }
 .badge-item.locked { cursor: not-allowed; }
+
+/* ── Skeleton loaders ─────────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--border) 25%, #e8edf6 50%, var(--border) 75%);
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+  border-radius: var(--r);
+}
+
+.skeleton-text  { height: 14px; border-radius: 6px; }
+.skeleton-title { height: 22px; border-radius: 8px; }
+.skeleton-avatar { border-radius: 50%; }
+.skeleton-card  { border-radius: var(--r-lg); }
+
+/* ── Dark Mode ────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:           #0D1117;
+  --surface:      #161B22;
+  --surface2:     #1C2333;
+  --border:       rgba(255,255,255,0.08);
+  --border2:      rgba(255,255,255,0.13);
+  --text:         #E6EDF3;
+  --text2:        #8B949E;
+  --text3:        #6E7681;
+  --shadow:       0 2px 10px rgba(0,0,0,0.35);
+  --shadow-md:    0 6px 28px rgba(0,0,0,0.45);
+  --shadow-lg:    0 16px 56px rgba(0,0,0,0.55);
+  --card-shadow:  0 4px 20px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.05);
+  --card-hover:   0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--cyan-mid);
+  --cyan-light:   rgba(0,200,224,0.12);
+  --blue-light:   rgba(26,108,246,0.12);
+  --aqua-light:   rgba(34,211,184,0.12);
+  --green-bg:     rgba(34,197,94,0.10);
+  --amber-bg:     rgba(245,158,11,0.10);
+  --red-bg:       rgba(239,68,68,0.10);
+  --grad-soft:    linear-gradient(135deg, rgba(0,200,224,0.15) 0%, rgba(26,108,246,0.15) 100%);
+}
+
+[data-theme="dark"] body { background: var(--bg); color: var(--text); }
+
+[data-theme="dark"] .app-main { background: var(--bg); }
+
+[data-theme="dark"] .db-card,
+[data-theme="dark"] .glass-panel-pro {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .db-card-hd {
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .chat-input,
+[data-theme="dark"] select,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] textarea {
+  background: var(--surface2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .btn-outline {
+  border-color: var(--border2);
+  color: var(--text2);
+}
+[data-theme="dark"] .btn-outline:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(0,200,224,0.08);
+}
+
+[data-theme="dark"] .btn-ghost { color: var(--text2); }
+[data-theme="dark"] .btn-ghost:hover { background: rgba(255,255,255,0.06); }
+
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(90deg, var(--surface2) 25%, rgba(255,255,255,0.06) 50%, var(--surface2) 75%);
+  background-size: 800px 100%;
+}
+
+[data-theme="dark"] .modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .app-topbar {
+  background: var(--surface);
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .app-sidebar { background: #080D14; }
+
+/* Theme toggle button */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sb-text);
+  transition: background 0.2s, border-color 0.2s;
+  font-family: var(--font-body);
+}
+.theme-toggle:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.18);
+}

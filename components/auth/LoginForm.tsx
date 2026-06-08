@@ -4,8 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/db/supabase-client'
 import Link from 'next/link'
+import { useT } from '@/lib/i18n/context'
 
 export default function LoginForm() {
+  const { t } = useT()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -52,17 +54,17 @@ export default function LoginForm() {
         alt="OnboardHero"
         className="auth-logo"
       />
-      <h2 className="auth-title">Welcome back</h2>
-      <p className="auth-subtitle">Log in to your OnboardHero account</p>
+      <h2 className="auth-title">{t('auth.login.title')}</h2>
+      <p className="auth-subtitle">{t('auth.login.subtitle')}</p>
 
       {error && <div className="auth-error">{error}</div>}
 
       <form onSubmit={handleLogin}>
         <div className="fg">
-          <label>Email</label>
+          <label>{t('auth.login.emailLabel')}</label>
           <input
             type="email"
-            placeholder="you@company.com"
+            placeholder={t('auth.login.emailPlaceholder')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -70,10 +72,10 @@ export default function LoginForm() {
         </div>
 
         <div className="fg">
-          <label>Password</label>
+          <label>{t('auth.login.passwordLabel')}</label>
           <input
             type="password"
-            placeholder="Your password"
+            placeholder={t('auth.login.passwordPlaceholder')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -85,12 +87,12 @@ export default function LoginForm() {
           className="btn btn-primary btn-block btn-lg"
           disabled={loading}
         >
-          {loading ? 'Logging in...' : 'Log in'}
+          {loading ? t('auth.login.loadingBtn') : t('auth.login.submitBtn')}
         </button>
       </form>
 
       <p className="auth-link">
-        Don&apos;t have an account? <Link href="/signup">Sign up</Link>
+        {t('auth.login.noAccount')} <Link href="/signup">{t('auth.login.signupLink')}</Link>
       </p>
     </div>
   )

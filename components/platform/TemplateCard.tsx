@@ -23,9 +23,17 @@ interface Template {
   created_at: string
 }
 
+interface TemplatePerf {
+  activeHires: number
+  completedHires: number
+  avgCompletionPct: number
+  avgTTP: number | null
+}
+
 interface Props {
   template: Template
   tasks?: Task[]
+  performance?: TemplatePerf
   onRefresh?: () => void
 }
 
@@ -44,7 +52,7 @@ function groupByWeek(tasks: Task[]) {
   return groups
 }
 
-export default function TemplateCard({ template, tasks = [], onRefresh }: Props) {
+export default function TemplateCard({ template, tasks = [], performance, onRefresh }: Props) {
   const [isPending, startTransition] = useTransition()
   const [expanded, setExpanded] = useState(false)
   const [showAssign, setShowAssign] = useState(false)
@@ -134,6 +142,50 @@ export default function TemplateCard({ template, tasks = [], onRefresh }: Props)
             )}
           </div>
         </div>
+
+        {/* Performance analytics */}
+        {performance && (performance.activeHires > 0 || performance.completedHires > 0) && (
+          <div style={{ margin: '0 20px 16px', padding: '12px 14px', background: 'var(--surface2)', borderRadius: 'var(--r)', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
+              Template Performance
+            </div>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 900, fontFamily: 'var(--font-display)', color: 'var(--cyan)', lineHeight: 1 }}>
+                  {performance.activeHires + performance.completedHires}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 2 }}>Hires used</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 900, fontFamily: 'var(--font-display)', color: performance.avgCompletionPct >= 80 ? 'var(--green)' : performance.avgCompletionPct >= 50 ? 'var(--amber)' : 'var(--red)', lineHeight: 1 }}>
+                  {performance.avgCompletionPct}%
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 2 }}>Avg completion</div>
+              </div>
+              {performance.avgTTP != null && (
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 18, fontWeight: 900, fontFamily: 'var(--font-display)', color: performance.avgTTP <= 45 ? 'var(--green)' : 'var(--amber)', lineHeight: 1 }}>
+                    {performance.avgTTP}d
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 2 }}>Avg TTP</div>
+                </div>
+              )}
+              {performance.activeHires > 0 && (
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 18, fontWeight: 900, fontFamily: 'var(--font-display)', color: 'var(--blue)', lineHeight: 1 }}>
+                    {performance.activeHires}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 2 }}>Active now</div>
+                </div>
+              )}
+            </div>
+            {performance.avgCompletionPct > 0 && (
+              <div style={{ marginTop: 10, height: 4, background: 'var(--border)', borderRadius: 100, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${performance.avgCompletionPct}%`, background: performance.avgCompletionPct >= 80 ? 'var(--green)' : performance.avgCompletionPct >= 50 ? 'var(--amber)' : 'var(--red)', borderRadius: 100, transition: 'width 0.6s ease' }} />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Expandable task preview */}
         {taskCount > 0 && (

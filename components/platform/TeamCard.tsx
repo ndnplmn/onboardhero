@@ -2,7 +2,9 @@ import RiskBadge from './RiskBadge'
 import Link from 'next/link'
 
 export default function TeamCard({ journey }: { journey: any }) {
-  const progress  = Math.min(Math.round((journey.current_week / 12) * 100), 100)
+  const template     = Array.isArray(journey.template) ? journey.template[0] : journey.template
+  const durationWeeks = template?.duration_days ? Math.round(template.duration_days / 7) : 12
+  const progress     = Math.min(Math.round((journey.current_week / durationWeeks) * 100), 100)
   const employee  = journey.employee
 
   return (

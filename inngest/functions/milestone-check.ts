@@ -83,6 +83,16 @@ export const milestoneCheck = inngest.createFunction(
             action_url: `/journeys/${journey.id}`,
           })
 
+          // Trigger the realtime risk handler for missed check-ins
+          await inngest.send({
+            name: 'journey/checkin.missed',
+            data: {
+              journeyId:  journey.id,
+              employeeId: journey.employee_id,
+              milestone:  milestone.key,
+            },
+          })
+
           created++
         }
 

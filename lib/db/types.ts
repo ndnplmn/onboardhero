@@ -15,6 +15,8 @@ export interface Profile {
   phone: string | null
   bio: string | null
   emergency_contact: { name?: string; phone?: string; relationship?: string } | null
+  interests?: string[] | null
+  fun_fact?: string | null
   active: boolean
   created_at: string
 }

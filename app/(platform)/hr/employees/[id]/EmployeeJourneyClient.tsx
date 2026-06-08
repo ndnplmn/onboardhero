@@ -23,6 +23,7 @@ interface Journey {
   sentiment_score: number
   start_date: string
   progress?: number
+  template?: { duration_days?: number } | { duration_days?: number }[] | null
 }
 
 interface Task {
@@ -165,7 +166,7 @@ export default function EmployeeJourneyClient({ employee, journey, tasks }: Prop
                 </div>
                 <div>
                   <div style={{ color: 'var(--text3)', marginBottom: 2 }}>Week</div>
-                  <div style={{ fontWeight: 700 }}>{journey?.current_week ?? '—'} / 12</div>
+                  <div style={{ fontWeight: 700 }}>{journey?.current_week ?? '—'} / {journey ? (Array.isArray(journey.template) ? journey.template[0] : journey.template)?.duration_days ? Math.round(((Array.isArray(journey.template) ? journey.template[0] : journey.template)!.duration_days!) / 7) : 12 : 12}</div>
                 </div>
                 <div>
                   <div style={{ color: 'var(--text3)', marginBottom: 2 }}>Tasks Done</div>

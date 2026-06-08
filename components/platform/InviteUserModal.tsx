@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { motion } from 'framer-motion'
 import { inviteUser } from '@/app/(platform)/hr/employees/actions'
+import { useT } from '@/lib/i18n/context'
 
 interface Props {
   managers: { id: string; full_name: string }[]
@@ -13,6 +14,7 @@ interface Props {
 const DEPARTMENTS = ['Engineering', 'Product', 'Design', 'Sales', 'Marketing', 'People', 'Finance', 'Legal', 'Operations']
 
 export default function InviteUserModal({ managers, templates, onClose }: Props) {
+  const { t } = useT()
   const [role, setRole]           = useState('new_hire')
   const [isPending, startTransition] = useTransition()
   const [error, setError]         = useState('')
@@ -77,7 +79,7 @@ export default function InviteUserModal({ managers, templates, onClose }: Props)
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700 }}>
-              Invite Team Member
+              {t('components.inviteModal.title')}
             </div>
             <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
               They&apos;ll receive an email invitation to set up their account.
@@ -141,26 +143,26 @@ export default function InviteUserModal({ managers, templates, onClose }: Props)
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="fg">
-                  <label>Full Name</label>
-                  <input name="full_name" type="text" placeholder="John Doe" required />
+                  <label>{t('components.inviteModal.fullNameLabel')}</label>
+                  <input name="full_name" type="text" placeholder={t('components.inviteModal.fullNamePlaceholder')} required />
                 </div>
                 <div className="fg">
-                  <label>Work Email</label>
-                  <input name="email" type="email" placeholder="john@company.com" required />
+                  <label>{t('components.inviteModal.emailLabel')}</label>
+                  <input name="email" type="email" placeholder={t('components.inviteModal.emailPlaceholder')} required />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="fg">
-                  <label>Role</label>
+                  <label>{t('components.inviteModal.roleLabel')}</label>
                   <select name="role" value={role} onChange={e => setRole(e.target.value)}>
-                    <option value="new_hire">New Hire</option>
-                    <option value="manager">Manager</option>
-                    <option value="hr">HR</option>
+                    <option value="new_hire">{t('components.inviteModal.newHire')}</option>
+                    <option value="manager">{t('components.inviteModal.manager')}</option>
+                    <option value="hr">{t('components.inviteModal.hr')}</option>
                   </select>
                 </div>
                 <div className="fg">
-                  <label>Department</label>
+                  <label>{t('components.inviteModal.departmentLabel')}</label>
                   <select name="department">
                     <option value="">Select department</option>
                     {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -189,10 +191,10 @@ export default function InviteUserModal({ managers, templates, onClose }: Props)
                     </div>
 
                     <div className="fg" style={{ margin: 0 }}>
-                      <label>Assign Manager</label>
+                      <label>{t('components.inviteModal.managerLabel')}</label>
                       {managers.length > 0 ? (
                         <select name="manager_id" required>
-                          <option value="">Select manager</option>
+                          <option value="">{t('components.inviteModal.selectManager')}</option>
                           {managers.map(m => (
                             <option key={m.id} value={m.id}>{m.full_name}</option>
                           ))}
@@ -210,10 +212,10 @@ export default function InviteUserModal({ managers, templates, onClose }: Props)
                     </div>
 
                     <div className="fg" style={{ margin: 0 }}>
-                      <label>Journey Template</label>
+                      <label>{t('components.inviteModal.templateLabel')}</label>
                       {templates.length > 0 ? (
                         <select name="template_id" required>
-                          <option value="">Select template</option>
+                          <option value="">{t('components.inviteModal.selectTemplate')}</option>
                           {templates.map(t => (
                             <option key={t.id} value={t.id}>{t.name}</option>
                           ))}
@@ -246,7 +248,7 @@ export default function InviteUserModal({ managers, templates, onClose }: Props)
                 onClick={onClose}
                 style={{ flex: 1 }}
               >
-                Cancel
+                {t('components.inviteModal.cancel')}
               </button>
               <button
                 type="submit"
@@ -255,8 +257,8 @@ export default function InviteUserModal({ managers, templates, onClose }: Props)
                 style={{ flex: 2 }}
               >
                 {isPending
-                  ? <><i className="fa-solid fa-spinner fa-spin" /> Sending...</>
-                  : <><i className="fa-solid fa-paper-plane" /> Send Invitation</>
+                  ? <><i className="fa-solid fa-spinner fa-spin" /> {t('components.inviteModal.sending')}</>
+                  : <><i className="fa-solid fa-paper-plane" /> {t('components.inviteModal.sendInvite')}</>
                 }
               </button>
             </div>

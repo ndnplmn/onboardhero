@@ -1,21 +1,73 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import styles from './AuraAssistant.module.css'
 import { useAura } from '@/hooks/useAura'
-import { askAura } from '@/lib/actions/aura'
+import { askAura, getAuraHistory } from '@/lib/actions/aura'
 
 interface AuraAssistantProps {
   role: string
+  journeyContext?: string
+  resources?: { id: string; title: string }[]
 }
 
-export default function AuraAssistant({ role }: AuraAssistantProps) {
+const ROLE_SUGGESTIONS: Record<string, string[]> = {
+  hire: [
+    'What should I focus on this week?',
+    'Who should I connect with first?',
+    'How am I doing compared to other hires?',
+    'What does my manager expect by day 30?',
+    'I have a blocker — can you help?',
+  ],
+  manager: [
+    'Which of my hires needs attention today?',
+    'Draft a check-in message for my at-risk hire',
+    'What are common blockers at week 3?',
+    'How can I improve my team\'s engagement?',
+    'Summarize my team\'s progress this week',
+  ],
+  hr: [
+    'Who is most at risk of churning?',
+    'Which department has the most friction?',
+    'What actions should I take today?',
+    'Compare this cohort to last quarter',
+    'How are we tracking against industry benchmarks?',
+  ],
+}
+
+function buildProactiveGreeting(context: string, role: string): string | null {
+  const lower = context.toLowerCase()
+  if (lower.includes('pending tasks this week')) {
+    const match = context.match(/Pending tasks this week:\s*'([^']+)'/)
+    const taskHint = match ? ` Your next task is "${match[1]}".` : ''
+    return `Hi! I can see you have tasks pending this week.${taskHint} Want me to walk you through what to prioritize?`
+  }
+  if (role === 'manager' && lower.includes('at-risk')) {
+    return `Hey — I noticed you have at-risk hires that may need attention. Want me to help you draft a check-in message or coaching plan?`
+  }
+  if (lower.includes('wiki') || lower.includes('resources')) {
+    return `I can see there are resources available that match your current onboarding stage. Want me to point you to the most relevant ones?`
+  }
+  return `Hi! I'm Aura, your onboarding assistant. I have context about your current journey — what can I help you with today?`
+}
+
+export default function AuraAssistant({ role, journeyContext, resources }: AuraAssistantProps) {
   const [state, setState] = useState<'IDLE' | 'WHISPERING' | 'ENGAGED'>('IDLE')
   const { whisper, setWhisper } = useAura()
   const [query, setQuery] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
+  const historyLoaded = useRef(false)
+
+  // Load conversation history from Supabase on first open
+  useEffect(() => {
+    if (state !== 'ENGAGED' || historyLoaded.current) return
+    historyLoaded.current = true
+    getAuraHistory().then(history => {
+      if (history.length > 0) setMessages(history)
+    })
+  }, [state])
 
   // Whisper detection
   useEffect(() => {
@@ -26,10 +78,19 @@ export default function AuraAssistant({ role }: AuraAssistantProps) {
 
   // External open trigger (dispatched by "Get Help" button etc.)
   useEffect(() => {
-    const handler = () => setState('ENGAGED')
+    const handler = () => {
+      setState('ENGAGED')
+      // Inject proactive opening message from context when panel opens cold
+      if (messages.length === 0 && journeyContext) {
+        const proactiveGreeting = buildProactiveGreeting(journeyContext, role)
+        if (proactiveGreeting) {
+          setMessages([{ role: 'assistant', content: proactiveGreeting }])
+        }
+      }
+    }
     window.addEventListener('aura-open', handler)
     return () => window.removeEventListener('aura-open', handler)
-  }, [])
+  }, [journeyContext, role, messages.length])
 
   const toggleEngage = () => {
     setState(prev => prev === 'ENGAGED' ? 'IDLE' : 'ENGAGED')
@@ -44,17 +105,22 @@ export default function AuraAssistant({ role }: AuraAssistantProps) {
     setIsTyping(true)
     setState('ENGAGED')
 
-    const res = await askAura(query, `Current Role: ${role}. Resource Hub current IDs: 1 (Handbook), 2 (IT Setup), 3 (Benefits), 4 (Brand). If a resource is relevant, include [[RESOURCE:ID]] in your response.`, messages)
-    
+    const resourceMap = resources?.length
+      ? `Available resources — reference with [[RESOURCE:id]]: ${resources.map(r => `[[RESOURCE:${r.id}]] = "${r.title}"`).join(', ')}.`
+      : ''
+    const systemContext = `Current Role: ${role}. ${journeyContext ?? ''} ${resourceMap} If a specific resource is relevant, include [[RESOURCE:id]] (use the exact id) in your response.`.trim()
+
+    const res = await askAura(query, systemContext, messages)
+
     if (res.success && res.data) {
       let content = res.data!.content
-      
-      // Aura Intelligence 2026: Resource Deep-linking
-      const resourceMatch = content.match(/\[\[RESOURCE:(\d+)\]\]/)
+
+      // Resource deep-linking — match UUID or any non-whitespace id
+      const resourceMatch = content.match(/\[\[RESOURCE:([^\]]+)\]\]/)
       if (resourceMatch) {
         const resourceId = resourceMatch[1]
         window.dispatchEvent(new CustomEvent('aura-highlight-resource', { detail: { id: resourceId } }))
-        content = content.replace(/\[\[RESOURCE:\d+\]\]/, "").trim()
+        content = content.replace(/\[\[RESOURCE:[^\]]+\]\]/, '').trim()
       }
 
       setMessages(prev => [...prev, { role: 'assistant', content }])
@@ -94,7 +160,7 @@ export default function AuraAssistant({ role }: AuraAssistantProps) {
             className={styles.auraFab}
             onClick={toggleEngage}
           >
-            <i className={`fa-solid fa-brain ${styles.auraFabIcon}`} />
+            <i className={`fa-solid fa-sparkles ${styles.auraFabIcon}`} />
             Ask Aura
             <span className={styles.auraFabDot} />
           </motion.button>
@@ -125,9 +191,13 @@ export default function AuraAssistant({ role }: AuraAssistantProps) {
                 <div className={styles.welcome}>
                   <div className={styles.titleGlow}>Your Onboarding Assistant</div>
                   <p>Ask me anything about your tasks, team, resources, or onboarding journey.</p>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 6, marginTop: 12 }}>
+                    What can I ask?
+                  </div>
                   <div className={styles.suggestions}>
-                    <button onClick={() => setQuery("What should I focus on this week?")} className={styles.btnSugg}>"What should I focus on this week?"</button>
-                    <button onClick={() => setQuery("Who should I connect with first?")} className={styles.btnSugg}>"Who should I connect with first?"</button>
+                    {ROLE_SUGGESTIONS[role as keyof typeof ROLE_SUGGESTIONS]?.map((q, i) => (
+                      <button key={i} onClick={() => setQuery(q)} className={styles.btnSugg}>&ldquo;{q}&rdquo;</button>
+                    ))}
                   </div>
                 </div>
               ) : (

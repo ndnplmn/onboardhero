@@ -18,7 +18,7 @@ export default async function ManagerCoaching() {
   // Fetch team journeys (admin client to avoid RLS issues with joined profiles)
   const { data: journeys } = await admin
     .from('journeys')
-    .select('id, status, current_week, risk_score, sentiment_score, start_date, employee:profiles!employee_id(id, full_name, department)')
+    .select('id, status, current_week, risk_score, sentiment_score, start_date, friction_points, employee:profiles!employee_id(id, full_name, department)')
     .eq('manager_id', user.id)
     .in('status', ['in_progress', 'at_risk', 'not_started'])
     .order('created_at', { ascending: false })
@@ -44,31 +44,61 @@ export default async function ManagerCoaching() {
     }
   }
 
+  // Last pulse score + history per journey
+  const lastPulses: Record<string, number> = {}
+  const pulseHistory: Record<string, { week: number; score: number }[]> = {}
+  if (journeyIds.length > 0) {
+    const { data: pulses } = await admin
+      .from('pulse_checks')
+      .select('journey_id, score, week, created_at')
+      .in('journey_id', journeyIds)
+      .order('created_at', { ascending: false })
+    for (const p of pulses ?? []) {
+      if (!(p.journey_id in lastPulses)) lastPulses[p.journey_id] = p.score
+      if (!pulseHistory[p.journey_id]) pulseHistory[p.journey_id] = []
+      pulseHistory[p.journey_id].push({ week: p.week, score: p.score })
+    }
+    // sort each history ascending by week
+    for (const id of Object.keys(pulseHistory)) {
+      pulseHistory[id] = pulseHistory[id].sort((a, b) => a.week - b.week).slice(-8)
+    }
+  }
+
+  // Friction points per journey (first 2 labels)
+  const frictionByJourney: Record<string, string[]> = {}
+  for (const j of journeys ?? []) {
+    const fps: any[] = Array.isArray(j.friction_points) ? j.friction_points : []
+    frictionByJourney[j.id] = fps.slice(0, 2).map((fp: any) => fp.label ?? fp.type ?? String(fp))
+  }
+
   const dbTeamMembers = (journeys || []).map((j: any) => {
     const counts = taskCounts[j.id] || { total: 0, completed: 0 }
     const progress = counts.total > 0 ? Math.round((counts.completed / counts.total) * 100) : 0
     return {
-      journeyId: j.id,
-      employeeId: j.employee?.id || '',
-      name: j.employee?.full_name || 'Unknown',
-      department: j.employee?.department || 'General',
-      status: j.status as string,
-      currentWeek: j.current_week as number,
-      riskScore: j.risk_score as number,
+      journeyId:      j.id,
+      employeeId:     j.employee?.id || '',
+      name:           j.employee?.full_name || 'Unknown',
+      department:     j.employee?.department || 'General',
+      status:         j.status as string,
+      currentWeek:    j.current_week as number,
+      riskScore:      j.risk_score as number,
       sentimentScore: j.sentiment_score as number,
       progress,
       completedTasks: counts.completed,
-      totalTasks: counts.total,
+      totalTasks:     counts.total,
+      lastPulse:      lastPulses[j.id] ?? null,
+      frictionPoints: frictionByJourney[j.id] ?? [],
+      pulseHistory:   pulseHistory[j.id] ?? [],
     }
   })
 
-  const MOCK_TEAM_MEMBERS = [
-    { journeyId: 'j1', employeeId: 'e1', name: 'Marcus Reed',  department: 'Product',     status: 'in_progress', currentWeek: 3,  riskScore: 18, sentimentScore: 82, progress: 24, completedTasks: 3,  totalTasks: 12 },
-    { journeyId: 'j2', employeeId: 'e2', name: 'Priya Mehta',  department: 'Engineering', status: 'at_risk',     currentWeek: 7,  riskScore: 74, sentimentScore: 38, progress: 58, completedTasks: 7,  totalTasks: 12 },
-    { journeyId: 'j4', employeeId: 'e4', name: 'Diana Torres', department: 'Design',      status: 'in_progress', currentWeek: 2,  riskScore: 12, sentimentScore: 91, progress: 16, completedTasks: 2,  totalTasks: 12 },
-  ]
+  // Fetch coaching notes saved by this manager
+  const { data: coachingNotes } = await admin
+    .from('coaching_notes')
+    .select('id, content, source, created_at')
+    .eq('manager_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(20)
 
-  const teamMembers = dbTeamMembers.length > 0 ? dbTeamMembers : MOCK_TEAM_MEMBERS
-
-  return <CoachingClient teamMembers={teamMembers} />
+  return <CoachingClient teamMembers={dbTeamMembers} coachingNotes={coachingNotes ?? []} />
 }

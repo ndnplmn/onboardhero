@@ -2,41 +2,82 @@
 
 interface Milestone {
   id: string
-  title: string
   date: string
   employee: string
-  avatar: string
+  avatarUrl?: string | null
 }
 
-const MOCK_MILESTONES: Milestone[] = [
-  { id: '1', title: 'Day 15 Check-in', date: 'Tomorrow, 10:00 AM', employee: 'Marcus Reed', avatar: 'https://i.pravatar.cc/150?u=marcus' },
-  { id: '2', title: 'Month 1 Review', date: 'Mar 24, 2:30 PM', employee: 'Priya Mehta', avatar: 'https://i.pravatar.cc/150?u=priya' },
-  { id: '3', title: 'Final Probation Sync', date: 'Apr 12, 11:15 AM', employee: 'James Wilson', avatar: 'https://i.pravatar.cc/150?u=james' },
-]
+interface MilestonesListProps {
+  milestones?: Milestone[]
+}
 
-export default function MilestonesList() {
+function getInitials(name: string) {
+  return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+}
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr)
+  const now = new Date()
+  const diff = (d.getTime() - now.getTime()) / 86400000
+  if (diff < 1 && diff >= 0) return 'Today'
+  if (diff < 2 && diff >= 1) return 'Tomorrow'
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+}
+
+export default function MilestonesList({ milestones = [] }: MilestonesListProps) {
   return (
     <div className="pro-max-card" style={{ padding: '20px' }}>
       <div className="db-card-hd" style={{ marginBottom: '16px' }}>
-        <h3><i className="fa-solid fa-calendar-check" style={{ color: 'var(--blue)' }}></i> Upcoming Milestones</h3>
+        <h3><i className="fa-solid fa-calendar-check" style={{ color: 'var(--blue)' }} /> Upcoming Check-ins</h3>
+        {milestones.length > 0 && (
+          <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>{milestones.length} scheduled</span>
+        )}
       </div>
-      <div className="ms-list">
-        {MOCK_MILESTONES.map(ms => (
-          <div key={ms.id} className="ms-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-            <div className="ms-avatar" style={{ position: 'relative' }}>
-              <img src={ms.avatar} alt={ms.employee} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid var(--bg)' }} />
-              <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '12px', height: '12px', background: 'var(--blue)', borderRadius: '50%', border: '2px solid var(--bg)', fontSize: '6px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <i className="fa-solid fa-clock"></i>
+
+      {milestones.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text3)' }}>
+          <i className="fa-solid fa-calendar-plus" style={{ fontSize: 20, display: 'block', marginBottom: 8 }} />
+          <p style={{ fontSize: 12, fontWeight: 500 }}>No upcoming check-ins scheduled.</p>
+        </div>
+      ) : (
+        <div className="ms-list">
+          {milestones.slice(0, 5).map(ms => (
+            <div key={ms.id} className="ms-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+              <div className="ms-avatar" style={{ position: 'relative', flexShrink: 0 }}>
+                {ms.avatarUrl ? (
+                  <img
+                    src={ms.avatarUrl}
+                    alt={ms.employee}
+                    style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid var(--bg)', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '32px', height: '32px', borderRadius: '50%',
+                    background: 'linear-gradient(135deg, var(--cyan), var(--blue))',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 11, fontWeight: 800, color: '#fff',
+                    border: '2px solid var(--bg)',
+                  }}>
+                    {getInitials(ms.employee)}
+                  </div>
+                )}
+                <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '12px', height: '12px', background: 'var(--blue)', borderRadius: '50%', border: '2px solid var(--bg)', fontSize: '6px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="fa-solid fa-clock" />
+                </div>
               </div>
+              <div className="ms-info" style={{ flex: 1, minWidth: 0 }}>
+                <strong style={{ display: 'block', fontSize: '13px', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {ms.employee}
+                </strong>
+                <span style={{ fontSize: '11px', color: 'var(--text3)' }}>{formatDate(ms.date)}</span>
+              </div>
+              <button className="btn btn-ghost btn-sm" style={{ padding: '4px', flexShrink: 0 }}>
+                <i className="fa-solid fa-chevron-right" style={{ fontSize: '10px' }} />
+              </button>
             </div>
-            <div className="ms-info" style={{ flex: 1 }}>
-              <strong style={{ display: 'block', fontSize: '13px', color: 'var(--text)' }}>{ms.title}</strong>
-              <span style={{ fontSize: '11px', color: 'var(--text3)' }}>{ms.date} · {ms.employee}</span>
-            </div>
-            <button className="btn btn-ghost btn-sm" style={{ padding: '4px' }}><i className="fa-solid fa-chevron-right" style={{ fontSize: '10px' }}></i></button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

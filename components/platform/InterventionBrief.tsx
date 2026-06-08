@@ -1,3 +1,6 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import type { FrictionPoint } from './FrictionMap'
 import { motion } from 'framer-motion'
 
@@ -23,6 +26,30 @@ const SEV_CONFIG = {
 export default function InterventionBrief({ point, onClose }: InterventionBriefProps) {
   const type = TYPE_CONFIG[point.type] ?? TYPE_CONFIG.technical
   const sev  = SEV_CONFIG[point.severity]
+
+  const [aiBullets, setAiBullets] = useState<string[]>([])
+  const [aiLoading, setAiLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/coaching-brief', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:          'your hire',
+        riskScore:     point.severity === 'high' ? 75 : point.severity === 'medium' ? 45 : 20,
+        sentimentScore: point.severity === 'high' ? 30 : 55,
+        progress:      50,
+        currentWeek:   Math.ceil((point.day ?? 1) / 7),
+        lastPulse:     null,
+        frictionPoints: [`${point.type}: ${point.label}`],
+        pendingTasks:  2,
+      }),
+    })
+      .then(r => r.json())
+      .then(d => { if (d.bullets?.length) setAiBullets(d.bullets) })
+      .catch(() => {})
+      .finally(() => setAiLoading(false))
+  }, [point.type, point.label, point.severity, point.day])
 
   return (
     <div
@@ -110,10 +137,7 @@ export default function InterventionBrief({ point, onClose }: InterventionBriefP
             borderRadius: 'var(--r)',
             padding: '14px 16px',
           }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              marginBottom: 8,
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
               <i className="fa-solid fa-sparkles" style={{
                 fontSize: 11,
                 background: 'var(--grad)', WebkitBackgroundClip: 'text',
@@ -122,10 +146,26 @@ export default function InterventionBrief({ point, onClose }: InterventionBriefP
               <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 AI Recommended Action
               </span>
+              {aiLoading && <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: 10, color: 'var(--text3)', marginLeft: 4 }} />}
             </div>
-            <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, margin: 0 }}>
-              {point.intervention}
-            </p>
+            {aiLoading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {[85, 70, 90].map(w => (
+                  <div key={w} style={{ height: 10, borderRadius: 5, background: 'var(--border)', width: `${w}%`, opacity: 0.6 }} />
+                ))}
+              </div>
+            ) : aiBullets.length > 0 ? (
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {aiBullets.map((b, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
+                    <i className="fa-solid fa-circle-dot" style={{ color: 'var(--cyan)', fontSize: 9, marginTop: 4, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, margin: 0 }}>{point.intervention}</p>
+            )}
           </div>
         </div>
 

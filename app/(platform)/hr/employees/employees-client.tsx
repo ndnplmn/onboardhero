@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import InviteUserModal from '@/components/platform/InviteUserModal'
 import EditEmployeeModal from '@/components/platform/EditEmployeeModal'
+import { useT } from '@/lib/i18n/context'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -24,6 +25,7 @@ interface Journey {
   status: 'active' | 'at_risk' | 'completed' | 'paused'
   current_week: number
   start_date: string
+  template?: { duration_days?: number } | { duration_days?: number }[] | null
 }
 
 interface Props {
@@ -31,25 +33,8 @@ interface Props {
   managers: { id: string; full_name: string }[]
   templates: { id: string; name: string }[]
   journeys: Journey[]
+  roleplayCounts?: Record<string, number>
 }
-
-// ── Mock data ──────────────────────────────────────────────────────────────
-
-const MOCK_PROFILES: Profile[] = [
-  { id: 'p1', full_name: 'Marcus Reed',   email: 'marcus@company.com',  role: 'new_hire', department: 'Product',     avatar_url: 'https://i.pravatar.cc/150?u=marcus', active: true,  created_at: '2026-03-01' },
-  { id: 'p2', full_name: 'Priya Mehta',   email: 'priya@company.com',   role: 'new_hire', department: 'Engineering', avatar_url: 'https://i.pravatar.cc/150?u=priya',  active: true,  created_at: '2026-01-15' },
-  { id: 'p3', full_name: 'James Wilson',  email: 'james@company.com',   role: 'new_hire', department: 'Sales',       avatar_url: 'https://i.pravatar.cc/150?u=james',  active: true,  created_at: '2025-12-01' },
-  { id: 'p4', full_name: 'Sarah Chen',    email: 'sarah@company.com',   role: 'manager',  department: 'Engineering', avatar_url: 'https://i.pravatar.cc/150?u=sarah',  active: true,  created_at: '2024-06-10' },
-  { id: 'p5', full_name: 'Alex Johnson',  email: 'alex@company.com',    role: 'hr',       department: 'People',      avatar_url: 'https://i.pravatar.cc/150?u=alex',   active: true,  created_at: '2024-01-20' },
-  { id: 'p6', full_name: 'Diana Torres',  email: 'diana@company.com',   role: 'new_hire', department: 'Design',      avatar_url: 'https://i.pravatar.cc/150?u=diana',  active: false, created_at: '2025-11-10' },
-]
-
-const MOCK_JOURNEYS: Journey[] = [
-  { employee_id: 'p1', status: 'active',    current_week: 3,  start_date: '2026-03-01' },
-  { employee_id: 'p2', status: 'at_risk',   current_week: 7,  start_date: '2026-01-15' },
-  { employee_id: 'p3', status: 'completed', current_week: 12, start_date: '2025-12-01' },
-  { employee_id: 'p6', status: 'paused',    current_week: 4,  start_date: '2025-11-10' },
-]
 
 // ── Config ─────────────────────────────────────────────────────────────────
 
@@ -75,8 +60,13 @@ const DEPT_COLORS: Record<string, string> = {
   Data: 'var(--amber)',
 }
 
+function getJourneyDurationWeeks(journey: Journey): number {
+  const tpl = Array.isArray(journey.template) ? journey.template[0] : journey.template
+  return tpl?.duration_days ? Math.round(tpl.duration_days / 7) : 12
+}
+
 function getJourneyProgress(journey: Journey) {
-  return Math.min(100, Math.round((journey.current_week / 12) * 100))
+  return Math.min(100, Math.round((journey.current_week / getJourneyDurationWeeks(journey)) * 100))
 }
 
 function getDaysSince(dateStr: string) {
@@ -113,17 +103,20 @@ function exportEmployeesCSV(profiles: Profile[], journeyMap: Record<string, Jour
 
 // ── Main Component ─────────────────────────────────────────────────────────
 
-export default function EmployeesClient({ profiles: dbProfiles, managers, templates, journeys: dbJourneys }: Props) {
+export default function EmployeesClient({ profiles: dbProfiles, managers, templates, journeys: dbJourneys, roleplayCounts = {} }: Props) {
   const router = useRouter()
+  const { t } = useT()
   const [showInvite, setShowInvite]         = useState(false)
   const [editingEmployee, setEditingEmployee] = useState<Profile | null>(null)
   const [search, setSearch]                 = useState('')
   const [filterRole, setFilterRole]         = useState<'all' | 'new_hire' | 'manager' | 'hr'>('all')
   const [filterStatus, setFilterStatus]     = useState<'all' | 'active' | 'inactive'>('all')
   const [filterDept, setFilterDept]         = useState<string>('all')
+  const [page, setPage]                     = useState(0)
+  const PAGE_SIZE = 10
 
-  const profiles = dbProfiles.length > 0 ? dbProfiles : MOCK_PROFILES
-  const journeys = dbJourneys.length > 0 ? dbJourneys : MOCK_JOURNEYS
+  const profiles = dbProfiles
+  const journeys = dbJourneys
 
   // Index journeys by employee_id
   const journeyMap = useMemo(() => {
@@ -145,8 +138,9 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
   const activeJourneys = journeys.filter(j => j.status === 'active' || j.status === 'at_risk').length
   const atRisk      = journeys.filter(j => j.status === 'at_risk').length
 
-  // Filtered list
+  // Filtered list — reset page whenever filters change
   const filtered = useMemo(() => {
+    setPage(0)
     return profiles.filter(p => {
       if (filterRole !== 'all' && p.role !== filterRole) return false
       if (filterStatus === 'active' && !p.active) return false
@@ -160,20 +154,23 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
     })
   }, [profiles, filterRole, filterStatus, filterDept, search])
 
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+
   return (
     <>
       {/* Header */}
       <div className="db-header">
         <div className="db-header-left">
-          <h1>All Employees</h1>
-          <p>Manage your organization&apos;s people and their onboarding journeys.</p>
+          <h1>{t('hr.employees.title')}</h1>
+          <p>{t('hr.employees.subtitle')}</p>
         </div>
         <div className="db-header-actions">
           <button className="btn btn-outline btn-sm" onClick={() => exportEmployeesCSV(filtered, journeyMap)} aria-label="Export employee list as CSV">
             <i className="fa-solid fa-download" aria-hidden="true" /> Export
           </button>
           <button className="btn btn-primary btn-sm btn-glow" onClick={() => setShowInvite(true)} aria-label="Invite a new team member">
-            <i className="fa-solid fa-user-plus" aria-hidden="true" /> Invite Member
+            <i className="fa-solid fa-user-plus" aria-hidden="true" /> {t('hr.employees.inviteBtn')}
           </button>
         </div>
       </div>
@@ -183,10 +180,10 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
         {/* KPI Row */}
         <div className="kpi-row">
           {[
-            { label: 'Total Members',    value: total,          icon: 'fa-solid fa-users',                    colorClass: 'blue'  },
-            { label: 'New Hires',        value: newHires,       icon: 'fa-solid fa-person-walking-arrow-right', colorClass: 'cyan'  },
-            { label: 'Active Journeys',  value: activeJourneys, icon: 'fa-solid fa-route',                    colorClass: 'green' },
-            { label: 'At Risk',          value: atRisk,         icon: 'fa-solid fa-triangle-exclamation',     colorClass: atRisk > 0 ? 'red' : 'green' },
+            { label: t('hr.employees.totalEmployees'), value: total,          icon: 'fa-solid fa-users',                      colorClass: 'blue'  },
+            { label: t('hr.employees.avgProgress'),    value: newHires,       icon: 'fa-solid fa-person-walking-arrow-right', colorClass: 'cyan'  },
+            { label: t('hr.employees.activeJourneys'), value: activeJourneys, icon: 'fa-solid fa-route',                      colorClass: 'green' },
+            { label: t('hr.employees.atRisk'),         value: atRisk,         icon: 'fa-solid fa-triangle-exclamation',       colorClass: atRisk > 0 ? 'red' : 'green' },
           ].map(k => (
             <div key={k.label} className="kpi-card">
               <div className={`kpi-icon ${k.colorClass}`}>
@@ -210,7 +207,7 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
               }} />
               <input
                 type="text"
-                placeholder="Search by name, email, or department..."
+                placeholder={t('hr.employees.searchPlaceholder')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 style={{
@@ -240,7 +237,7 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
                     cursor: 'pointer', transition: 'all 0.15s',
                   }}
                 >
-                  {r === 'all' ? 'All Roles' : ROLE_CONFIG[r].label}
+                  {r === 'all' ? t('hr.employees.filterAll') : r === 'hr' ? t('hr.employees.filterHR') : r === 'manager' ? t('hr.employees.filterManager') : t('hr.employees.filterNewHire')}
                 </button>
               ))}
             </div>
@@ -293,10 +290,10 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
         {filtered.length === 0 ? (
           <div className="db-card" style={{ textAlign: 'center', padding: '48px 24px' }}>
             <i className="fa-solid fa-users-slash" style={{ fontSize: 32, color: 'var(--text3)', display: 'block', marginBottom: 12 }} />
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>No employees match your filters</div>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>{t('hr.employees.noEmployees')}</div>
             <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>Try adjusting your search or filters above.</div>
             <button className="btn btn-primary btn-sm" onClick={() => setShowInvite(true)}>
-              <i className="fa-solid fa-user-plus" /> Invite First Member
+              <i className="fa-solid fa-user-plus" /> {t('hr.employees.inviteBtn')}
             </button>
           </div>
         ) : (
@@ -305,7 +302,7 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
-                    {['Employee', 'Role', 'Department', 'Journey', 'Progress', 'Status', ''].map(h => (
+                    {[t('common.name'), t('common.role'), t('common.department'), t('hr.employees.activeJourneys'), t('hr.employees.avgProgress'), t('common.status'), ''].map(h => (
                       <th key={h} style={{
                         padding: '10px 16px', textAlign: 'left',
                         fontSize: 10, fontWeight: 800, color: 'var(--text3)',
@@ -318,7 +315,7 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((p, i) => {
+                  {paginated.map((p, i) => {
                     const journey = journeyMap[p.id]
                     const rc = ROLE_CONFIG[p.role] || ROLE_CONFIG.new_hire
                     const sc = journey ? STATUS_CONFIG[journey.status] : null
@@ -333,7 +330,7 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.04, duration: 0.2 }}
                         style={{
-                          borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none',
+                          borderBottom: i < paginated.length - 1 ? '1px solid var(--border)' : 'none',
                           opacity: p.active ? 1 : 0.55,
                         }}
                       >
@@ -355,15 +352,25 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
                               )}
                             </div>
                             <div>
-                              <div style={{ fontWeight: 700, color: 'var(--text)', lineHeight: 1.3 }}>
+                              <div style={{ fontWeight: 700, color: 'var(--text)', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                 {p.full_name}
                                 {!p.active && (
                                   <span style={{
-                                    marginLeft: 6, fontSize: 9, fontWeight: 800,
+                                    fontSize: 9, fontWeight: 800,
                                     color: 'var(--red)', background: 'var(--red-bg)',
                                     padding: '1px 6px', borderRadius: 100,
                                   }}>
                                     INACTIVE
+                                  </span>
+                                )}
+                                {p.role === 'manager' && (roleplayCounts[p.id] ?? 0) > 0 && (
+                                  <span title={`${roleplayCounts[p.id]} roleplay scenario${roleplayCounts[p.id] !== 1 ? 's' : ''} completed`} style={{
+                                    fontSize: 9, fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 3,
+                                    color: 'var(--purple)', background: 'color-mix(in srgb, var(--purple) 12%, transparent)',
+                                    padding: '1px 7px', borderRadius: 100, border: '1px solid color-mix(in srgb, var(--purple) 25%, transparent)',
+                                  }}>
+                                    <i className="fa-solid fa-masks-theater" style={{ fontSize: 8 }} />
+                                    {roleplayCounts[p.id]} roleplay{roleplayCounts[p.id] !== 1 ? 's' : ''}
                                   </span>
                                 )}
                               </div>
@@ -398,7 +405,7 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
                           {journey ? (
                             <div>
                               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>
-                                Week {journey.current_week} / 12
+                                Week {journey.current_week} / {getJourneyDurationWeeks(journey)}
                               </div>
                               <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 1 }}>
                                 Day {getDaysSince(journey.start_date)}
@@ -406,7 +413,7 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
                             </div>
                           ) : (
                             <span style={{ fontSize: 11, color: 'var(--text3)' }}>
-                              {p.role === 'new_hire' ? 'Not started' : '—'}
+                              {p.role === 'new_hire' ? t('hr.employees.journeyNotStarted') : '—'}
                             </span>
                           )}
                         </td>
@@ -465,14 +472,14 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
                                 onClick={() => router.push(`/hr/employees/${p.id}`)}
                                 style={{ fontSize: 11 }}
                               >
-                                <i className="fa-solid fa-route" /> Journey
+                                <i className="fa-solid fa-route" /> {t('hr.employees.viewJourney')}
                               </button>
                             )}
                             <button
                               className="btn btn-ghost btn-sm"
                               onClick={() => setEditingEmployee({ ...p, active: p.active ?? true })}
                               style={{ fontSize: 11, color: 'var(--text3)' }}
-                              title="Edit employee"
+                              title={t('hr.employees.editEmployee')}
                             >
                               <i className="fa-solid fa-pen" />
                             </button>
@@ -485,21 +492,52 @@ export default function EmployeesClient({ profiles: dbProfiles, managers, templa
               </table>
             </div>
 
-            {/* Footer summary */}
-            <div style={{
-              padding: '10px 20px',
-              borderTop: '1px solid var(--border)',
-              background: 'var(--surface2)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
+            {/* Footer: pagination + summary */}
+            <div style={{ padding: '10px 20px', borderTop: '1px solid var(--border)', background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
               <span style={{ fontSize: 11, color: 'var(--text3)' }}>
-                Showing {filtered.length} of {total} members
+                Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} of {filtered.length} members
               </span>
-              <button
-                className="btn btn-ghost btn-sm"
-                style={{ fontSize: 11, color: 'var(--text3)' }}
-                onClick={() => exportEmployeesCSV(filtered, journeyMap)}
-              >
+
+              {totalPages > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ fontSize: 11 }}
+                    disabled={page === 0}
+                    onClick={() => setPage(p => Math.max(0, p - 1))}
+                    aria-label="Previous page"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPage(i)}
+                      style={{
+                        minWidth: 28, height: 28, borderRadius: 'var(--r)', fontSize: 11, fontWeight: 700,
+                        border: '1px solid',
+                        borderColor: page === i ? 'var(--blue)' : 'var(--border)',
+                        background: page === i ? 'var(--blue-light)' : 'transparent',
+                        color: page === i ? 'var(--blue)' : 'var(--text3)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ fontSize: 11 }}
+                    disabled={page >= totalPages - 1}
+                    onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                    aria-label="Next page"
+                  >
+                    <i className="fa-solid fa-chevron-right" />
+                  </button>
+                </div>
+              )}
+
+              <button className="btn btn-ghost btn-sm" style={{ fontSize: 11, color: 'var(--text3)' }} onClick={() => exportEmployeesCSV(filtered, journeyMap)}>
                 <i className="fa-solid fa-download" /> Export CSV
               </button>
             </div>

@@ -5,24 +5,6 @@ import HiresClient from './HiresClient'
 
 export const dynamic = 'force-dynamic'
 
-// ── Mock fallback ──────────────────────────────────────────────────────────
-
-const MOCK_JOURNEYS = [
-  { id: 'j1', status: 'active',    current_week: 3,  risk_score: 72, start_date: '2026-03-01', employee: { id: 'e1', full_name: 'Marcus Reed',  department: 'Product',     avatar_url: 'https://i.pravatar.cc/150?u=marcus' } },
-  { id: 'j2', status: 'active',    current_week: 7,  risk_score: 44, start_date: '2026-01-15', employee: { id: 'e2', full_name: 'Priya Mehta',  department: 'Engineering', avatar_url: 'https://i.pravatar.cc/150?u=priya'  } },
-  { id: 'j3', status: 'completed', current_week: 12, risk_score: 12, start_date: '2025-12-01', employee: { id: 'e3', full_name: 'James Wilson', department: 'Sales',       avatar_url: 'https://i.pravatar.cc/150?u=james'  } },
-  { id: 'j4', status: 'active',    current_week: 2,  risk_score: 18, start_date: '2026-03-15', employee: { id: 'e4', full_name: 'Diana Torres', department: 'Design',      avatar_url: 'https://i.pravatar.cc/150?u=diana'  } },
-]
-
-const MOCK_TASKS = [
-  ...Array.from({ length: 12 }, (_, i) => [
-    { journey_id: 'j1', status: i < 2  ? 'completed' : 'pending' },
-    { journey_id: 'j2', status: i < 6  ? 'completed' : 'pending' },
-    { journey_id: 'j3', status: 'completed' },
-    { journey_id: 'j4', status: i < 1  ? 'completed' : 'pending' },
-  ]).flat(),
-]
-
 export default async function ManagerHiresPage() {
   const supabase = await createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
@@ -31,18 +13,15 @@ export default async function ManagerHiresPage() {
   const { journeys: dbJourneys, tasks: dbTasks, pendingCheckIns } =
     await getManagerHiresData(user.id)
 
-  const journeys = dbJourneys.length > 0 ? dbJourneys : MOCK_JOURNEYS
-  const tasks    = dbTasks.length    > 0 ? dbTasks    : MOCK_TASKS
-
   // ── Derive task completion per journey ──────────────────────────────────
   const taskMap: Record<string, { done: number; total: number }> = {}
-  tasks.forEach((t: any) => {
+  dbTasks.forEach((t: any) => {
     if (!taskMap[t.journey_id]) taskMap[t.journey_id] = { done: 0, total: 0 }
     taskMap[t.journey_id].total++
     if (t.status === 'completed') taskMap[t.journey_id].done++
   })
 
-  const enrichedJourneys = journeys.map((j: any) => {
+  const enrichedJourneys = dbJourneys.map((j: any) => {
     const tc  = taskMap[j.id]
     const pct = tc && tc.total > 0 ? Math.round((tc.done / tc.total) * 100) : 0
     return { ...j, taskPct: pct }

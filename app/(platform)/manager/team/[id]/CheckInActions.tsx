@@ -19,13 +19,22 @@ export default function CheckInActions({ checkIns }: CheckInActionsProps) {
   const [reschedulingId, setReschedulingId] = useState<string | null>(null)
   const [newDate, setNewDate] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
+  const [notesId, setNotesId] = useState<string | null>(null)
+  const [noteText, setNoteText] = useState('')
 
   const today = new Date().toISOString().split('T')[0]
 
-  function handleComplete(checkInId: string) {
+  function requestComplete(checkInId: string) {
+    setNotesId(checkInId)
+    setNoteText('')
+    setReschedulingId(null)
+  }
+
+  function handleComplete(checkInId: string, notes?: string) {
     setPendingId(checkInId)
+    setNotesId(null)
     startTransition(async () => {
-      await completeCheckIn(checkInId)
+      await completeCheckIn(checkInId, notes)
       setPendingId(null)
     })
   }
@@ -126,7 +135,7 @@ export default function CheckInActions({ checkIns }: CheckInActionsProps) {
                     </button>
                     <button
                       className="btn btn-primary"
-                      onClick={() => handleComplete(ci.id)}
+                      onClick={() => requestComplete(ci.id)}
                       disabled={isThisPending}
                       style={{ fontSize: '0.8rem', padding: '6px 14px' }}
                     >
@@ -173,6 +182,64 @@ export default function CheckInActions({ checkIns }: CheckInActionsProps) {
                   >
                     Cancel
                   </button>
+                </div>
+              )}
+
+              {/* Inline notes panel before completing */}
+              {notesId === ci.id && (
+                <div style={{
+                  margin: '6px 0 2px',
+                  padding: '12px 14px',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--r)',
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Meeting Notes <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                  </div>
+                  <textarea
+                    value={noteText}
+                    onChange={e => setNoteText(e.target.value)}
+                    placeholder="Key takeaways, blockers, next steps…"
+                    rows={3}
+                    maxLength={2000}
+                    style={{
+                      width: '100%',
+                      resize: 'vertical',
+                      padding: '8px 10px',
+                      borderRadius: 'var(--r)',
+                      border: '1px solid var(--border)',
+                      background: 'var(--bg)',
+                      color: 'var(--text)',
+                      fontSize: 12,
+                      fontFamily: 'inherit',
+                      lineHeight: 1.5,
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: 8, marginTop: 8, justifyContent: 'flex-end' }}>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setNotesId(null)}
+                      style={{ fontSize: 11 }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => handleComplete(ci.id)}
+                      style={{ fontSize: 11, color: 'var(--text3)' }}
+                    >
+                      Skip Notes
+                    </button>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => handleComplete(ci.id, noteText)}
+                      style={{ fontSize: 11 }}
+                    >
+                      <i className="fa-solid fa-circle-check" style={{ fontSize: 10 }} /> Mark Complete
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

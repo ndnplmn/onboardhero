@@ -5,70 +5,6 @@ import FeedbackClient from './FeedbackClient'
 
 export const dynamic = 'force-dynamic'
 
-// ── Mock fallback ──────────────────────────────────────────────────────────
-
-const MOCK_FEEDBACK = [
-  {
-    id: 'f1',
-    from: 'Marcus Reed',
-    department: 'Product',
-    avatar_url: 'https://i.pravatar.cc/150?u=marcus',
-    date: '2026-04-10',
-    content: 'The technical onboarding documentation is top-notch. I felt very supported by the IT team during the first week.',
-    rating: 5,
-    category: 'Technical',
-    sentiment: 'positive' as const,
-    source: 'form' as const,
-  },
-  {
-    id: 'f2',
-    from: 'Priya Mehta',
-    department: 'Engineering',
-    avatar_url: 'https://i.pravatar.cc/150?u=priya',
-    date: '2026-04-08',
-    content: 'The social buddy system is great, but I think the Week 2 orientation could be a bit more focused on architecture.',
-    rating: 4,
-    category: 'Social',
-    sentiment: 'mixed' as const,
-    source: 'form' as const,
-  },
-  {
-    id: 'f3',
-    from: 'James Wilson',
-    department: 'Sales',
-    avatar_url: 'https://i.pravatar.cc/150?u=james',
-    date: '2026-04-05',
-    content: 'The leadership simulation was incredibly helpful for understanding the company culture. Highly recommend it!',
-    rating: 5,
-    category: 'Culture',
-    sentiment: 'positive' as const,
-    source: 'check-in' as const,
-  },
-  {
-    id: 'f4',
-    from: 'Diana Torres',
-    department: 'Design',
-    avatar_url: 'https://i.pravatar.cc/150?u=diana',
-    date: '2026-04-01',
-    content: 'Final onboarding process was smooth. The integration radar provided clear visibility into my progress.',
-    rating: 5,
-    category: 'Process',
-    sentiment: 'positive' as const,
-    source: 'form' as const,
-  },
-  {
-    id: 'f5',
-    from: 'Priya Mehta',
-    department: 'Engineering',
-    avatar_url: 'https://i.pravatar.cc/150?u=priya',
-    date: '2026-03-28',
-    content: 'Week 3 felt overwhelming — too many tasks assigned at once. Would benefit from better pacing.',
-    rating: 2,
-    category: 'Process',
-    sentiment: 'negative' as const,
-    source: 'check-in' as const,
-  },
-]
 
 export default async function ManagerFeedbackPage() {
   const supabase = await createSupabaseServer()
@@ -119,8 +55,7 @@ export default async function ManagerFeedbackPage() {
       }
     })
 
-  const allFeedback = [...fromForms, ...fromCheckIns]
-  const feedback = allFeedback.length > 0 ? allFeedback : MOCK_FEEDBACK
+  const feedback = [...fromForms, ...fromCheckIns]
 
   // ── Derive KPIs ──────────────────────────────────────────────────────────
   const total         = feedback.length

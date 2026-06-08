@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Alert {
@@ -11,43 +11,40 @@ interface Alert {
   action?: { label: string; href?: string; onClick?: string }
 }
 
-// Default alerts shown when no real data is available
-const DEFAULT_ALERTS: Alert[] = [
-  {
-    id: '1',
-    type: 'warning',
-    title: 'Priya Mehta — At Risk',
-    description: '3 overdue tasks in Week 7. Manager check-in not completed. Journey stalled for 9 days.',
-    action: { label: 'Schedule Check-in', onClick: 'schedule' },
-  },
-  {
-    id: '2',
-    type: 'info',
-    title: 'Sarah Kim — 30-day review due',
-    description: 'First month review scheduled for March 18. Action required from manager.',
-    action: { label: 'View Profile', href: '/hr/employees/3' },
-  },
-  {
-    id: '3',
-    type: 'info',
-    title: '2 new hires starting next week',
-    description: 'Jordan Blake (Product) and Wei Li (Data Science) — journeys not yet assigned.',
-    action: { label: 'Assign Journeys', onClick: 'invite' },
-  },
-]
-
 interface ActiveAlertsProps {
   alerts?: Alert[]
   onScheduleCheckIn?: () => void
   onInviteNew?: () => void
 }
 
+const SNOOZE_MS = 60 * 60 * 1000 // 1 hour
+
 export default function ActiveAlerts({ alerts: propAlerts, onScheduleCheckIn, onInviteNew }: ActiveAlertsProps) {
   const router = useRouter()
   const [dismissed, setDismissed] = useState<string[]>([])
+  const [snoozed, setSnoozed]     = useState<string[]>([])
 
-  const alerts  = propAlerts && propAlerts.length > 0 ? propAlerts : DEFAULT_ALERTS
-  const visible = alerts.filter(a => !dismissed.includes(a.id))
+  useEffect(() => {
+    try {
+      const now = Date.now()
+      const raw = JSON.parse(localStorage.getItem('alerts_snoozed') ?? '{}') as Record<string, number>
+      const active = Object.entries(raw).filter(([, until]) => until > now).map(([id]) => id)
+      setSnoozed(active)
+    } catch {}
+  }, [])
+
+  function snooze(id: string) {
+    const until = Date.now() + SNOOZE_MS
+    try {
+      const raw = JSON.parse(localStorage.getItem('alerts_snoozed') ?? '{}') as Record<string, number>
+      raw[id] = until
+      localStorage.setItem('alerts_snoozed', JSON.stringify(raw))
+    } catch {}
+    setSnoozed(s => [...s, id])
+  }
+
+  const alerts  = propAlerts ?? []
+  const visible = alerts.filter((a: Alert) => !dismissed.includes(a.id) && !snoozed.includes(a.id))
 
   function handleAction(alert: Alert) {
     if (!alert.action) return
@@ -90,7 +87,7 @@ export default function ActiveAlerts({ alerts: propAlerts, onScheduleCheckIn, on
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {visible.map(alert => (
+          {visible.map((alert: Alert) => (
             <div
               key={alert.id}
               style={{
@@ -114,10 +111,21 @@ export default function ActiveAlerts({ alerts: propAlerts, onScheduleCheckIn, on
                     {alert.description}
                   </span>
                 </div>
+                {/* Snooze (1h) */}
+                <button
+                  onClick={() => snooze(alert.id)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 2, flexShrink: 0 }}
+                  title="Snooze 1 hour"
+                  aria-label="Snooze alert for 1 hour"
+                >
+                  <i className="fa-solid fa-clock" style={{ fontSize: 10 }} />
+                </button>
+                {/* Dismiss */}
                 <button
                   onClick={() => setDismissed(d => [...d, alert.id])}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 2, flexShrink: 0 }}
                   title="Dismiss"
+                  aria-label="Dismiss alert"
                 >
                   <i className="fa-solid fa-xmark" style={{ fontSize: 10 }} />
                 </button>

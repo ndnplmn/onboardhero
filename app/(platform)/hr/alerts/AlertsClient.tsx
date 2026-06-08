@@ -276,7 +276,7 @@ export default function AlertsClient({ atRisk, overdueCheckIns, notifications }:
         </div>
 
         {/* Main two-col layout */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, alignItems: 'start' }}>
+        <div className="db-grid-1-360">
 
           {/* Left — Risk alerts + Overdue check-ins */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

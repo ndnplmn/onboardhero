@@ -5,26 +5,122 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import TaskList from '@/components/platform/TaskList'
 import TeamsModal from './TeamsModal'
 import ResourceModal from './ResourceModal'
-import { MOCK_JOURNEY, MOCK_CONTACTS } from '@/lib/constants/mock-journey'
 
 interface JourneyViewProps {
   journey: any
   dbTasks: any[]
+  checkIns?: any[]
+  contacts?: { name: string; role: string; dept?: string; avatar?: string | null }[]
 }
 
-export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
+// Static per-week content — labels and generic expectations only
+const WEEK_CONTENT: Record<string, { label: string; expectations: string[]; equipment?: { icon: string; label: string; status: 'done' | 'pending' }[] }> = {
+  week1: {
+    label: 'Week 1',
+    expectations: [
+      'Complete all mandatory training modules',
+      'Meet with your direct manager for 1:1',
+      'Set up your development environment',
+      'Introduce yourself in the #general Slack channel',
+    ],
+    equipment: [
+      { icon: 'fa-solid fa-laptop',         label: 'Laptop',             status: 'done'    },
+      { icon: 'fa-solid fa-keyboard',        label: 'Keyboard & Mouse',   status: 'done'    },
+      { icon: 'fa-solid fa-id-card',         label: 'Office Access Badge',status: 'pending' },
+      { icon: 'fa-solid fa-network-wired',   label: 'VPN Access',         status: 'pending' },
+    ],
+  },
+  week2: {
+    label: 'Week 2',
+    expectations: [
+      'Start your first sprint tasks',
+      'Request access to all necessary repositories',
+      'Shadow 2 customer discovery calls',
+    ],
+  },
+  week3: {
+    label: 'Week 3',
+    expectations: [
+      'Deliver your first PR for review',
+      'Participate in the bi-weekly town hall meeting',
+    ],
+  },
+  week4: {
+    label: 'Week 4',
+    expectations: [
+      'Complete your first independent task end-to-end',
+      'Submit the Month 1 Employee Experience survey',
+      'Finalize your OKRs for the remainder of the quarter',
+    ],
+  },
+  month2: {
+    label: 'Month 2',
+    expectations: [
+      'Contribute to a major project feature',
+      'Lead a team ritual (e.g., Standup or Retro)',
+      'Shadow 1-on-1 customer interview sessions',
+    ],
+  },
+  month3: {
+    label: 'Month 3',
+    expectations: [
+      'Fully own a specific product area or process',
+      'Present a proposal for a process improvement',
+      'Mentor a newer hire or peer in a specific domain',
+    ],
+  },
+}
+
+const WEEK_KEYS = ['week1', 'week2', 'week3', 'week4', 'month2', 'month3']
+
+// Return the [startDay, endDay) range for a given week key (relative to start_date)
+function weekDayRange(wk: string): [number, number] {
+  switch (wk) {
+    case 'week1':  return [0, 7]
+    case 'week2':  return [7, 14]
+    case 'week3':  return [14, 21]
+    case 'week4':  return [21, 28]
+    case 'month2': return [28, 60]
+    case 'month3': return [60, 999]
+    default:       return [0, 7]
+  }
+}
+
+function meetingsForWeek(checkIns: any[], startDate: string, wk: string, managerName: string): any[] {
+  const [minDay, maxDay] = weekDayRange(wk)
+  const startMs = new Date(startDate).getTime()
+  return checkIns
+    .filter((c: any) => {
+      if (!c.scheduled_date || c.completed_date) return false
+      const diffDays = Math.floor((new Date(c.scheduled_date).getTime() - startMs) / 86400000)
+      return diffDays >= minDay && diffDays < maxDay
+    })
+    .map((c: any) => {
+      const d = new Date(c.scheduled_date)
+      return {
+        day: String(d.getDate()).padStart(2, '0'),
+        mon: d.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+        title: c.type === 'weekly' ? 'Weekly 1:1 with Manager'
+             : c.type === 'day30'  ? '30-Day Review'
+             : c.type === 'day60'  ? '60-Day Review'
+             : c.type === 'day90'  ? '90-Day Sign-off'
+             : 'Check-in',
+        time: '10:00 AM',
+        contact: managerName,
+      }
+    })
+}
+
+export default function JourneyView({ journey, dbTasks, checkIns = [], contacts = [] }: JourneyViewProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
-  
+
   const weekFromUrl = searchParams.get('week') || 'week1'
   const [activeWeek, setActiveWeek] = useState(weekFromUrl)
 
-  // Sync state when URL changes
   useEffect(() => {
-    if (weekFromUrl && weekFromUrl !== activeWeek) {
-      setActiveWeek(weekFromUrl)
-    }
+    if (weekFromUrl && weekFromUrl !== activeWeek) setActiveWeek(weekFromUrl)
   }, [weekFromUrl, activeWeek])
 
   const handleTabChange = (wk: string) => {
@@ -33,19 +129,16 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
     params.set('week', wk)
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
+
   const [teamsModal, setTeamsModal] = useState<{ isOpen: boolean; contact: string }>({ isOpen: false, contact: '' })
   const [resourceModal, setResourceModal] = useState<{ isOpen: boolean; resource: any | null }>({ isOpen: false, resource: null })
 
-  const weekKeys = ['week1', 'week2', 'week3', 'week4', 'month2', 'month3']
-  const currentWeekData = MOCK_JOURNEY[activeWeek] || { meetings: [], resources: [], expectations: [], equipment: [] }
-  
-  // Merge DB tasks with mock week logic
-  // For simplicity in this restoration, we assume DB tasks have a 'week' field
-  // If not, we'd fallback to mock ones or just show DB ones in the active week.
-  const weekNumber = activeWeek.startsWith('week') ? parseInt(activeWeek.replace('week', '')) : (activeWeek === 'month2' ? 5 : 6)
+  const weekData     = WEEK_CONTENT[activeWeek] ?? WEEK_CONTENT.week1
+  const weekNumber   = activeWeek.startsWith('week') ? parseInt(activeWeek.replace('week', '')) : (activeWeek === 'month2' ? 5 : 6)
   const displayTasks = dbTasks.filter(t => t.week === weekNumber || (!t.week && activeWeek === 'week1'))
-
-  const progress = Math.min(Math.round((journey.current_week / 12) * 100), 100)
+  const progress     = Math.min(Math.round((journey.current_week / 12) * 100), 100)
+  const managerName  = journey.manager?.full_name ?? 'Your Manager'
+  const weekMeetings = meetingsForWeek(checkIns, journey.start_date, activeWeek, managerName)
 
   return (
     <div className="jv-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -73,13 +166,13 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
       </div>
 
       <div className="db-tabs" style={{ marginBottom: 0 }}>
-        {weekKeys.map(wk => (
-          <button 
+        {WEEK_KEYS.map(wk => (
+          <button
             key={wk}
             className={`db-tab ${activeWeek === wk ? 'active' : ''}`}
             onClick={() => handleTabChange(wk)}
           >
-            {MOCK_JOURNEY[wk].label}
+            {WEEK_CONTENT[wk].label}
           </button>
         ))}
       </div>
@@ -88,7 +181,7 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
         {/* TASKS */}
         <div className="db-card">
           <div className="db-card-hd">
-            <h3><i className="fa-solid fa-list-check" style={{ color: 'var(--cyan)', marginRight: '6px' }}></i> {MOCK_JOURNEY[activeWeek].label} Tasks</h3>
+            <h3><i className="fa-solid fa-list-check" style={{ color: 'var(--cyan)', marginRight: '6px' }} /> {weekData.label} Tasks</h3>
           </div>
           <div className="db-card-bd">
             <TaskList tasks={displayTasks} currentWeek={weekNumber} />
@@ -98,12 +191,12 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
         {/* MEETINGS */}
         <div className="db-card">
           <div className="db-card-hd">
-            <h3><i className="fa-solid fa-calendar" style={{ color: 'var(--blue)', marginRight: '6px' }}></i> {MOCK_JOURNEY[activeWeek].label} Meetings</h3>
+            <h3><i className="fa-solid fa-calendar" style={{ color: 'var(--blue)', marginRight: '6px' }} /> {weekData.label} Meetings</h3>
           </div>
           <div className="db-card-bd">
             <div className="meet-list">
-              {currentWeekData.meetings.length > 0 ? (
-                currentWeekData.meetings.map((m: any, i: number) => (
+              {weekMeetings.length > 0 ? (
+                weekMeetings.map((m: any, i: number) => (
                   <div key={i} className="meet-card">
                     <div className="meet-date" style={{ background: 'var(--blue-light)', borderRadius: '8px' }}>
                       <div className="md">{m.day}</div>
@@ -113,11 +206,11 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
                       <strong>{m.title}</strong>
                       <span>{m.time} · with {m.contact}</span>
                     </div>
-                    <button 
+                    <button
                       className="btn btn-primary btn-sm"
                       onClick={() => setTeamsModal({ isOpen: true, contact: m.contact })}
                     >
-                      <i className="fa-brands fa-microsoft"></i>
+                      <i className="fa-brands fa-microsoft" />
                     </button>
                   </div>
                 ))
@@ -133,58 +226,64 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
         {/* RESOURCES */}
         <div className="db-card">
           <div className="db-card-hd">
-            <h3><i className="fa-solid fa-folder-open" style={{ color: 'var(--cyan)', marginRight: '6px' }}></i> Resources & Documents</h3>
+            <h3><i className="fa-solid fa-folder-open" style={{ color: 'var(--cyan)', marginRight: '6px' }} /> Resources & Documents</h3>
           </div>
           <div className="db-card-bd">
-            {currentWeekData.resources.length > 0 ? (
-              <div className="res-grid">
-                {currentWeekData.resources.map((r: any) => (
-                  <div 
-                    key={r.id} 
-                    className="res-card"
-                    onClick={() => setResourceModal({ isOpen: true, resource: r })}
-                  >
-                    <div className="res-ico"><i className={r.icon} style={{ color: 'var(--blue)' }}></i></div>
-                    <div className="res-info">
-                      <strong>{r.title}</strong>
-                      <span>{r.type}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p style={{ fontSize: '13px', color: 'var(--text3)' }}>No additional resources for this period.</p>
-            )}
+            <p style={{ fontSize: '13px', color: 'var(--text3)' }}>
+              Resources for this period are available in the{' '}
+              <a href="/hire/resources" style={{ color: 'var(--blue)', fontWeight: 600 }}>Resource Hub</a>.
+            </p>
           </div>
         </div>
 
-        {/* EXPECTATIONS */}
+        {/* EXPECTATIONS — real tasks for this week, static fallback if none */}
         <div className="db-card">
           <div className="db-card-hd">
-            <h3><i className="fa-solid fa-star" style={{ color: 'var(--amber)', marginRight: '6px' }}></i> What&apos;s expected from you</h3>
+            <h3><i className="fa-solid fa-star" style={{ color: 'var(--amber)', marginRight: '6px' }} /> What&apos;s expected from you</h3>
           </div>
           <div className="db-card-bd">
-            <div className="expect-list">
-              {currentWeekData.expectations.map((e: string, i: number) => (
-                <div key={i} className="expect-item">
-                  <i className="fa-solid fa-arrow-right"></i>
-                  {e}
-                </div>
-              ))}
-            </div>
+            {displayTasks.length > 0 ? (
+              <div className="expect-list">
+                {displayTasks.map((t: any) => {
+                  const isDone = t.status === 'completed'
+                  return (
+                    <div
+                      key={t.id}
+                      className="expect-item"
+                      style={{ opacity: isDone ? 0.55 : 1, textDecoration: isDone ? 'line-through' : 'none' }}
+                    >
+                      <i
+                        className={isDone ? 'fa-solid fa-circle-check' : 'fa-solid fa-arrow-right'}
+                        style={{ color: isDone ? 'var(--green)' : undefined, flexShrink: 0 }}
+                      />
+                      {t.title}
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="expect-list">
+                {weekData.expectations.map((e: string, i: number) => (
+                  <div key={i} className="expect-item">
+                    <i className="fa-solid fa-arrow-right" />
+                    {e}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {activeWeek === 'week1' && currentWeekData.equipment && (
+      {activeWeek === 'week1' && weekData.equipment && (
         <div className="db-row full">
           <div className="db-card">
             <div className="db-card-hd">
-              <h3><i className="fa-solid fa-box-open" style={{ color: 'var(--cyan)', marginRight: '6px' }}></i> Equipment & Access Checklist</h3>
+              <h3><i className="fa-solid fa-box-open" style={{ color: 'var(--cyan)', marginRight: '6px' }} /> Equipment & Access Checklist</h3>
             </div>
             <div className="db-card-bd">
               <div className="equip-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-                {currentWeekData.equipment.map((eq: any, i: number) => (
+                {weekData.equipment.map((eq, i: number) => (
                   <div key={i} className={`equip-item eq-${eq.status}`} style={{
                     padding: '14px',
                     borderRadius: 'var(--r)',
@@ -194,9 +293,9 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
                     flexDirection: 'column',
                     alignItems: 'center',
                     gap: '8px',
-                    opacity: eq.status === 'done' ? 1 : 0.7
+                    opacity: eq.status === 'done' ? 1 : 0.7,
                   }}>
-                    <i className={eq.icon} style={{ fontSize: '20px', color: eq.status === 'done' ? 'var(--green)' : 'var(--text3)' }}></i>
+                    <i className={eq.icon} style={{ fontSize: '20px', color: eq.status === 'done' ? 'var(--green)' : 'var(--text3)' }} />
                     <span style={{ fontSize: '12px', fontWeight: 700, textAlign: 'center' }}>{eq.label}</span>
                     <span style={{ fontSize: '10px', fontWeight: 600, color: eq.status === 'done' ? 'var(--green)' : 'var(--text3)' }}>
                       {eq.status === 'done' ? '✓ Received' : '⏳ Pending'}
@@ -209,54 +308,62 @@ export default function JourneyView({ journey, dbTasks }: JourneyViewProps) {
         </div>
       )}
 
-      {/* CONTACTS PREVIEW */}
-      <div className="db-row full">
-        <div className="db-card">
-          <div className="db-card-hd">
-            <h3><i className="fa-solid fa-address-book" style={{ color: 'var(--blue)', marginRight: '6px' }}></i> Key Contacts</h3>
-          </div>
-          <div className="db-card-bd">
-            <div className="contact-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
-              {MOCK_CONTACTS.map((c, i) => (
-                <div key={i} className="contact-card" style={{
-                  padding: '20px',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--r-lg)',
-                  background: 'var(--surface2)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  textAlign: 'center'
-                }}>
-                  <img src={c.avatar} style={{ width: '60px', height: '60px', borderRadius: '50%', marginBottom: '12px', border: '3px solid var(--cyan-light)' }} alt={c.name} />
-                  <div style={{ fontWeight: 800, fontSize: '15px' }}>{c.name}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text3)', marginBottom: '16px' }}>{c.role} · {c.dept}</div>
-                  <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                    <button className="btn btn-outline btn-sm" style={{ flex: 1 }}>Message</button>
-                    <button 
-                      className="btn btn-primary btn-sm" 
-                      style={{ flex: 1 }}
-                      onClick={() => setTeamsModal({ isOpen: true, contact: c.name })}
-                    >
-                      <i className="fa-brands fa-microsoft"></i> Teams
-                    </button>
+      {/* KEY CONTACTS — real data from props */}
+      {contacts.length > 0 && (
+        <div className="db-row full">
+          <div className="db-card">
+            <div className="db-card-hd">
+              <h3><i className="fa-solid fa-address-book" style={{ color: 'var(--blue)', marginRight: '6px' }} /> Key Contacts</h3>
+            </div>
+            <div className="db-card-bd">
+              <div className="contact-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+                {contacts.map((c, i) => (
+                  <div key={i} className="contact-card" style={{
+                    padding: '20px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--r-lg)',
+                    background: 'var(--surface2)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                  }}>
+                    {c.avatar ? (
+                      <img src={c.avatar} style={{ width: '60px', height: '60px', borderRadius: '50%', marginBottom: '12px', border: '3px solid var(--cyan-light)' }} alt={c.name} />
+                    ) : (
+                      <div style={{ width: 60, height: 60, borderRadius: '50%', marginBottom: 12, border: '3px solid var(--cyan-light)', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: 'var(--text2)' }}>
+                        {c.name.charAt(0)}
+                      </div>
+                    )}
+                    <div style={{ fontWeight: 800, fontSize: '15px' }}>{c.name}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text3)', marginBottom: '16px' }}>{c.role}{c.dept ? ` · ${c.dept}` : ''}</div>
+                    <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                      <button className="btn btn-outline btn-sm" style={{ flex: 1 }}>Message</button>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        style={{ flex: 1 }}
+                        onClick={() => setTeamsModal({ isOpen: true, contact: c.name })}
+                      >
+                        <i className="fa-brands fa-microsoft" /> Teams
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <TeamsModal 
-        isOpen={teamsModal.isOpen} 
-        onClose={() => setTeamsModal({ ...teamsModal, isOpen: false })} 
-        contactName={teamsModal.contact} 
+      <TeamsModal
+        isOpen={teamsModal.isOpen}
+        onClose={() => setTeamsModal({ ...teamsModal, isOpen: false })}
+        contactName={teamsModal.contact}
       />
-      <ResourceModal 
-        isOpen={resourceModal.isOpen} 
-        onClose={() => setResourceModal({ ...resourceModal, isOpen: false })} 
-        resource={resourceModal.resource} 
+      <ResourceModal
+        isOpen={resourceModal.isOpen}
+        onClose={() => setResourceModal({ ...resourceModal, isOpen: false })}
+        resource={resourceModal.resource}
       />
     </div>
   )

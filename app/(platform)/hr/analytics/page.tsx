@@ -3,41 +3,10 @@ import AnalyticsClient from './AnalyticsClient'
 
 export const dynamic = 'force-dynamic'
 
-// ── Mock data fallback ─────────────────────────────────────────────────────
-
-const MOCK_JOURNEYS = [
-  { id: 'j1', status: 'active',    current_week: 3,  risk_score: 72, risk_reasons: ['No check-in completed', '2 overdue tasks', 'Manager not logged in this week'], start_date: '2026-03-01', employee: { id: 'e1', full_name: 'Marcus Reed',  department: 'Product',     avatar_url: 'https://i.pravatar.cc/150?u=marcus' }, manager: { id: 'm1', full_name: 'Sarah Chen' } },
-  { id: 'j2', status: 'active',    current_week: 7,  risk_score: 44, risk_reasons: ['Feedback survey pending', '1 overdue task'], start_date: '2026-01-15', employee: { id: 'e2', full_name: 'Priya Mehta',  department: 'Engineering', avatar_url: 'https://i.pravatar.cc/150?u=priya'  }, manager: { id: 'm1', full_name: 'Sarah Chen' } },
-  { id: 'j3', status: 'completed', current_week: 12, risk_score: 12, risk_reasons: [], start_date: '2025-12-01', employee: { id: 'e3', full_name: 'James Wilson', department: 'Sales',       avatar_url: 'https://i.pravatar.cc/150?u=james'  }, manager: { id: 'm2', full_name: 'David Park' } },
-  { id: 'j4', status: 'active',    current_week: 2,  risk_score: 18, risk_reasons: [], start_date: '2026-03-15', employee: { id: 'e4', full_name: 'Diana Torres', department: 'Design',      avatar_url: 'https://i.pravatar.cc/150?u=diana'  }, manager: { id: 'm2', full_name: 'David Park' } },
-]
-
-const MOCK_TASKS = [
-  ...Array.from({ length: 12 }, (_, i) => [
-    { journey_id: 'j1', week: i + 1, status: i < 2 ? 'completed' : 'pending' },
-    { journey_id: 'j2', week: i + 1, status: i < 6 ? 'completed' : 'pending' },
-    { journey_id: 'j3', week: i + 1, status: 'completed' },
-  ]).flat(),
-]
-
-const MOCK_CHECKINS = [
-  { id: 'c1', milestone: 'day_30',  scheduled_date: '2026-03-31', completed_date: '2026-03-31', journey: { employee: { full_name: 'Marcus Reed',  department: 'Product'     } }, manager: { full_name: 'Sarah Chen' } },
-  { id: 'c2', milestone: 'day_60',  scheduled_date: '2026-04-30', completed_date: null,         journey: { employee: { full_name: 'Marcus Reed',  department: 'Product'     } }, manager: { full_name: 'Sarah Chen' } },
-  { id: 'c3', milestone: 'day_30',  scheduled_date: '2026-02-14', completed_date: null,         journey: { employee: { full_name: 'Priya Mehta',  department: 'Engineering' } }, manager: { full_name: 'Sarah Chen' } },
-  { id: 'c4', milestone: 'day_90',  scheduled_date: '2026-04-15', completed_date: null,         journey: { employee: { full_name: 'Priya Mehta',  department: 'Engineering' } }, manager: { full_name: 'Sarah Chen' } },
-  { id: 'c5', milestone: 'day_90',  scheduled_date: '2026-02-28', completed_date: '2026-02-28', journey: { employee: { full_name: 'James Wilson', department: 'Sales'       } }, manager: { full_name: 'David Park' } },
-]
-
-const MOCK_FEEDBACK = [
-  { id: 'f1', milestone: 'day_30', rating: 5, comments: 'Really smooth onboarding experience. The buddy program was a highlight.', created_at: '2026-02-01', employee: { full_name: 'James Wilson' } },
-  { id: 'f2', milestone: 'day_60', rating: 4, comments: 'Good overall. Would appreciate more structured goals in week 3.', created_at: '2026-03-01', employee: { full_name: 'James Wilson' } },
-  { id: 'f3', milestone: 'day_30', rating: 3, comments: 'Missing clarity on team norms. Manager check-ins felt rushed.', created_at: '2026-02-20', employee: { full_name: 'Priya Mehta' } },
-]
-
 export default async function HRAnalyticsPage() {
   const supabase = await createSupabaseServer()
 
-  const [journeysRes, tasksRes, checkInsRes, feedbackRes] = await Promise.all([
+  const [journeysRes, tasksRes, checkInsRes, feedbackRes, pulseRes] = await Promise.all([
     supabase
       .from('journeys')
       .select('id, status, current_week, risk_score, risk_reasons, start_date, employee:profiles!employee_id(id, full_name, avatar_url, department), manager:profiles!manager_id(id, full_name)')
@@ -54,12 +23,79 @@ export default async function HRAnalyticsPage() {
       .select('id, milestone, rating, comments, created_at, employee:profiles!employee_id(full_name)')
       .order('created_at', { ascending: false })
       .limit(30),
+    supabase
+      .from('pulse_checks')
+      .select('week, score')
+      .order('week'),
   ])
 
-  const journeys  = (journeysRes.data  && journeysRes.data.length  > 0) ? journeysRes.data  : MOCK_JOURNEYS
-  const tasks     = (tasksRes.data     && tasksRes.data.length     > 0) ? tasksRes.data     : MOCK_TASKS
-  const checkIns  = (checkInsRes.data  && checkInsRes.data.length  > 0) ? checkInsRes.data  : MOCK_CHECKINS
-  const feedback  = (feedbackRes.data  && feedbackRes.data.length  > 0) ? feedbackRes.data  : MOCK_FEEDBACK
+  const journeys   = journeysRes.data  ?? []
+  const tasks      = tasksRes.data     ?? []
+  const checkIns   = checkInsRes.data  ?? []
+  const feedback   = feedbackRes.data  ?? []
+  const pulseData  = pulseRes.data     ?? []
+
+  // ── Real Cohort Data (group by start month) ──────────────────────────────
+  const cohortMap: Record<string, { journeyIds: string[]; atRisk: number; completed: number; totalDays: number }> = {}
+  for (const j of journeys as any[]) {
+    if (!j.start_date) continue
+    const d = new Date(j.start_date)
+    const label = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    if (!cohortMap[label]) cohortMap[label] = { journeyIds: [], atRisk: 0, completed: 0, totalDays: 0 }
+    cohortMap[label].journeyIds.push(j.id)
+    if ((j.risk_score ?? 0) > 60) cohortMap[label].atRisk++
+    if (j.status === 'completed') cohortMap[label].completed++
+    cohortMap[label].totalDays += Math.max(1, Math.round((Date.now() - d.getTime()) / 86400000))
+  }
+  const cohortData = Object.entries(cohortMap)
+    .map(([label, { journeyIds, atRisk, completed, totalDays }]) => {
+      const cohortTasks = (tasks as any[]).filter((t: any) => journeyIds.includes(t.journey_id))
+      const done = cohortTasks.filter((t: any) => t.status === 'completed').length
+      const avgProgress = cohortTasks.length > 0 ? Math.round(done / cohortTasks.length * 100) : 0
+      const avgDays = journeyIds.length > 0 ? Math.round(totalDays / journeyIds.length) : 0
+      return { label, hired: journeyIds.length, avgProgress, atRisk, completed, avgDays }
+    })
+    .sort((a, b) => {
+      const da = new Date(a.label).getTime(), db = new Date(b.label).getTime()
+      return da - db
+    })
+    .slice(-8)
+
+  // ── Real Dept Data ──────────────────────────────────────────────────────
+  const deptMap: Record<string, { journeyIds: string[]; atRisk: number; weeks: number[] }> = {}
+  for (const j of journeys as any[]) {
+    const dept = j.employee?.department || 'Other'
+    if (!deptMap[dept]) deptMap[dept] = { journeyIds: [], atRisk: 0, weeks: [] }
+    deptMap[dept].journeyIds.push(j.id)
+    if ((j.risk_score ?? 0) > 60) deptMap[dept].atRisk++
+    if (j.current_week) deptMap[dept].weeks.push(j.current_week)
+  }
+  const deptData = Object.entries(deptMap).map(([name, { journeyIds, atRisk, weeks }]) => {
+    const deptTasks = (tasks as any[]).filter((t: any) => journeyIds.includes(t.journey_id))
+    const done = deptTasks.filter((t: any) => t.status === 'completed').length
+    const progress = deptTasks.length > 0 ? Math.round(done / deptTasks.length * 100) : 0
+    const avgWeek = weeks.length > 0 ? +(weeks.reduce((a, b) => a + b, 0) / weeks.length).toFixed(1) : 0
+    return { name, progress, atRisk, avgWeek }
+  })
+
+  // ── Real Manager Effectiveness Data ────────────────────────────────────
+  const mgrMap: Record<string, { name: string; total: number; completed: number; atRisk: number }> = {}
+  for (const j of journeys as any[]) {
+    const mgr = j.manager
+    if (!mgr?.id) continue
+    if (!mgrMap[mgr.id]) mgrMap[mgr.id] = { name: mgr.full_name ?? 'Unknown', total: 0, completed: 0, atRisk: 0 }
+    mgrMap[mgr.id].total++
+    if (j.status === 'completed') mgrMap[mgr.id].completed++
+    if ((j.risk_score ?? 0) > 60) mgrMap[mgr.id].atRisk++
+  }
+  const managerData = Object.values(mgrMap)
+    .map(({ name, total, completed }) => {
+      const successRate = total > 0 ? Math.round((completed / total) * 100) : 0
+      const trend: 'top' | 'good' | 'support' | 'risk' =
+        successRate >= 85 ? 'top' : successRate >= 70 ? 'good' : successRate >= 50 ? 'support' : 'risk'
+      return { name, avatar: `https://i.pravatar.cc/40?u=${encodeURIComponent(name)}`, hires: total, successRate, trend }
+    })
+    .sort((a, b) => b.successRate - a.successRate)
 
   return (
     <AnalyticsClient
@@ -67,6 +103,10 @@ export default async function HRAnalyticsPage() {
       tasks={tasks as any}
       checkIns={checkIns as any}
       feedback={feedback as any}
+      pulseData={pulseData as any}
+      cohortData={cohortData}
+      deptData={deptData}
+      managerData={managerData}
     />
   )
 }

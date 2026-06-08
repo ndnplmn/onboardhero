@@ -20,34 +20,43 @@ const FrictionAnalysisSchema = z.object({
 })
 
 export async function analyzeJourneyFriction(journeyData: any) {
-  const { journey, tasks, checkIns } = journeyData
+  const { journey, tasks, checkIns, pulseChecks } = journeyData
+
+  const pulseSection = pulseChecks?.length
+    ? `\n    Pulse Check Scores (weekly self-reported mood 1-5):\n    ${JSON.stringify(
+        pulseChecks.map((p: any) => ({ week: p.week, score: p.score, note: p.note })),
+        null, 2
+      )}`
+    : ''
 
   const prompt = `
     Analyze this onboarding journey data for a "New Hire" and detect friction points.
     Today is Day ${Math.ceil((Date.now() - new Date(journey.start_date).getTime()) / (1000 * 60 * 60 * 24))}.
-    
+
     Journey Status: ${journey.status}
     Current Week: ${journey.current_week}
-    
+
     Tasks:
-    ${JSON.stringify(tasks.map((t: any) => ({ 
-      title: t.title, 
-      week: t.week, 
-      status: t.status, 
-      category: t.category 
+    ${JSON.stringify(tasks.map((t: any) => ({
+      title: t.title,
+      week: t.week,
+      status: t.status,
+      category: t.category
     })), null, 2)}
-    
+
     Check-in Notes:
-    ${JSON.stringify(checkIns.map((c: any) => ({ 
-      date: c.scheduled_date, 
-      sentiment: c.sentiment_score, 
-      notes: c.manager_notes 
+    ${JSON.stringify(checkIns.map((c: any) => ({
+      date: c.scheduled_date,
+      sentiment: c.sentiment_score,
+      notes: c.manager_notes
     })), null, 2)}
-    
-    Return a professional risk assessment. 
+    ${pulseSection}
+
+    Return a professional risk assessment.
     A "Friction Point" is a specific event or pattern that is causing delay or low engagement.
     If multiple tasks in "Tech Setup" are incomplete by Week 2, that's a "technical" friction point.
     If check-in sentiment is dropping, that's an "engagement" friction point.
+    If pulse scores trend downward week-over-week, that strongly signals a culture or engagement friction point.
   `
 
   const { object } = await generateObject({

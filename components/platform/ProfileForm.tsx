@@ -2,6 +2,8 @@
 
 import { useTransition, useState, useRef } from 'react'
 import { updateProfile } from '@/app/(platform)/hire/actions'
+import { useT } from '@/lib/i18n/context'
+import InterestsPicker from '@/components/platform/InterestsPicker'
 
 interface Props {
   profile: {
@@ -14,12 +16,16 @@ interface Props {
     avatar_url: string | null
     department?: string | null
     role?: string
+    interests?: string[] | null
+    fun_fact?: string | null
   }
 }
 
 export default function ProfileForm({ profile }: Props) {
+  const { t } = useT()
   const [isPending, startTransition] = useTransition()
   const [saved, setSaved]   = useState(false)
+  const [interests, setInterests] = useState<string[]>(profile.interests ?? [])
   const [avatarSrc, setAvatarSrc] = useState<string>(
     profile.avatar_url || `https://i.pravatar.cc/150?u=${profile.id}`
   )
@@ -108,14 +114,14 @@ export default function ProfileForm({ profile }: Props) {
             className="btn btn-outline btn-sm"
             onClick={() => fileInputRef.current?.click()}
           >
-            <i className="fa-solid fa-image" style={{ marginRight: 6 }} />Change Photo
+            <i className="fa-solid fa-image" style={{ marginRight: 6 }} />{t('components.profileForm.changePhoto')}
           </button>
         </div>
 
         {avatarSrc !== (profile.avatar_url || `https://i.pravatar.cc/150?u=${profile.id}`) && (
           <div style={{ marginTop: 12, fontSize: 12, color: 'var(--amber)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <i className="fa-solid fa-circle-info" />
-            New photo selected — save your profile to apply it.
+            {t('components.profileForm.photoChanged')}
           </div>
         )}
       </div>
@@ -123,10 +129,10 @@ export default function ProfileForm({ profile }: Props) {
       {/* Personal Info */}
       <div className="db-card" style={{ padding: '24px', marginBottom: 20 }}>
         <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, marginBottom: 16, color: 'var(--text)' }}>
-          <i className="fa-solid fa-user" style={{ marginRight: 8, color: 'var(--blue)' }} />Personal Info
+          <i className="fa-solid fa-user" style={{ marginRight: 8, color: 'var(--blue)' }} />{t('components.profileForm.personalInfo')}
         </h3>
         <div className="fg">
-          <label>Full Name</label>
+          <label>{t('components.profileForm.fullNameLabel')}</label>
           <input name="full_name" type="text" defaultValue={profile.full_name} required />
         </div>
         <div className="fg">
@@ -142,23 +148,43 @@ export default function ProfileForm({ profile }: Props) {
             style={{ minHeight: '90px', padding: '10px', border: '1px solid var(--border)', borderRadius: 'var(--r)', background: 'var(--surface)', width: '100%', resize: 'vertical', fontSize: 13, color: 'var(--text)', fontFamily: 'var(--font-body)', lineHeight: 1.6 }}
           />
         </div>
+        <div className="fg">
+          <label>Fun Fact</label>
+          <input
+            name="fun_fact"
+            type="text"
+            defaultValue={profile.fun_fact ?? ''}
+            placeholder="Something surprising about you..."
+          />
+        </div>
+      </div>
+
+      {/* Interests */}
+      <div className="db-card" style={{ padding: '24px', marginBottom: 20 }}>
+        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, marginBottom: 6, color: 'var(--text)' }}>
+          <i className="fa-solid fa-heart" style={{ marginRight: 8, color: 'var(--violet)' }} />Interests
+        </h3>
+        <p style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 20, lineHeight: 1.5 }}>
+          Pick up to 12 interests so colleagues can find you. Your shared passions help build connections.
+        </p>
+        <InterestsPicker selected={interests} onChange={setInterests} name="interests" />
       </div>
 
       {/* Emergency Contact */}
       <div className="db-card" style={{ padding: '24px', marginBottom: 20 }}>
         <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, marginBottom: 16, color: 'var(--text)' }}>
-          <i className="fa-solid fa-heart-pulse" style={{ marginRight: 8, color: 'var(--red)' }} />Emergency Contact
+          <i className="fa-solid fa-heart-pulse" style={{ marginRight: 8, color: 'var(--red)' }} />{t('components.profileForm.emergencyContact')}
         </h3>
         <div className="fg">
-          <label>Contact Name</label>
+          <label>{t('components.profileForm.emergencyNameLabel')}</label>
           <input name="ec_name" type="text" defaultValue={ec.name || ''} placeholder="Full name" />
         </div>
         <div className="fg">
-          <label>Phone</label>
+          <label>{t('components.profileForm.emergencyPhoneLabel')}</label>
           <input name="ec_phone" type="tel" defaultValue={ec.phone || ''} placeholder="+1 555 987 6543" />
         </div>
         <div className="fg">
-          <label>Relationship</label>
+          <label>{t('components.profileForm.emergencyRelLabel')}</label>
           <input name="ec_relationship" type="text" defaultValue={ec.relationship || ''} placeholder="Spouse, Parent, Sibling…" />
         </div>
       </div>
@@ -167,11 +193,11 @@ export default function ProfileForm({ profile }: Props) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <button type="submit" className="btn btn-primary" disabled={isPending}>
           {isPending ? (
-            <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 6 }} />Saving…</>
+            <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 6 }} />{t('components.profileForm.saving')}</>
           ) : saved ? (
-            <><i className="fa-solid fa-check" style={{ marginRight: 6 }} />Saved!</>
+            <><i className="fa-solid fa-check" style={{ marginRight: 6 }} />{t('components.profileForm.saved')}</>
           ) : (
-            <><i className="fa-solid fa-floppy-disk" style={{ marginRight: 6 }} />Save Profile</>
+            <><i className="fa-solid fa-floppy-disk" style={{ marginRight: 6 }} />{t('components.profileForm.saveChanges')}</>
           )}
         </button>
         {saved && (

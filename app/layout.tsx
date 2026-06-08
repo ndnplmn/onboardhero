@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import ScrollReveal from '@/components/landing/ScrollReveal'
+import { LanguageProvider } from '@/lib/i18n/context'
 
 export const metadata: Metadata = {
   title: 'OnboardHero — Structured Onboarding. Better Integration.',
@@ -21,8 +22,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <ScrollReveal />
-        {children}
+        <LanguageProvider>
+          <ScrollReveal />
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   )

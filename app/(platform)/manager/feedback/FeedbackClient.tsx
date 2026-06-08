@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useT } from '@/lib/i18n/context'
 
 type Sentiment = 'positive' | 'mixed' | 'negative'
 type Source    = 'form' | 'check-in'
@@ -73,10 +74,11 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 function SentimentBadge({ sentiment }: { sentiment: Sentiment }) {
+  const { t } = useT()
   const MAP = {
-    positive: { bg: 'var(--green-bg)', color: 'var(--green)', icon: 'fa-face-smile',      label: 'Positive' },
-    mixed:    { bg: 'var(--amber-bg)', color: 'var(--amber)', icon: 'fa-face-meh',         label: 'Mixed'    },
-    negative: { bg: 'var(--red-bg)',   color: 'var(--red)',   icon: 'fa-face-frown-open',  label: 'Negative' },
+    positive: { bg: 'var(--green-bg)', color: 'var(--green)', icon: 'fa-face-smile',      label: t('manager.feedback.positive') },
+    mixed:    { bg: 'var(--amber-bg)', color: 'var(--amber)', icon: 'fa-face-meh',         label: t('manager.feedback.mixed')    },
+    negative: { bg: 'var(--red-bg)',   color: 'var(--red)',   icon: 'fa-face-frown-open',  label: t('manager.feedback.negative') },
   }
   const s = MAP[sentiment]
   return (
@@ -92,14 +94,112 @@ function SentimentBadge({ sentiment }: { sentiment: Sentiment }) {
 }
 
 function SourceBadge({ source }: { source: Source }) {
+  const { t } = useT()
   return (
     <span style={{
       fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 100,
       background: 'var(--surface)', color: 'var(--text3)',
       border: '1px solid var(--border)', letterSpacing: '0.04em', textTransform: 'uppercase',
     }}>
-      {source === 'form' ? 'Form' : 'Check-in'}
+      {source === 'form' ? t('manager.feedback.fromForm') : t('manager.feedback.fromCheckIn')}
     </span>
+  )
+}
+
+// ── Trend Sparkline ───────────────────────────────────────────────────────
+
+function TrendSparkline({ values, color }: { values: number[]; color: string }) {
+  if (values.length < 2) return <span style={{ fontSize: 10, color: 'var(--text3)' }}>—</span>
+  const max = Math.max(...values, 5)
+  const W = 64, H = 28
+  const pts = values.map((v, i) => `${Math.round((i / (values.length - 1)) * W)},${Math.round((1 - v / max) * H)}`)
+  const trending = values[values.length - 1] >= values[values.length - 2]
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <svg width={W} height={H} style={{ overflow: 'visible' }}>
+        <polyline
+          points={pts.join(' ')}
+          fill="none"
+          stroke={color}
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={0.85}
+        />
+        {values.map((v, i) => (
+          <circle
+            key={i}
+            cx={Math.round((i / (values.length - 1)) * W)}
+            cy={Math.round((1 - v / max) * H)}
+            r={i === values.length - 1 ? 3 : 2}
+            fill={color}
+            opacity={i === values.length - 1 ? 1 : 0.5}
+          />
+        ))}
+      </svg>
+      <i
+        className={`fa-solid fa-arrow-${trending ? 'up' : 'down'}`}
+        style={{ fontSize: 9, color: trending ? 'var(--green)' : 'var(--red)' }}
+      />
+    </div>
+  )
+}
+
+function CategoryTrends({ feedback }: { feedback: FeedbackItem[] }) {
+  const trends = useMemo(() => {
+    const byCategory: Record<string, { date: string; rating: number }[]> = {}
+    for (const f of feedback) {
+      if (!byCategory[f.category]) byCategory[f.category] = []
+      byCategory[f.category].push({ date: f.date, rating: f.rating })
+    }
+
+    return Object.entries(byCategory).map(([cat, items]) => {
+      const sorted = [...items].sort((a, b) => a.date.localeCompare(b.date))
+      const ratings = sorted.map(i => i.rating)
+      const avg = ratings.reduce((s, r) => s + r, 0) / ratings.length
+      const last3 = ratings.slice(-3)
+      const alert = last3.length >= 3 && last3.every(r => r < avg)
+      return { cat, ratings, avg, alert }
+    }).sort((a, b) => (b.alert ? 1 : 0) - (a.alert ? 1 : 0))
+  }, [feedback])
+
+  if (trends.length === 0) return null
+
+  return (
+    <div className="db-card" style={{ padding: '20px 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+        <i className="fa-solid fa-chart-line" style={{ color: 'var(--blue)', fontSize: 13 }} />
+        <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0 }}>Rating Trends</h3>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {trends.map(({ cat, ratings, avg, alert }) => (
+          <div key={cat}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)' }}>{cat}</span>
+                {alert && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 100,
+                    background: 'var(--red-bg)', color: 'var(--red)',
+                    border: '1px solid rgba(239,68,68,0.2)',
+                  }}>
+                    <i className="fa-solid fa-triangle-exclamation" style={{ fontSize: 8, marginRight: 3 }} />
+                    3× below avg
+                  </span>
+                )}
+              </div>
+              <span style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 600 }}>
+                avg {avg.toFixed(1)}/5
+              </span>
+            </div>
+            <TrendSparkline
+              values={ratings}
+              color={alert ? 'var(--red)' : avg >= 4 ? 'var(--green)' : avg >= 3 ? 'var(--cyan)' : 'var(--amber)'}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -191,6 +291,7 @@ function RespondModal({ item, onClose }: { item: FeedbackItem; onClose: () => vo
 // ── Main component ────────────────────────────────────────────────────────
 
 export default function FeedbackClient({ feedback, kpis, categories }: FeedbackClientProps) {
+  const { t } = useT()
   const [sentimentFilter, setSentimentFilter] = useState<SentimentFilter>('all')
   const [categoryFilter,  setCategoryFilter]  = useState<string>('all')
   const [search,          setSearch]          = useState('')
@@ -208,18 +309,18 @@ export default function FeedbackClient({ feedback, kpis, categories }: FeedbackC
   }, [feedback, sentimentFilter, categoryFilter, search])
 
   const SENTIMENT_OPTIONS: { value: SentimentFilter; label: string; color: string }[] = [
-    { value: 'all',      label: 'All',      color: 'var(--text2)' },
-    { value: 'positive', label: 'Positive', color: 'var(--green)' },
-    { value: 'mixed',    label: 'Mixed',    color: 'var(--amber)' },
-    { value: 'negative', label: 'Negative', color: 'var(--red)'   },
+    { value: 'all',      label: t('manager.feedback.allSentiments'), color: 'var(--text2)' },
+    { value: 'positive', label: t('manager.feedback.positive'),      color: 'var(--green)' },
+    { value: 'mixed',    label: t('manager.feedback.mixed'),         color: 'var(--amber)' },
+    { value: 'negative', label: t('manager.feedback.negative'),      color: 'var(--red)'   },
   ]
 
   return (
     <>
       <div className="db-header">
         <div className="db-header-left">
-          <h1>Team Feedback</h1>
-          <p>Read and respond to feedback from your new hires to improve the onboarding experience.</p>
+          <h1>{t('manager.feedback.title')}</h1>
+          <p>{t('manager.feedback.subtitle')}</p>
         </div>
       </div>
 
@@ -230,27 +331,27 @@ export default function FeedbackClient({ feedback, kpis, categories }: FeedbackC
           <div className="kpi-card">
             <div className="kpi-icon blue"><i className="fa-solid fa-comments" /></div>
             <div className="kpi-value">{kpis.total}</div>
-            <div className="kpi-label">Total Responses</div>
+            <div className="kpi-label">{t('manager.feedback.totalFeedback')}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon amber"><i className="fa-solid fa-star" /></div>
             <div className="kpi-value">{kpis.avgRating}/5</div>
-            <div className="kpi-label">Avg. Satisfaction</div>
+            <div className="kpi-label">{t('manager.feedback.avgRating')}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon green"><i className="fa-solid fa-face-smile" /></div>
             <div className="kpi-value">{kpis.positivePct}%</div>
-            <div className="kpi-label">Positive Sentiment</div>
+            <div className="kpi-label">{t('manager.feedback.positiveSentiment')}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon red"><i className="fa-solid fa-face-frown-open" /></div>
             <div className="kpi-value">{kpis.negativeCount}</div>
-            <div className="kpi-label">Needs Attention</div>
+            <div className="kpi-label">{t('manager.feedback.needsAttention')}</div>
           </div>
         </div>
 
         {/* Main 2/3 + Side 1/3 */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--gap-standard)', alignItems: 'start' }}>
+        <div className="db-grid-2-1" style={{ alignItems: 'start' }}>
 
           {/* Feedback list */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-standard)' }}>
@@ -295,7 +396,7 @@ export default function FeedbackClient({ feedback, kpis, categories }: FeedbackC
                   onChange={e => setCategoryFilter(e.target.value)}
                   style={{ height: 32, fontSize: 12, background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--r)', color: 'var(--text)', padding: '0 10px', outline: 'none', cursor: 'pointer' }}
                 >
-                  <option value="all">All categories</option>
+                  <option value="all">{t('manager.feedback.allCategories')}</option>
                   {categories.map(c => (
                     <option key={c.label} value={c.label}>{c.label}</option>
                   ))}
@@ -311,7 +412,7 @@ export default function FeedbackClient({ feedback, kpis, categories }: FeedbackC
             {filtered.length === 0 ? (
               <div className="db-card" style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>
                 <i className="fa-solid fa-comment-slash" style={{ fontSize: 28, display: 'block', marginBottom: 10, color: 'var(--border)' }} />
-                No feedback matches your filter.
+                {t('manager.feedback.noFeedback')}
               </div>
             ) : (
               <AnimatePresence mode="sync">
@@ -404,9 +505,9 @@ export default function FeedbackClient({ feedback, kpis, categories }: FeedbackC
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {([
-                  { key: 'positive' as Sentiment, label: 'Positive', color: 'var(--green)', icon: 'fa-face-smile'      },
-                  { key: 'mixed'    as Sentiment, label: 'Mixed',    color: 'var(--amber)', icon: 'fa-face-meh'         },
-                  { key: 'negative' as Sentiment, label: 'Negative', color: 'var(--red)',   icon: 'fa-face-frown-open'  },
+                  { key: 'positive' as Sentiment, label: t('manager.feedback.positive'), color: 'var(--green)', icon: 'fa-face-smile'      },
+                  { key: 'mixed'    as Sentiment, label: t('manager.feedback.mixed'),    color: 'var(--amber)', icon: 'fa-face-meh'         },
+                  { key: 'negative' as Sentiment, label: t('manager.feedback.negative'), color: 'var(--red)',   icon: 'fa-face-frown-open'  },
                 ]).map(({ key, label, color, icon }) => {
                   const count = feedback.filter(f => f.sentiment === key).length
                   const pct   = feedback.length > 0 ? Math.round((count / feedback.length) * 100) : 0
@@ -468,6 +569,9 @@ export default function FeedbackClient({ feedback, kpis, categories }: FeedbackC
                 </div>
               </div>
             )}
+
+            {/* Category Trends */}
+            <CategoryTrends feedback={feedback} />
 
             {/* AI Insight */}
             <div className="db-card" style={{ padding: '20px', background: 'var(--grad-soft)', border: '1px solid var(--border)' }}>

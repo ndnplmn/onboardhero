@@ -1,9 +1,52 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+
+function RiskScoreCell({ score }: { score: number }) {
+  const [expanded, setExpanded] = useState(false)
+
+  const label = score >= 70 ? 'High Risk' : score >= 40 ? 'Moderate' : 'On Track'
+  const color = score >= 70 ? 'var(--red)' : score >= 40 ? 'var(--amber)' : 'var(--green)'
+
+  const explanation = score >= 70
+    ? 'Multiple friction signals detected. Immediate manager check-in recommended.'
+    : score >= 40
+    ? 'Some integration challenges detected. Monitor and consider a proactive 1:1.'
+    : 'Journey progressing normally. Keep up the cadence.'
+
+  const action = score >= 70
+    ? 'Schedule 1:1 today'
+    : score >= 40
+    ? 'Send a check-in message'
+    : 'No action needed'
+
+  return (
+    <div>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: 0 }}
+        aria-expanded={expanded}
+        aria-label={`Risk score ${score}: ${label}. Click to ${expanded ? 'collapse' : 'expand'} details.`}
+      >
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 800, color }}>{score}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color, textTransform: 'uppercase' }}>{label}</span>
+        <i className={`fa-solid fa-chevron-${expanded ? 'up' : 'down'}`} style={{ fontSize: 9, color: 'var(--text3)' }} aria-hidden="true" />
+      </button>
+      {expanded && (
+        <div style={{ marginTop: 6, padding: '8px 10px', borderRadius: 'var(--r)', background: score >= 70 ? 'var(--red-bg)' : score >= 40 ? 'var(--amber-bg)' : 'var(--green-bg)', border: `1px solid ${color}22`, maxWidth: 200 }}>
+          <p style={{ fontSize: 11, color: 'var(--text2)', margin: '0 0 4px', lineHeight: 1.4 }}>{explanation}</p>
+          <span style={{ fontSize: 10, fontWeight: 700, color }}>
+            <i className="fa-solid fa-arrow-right" style={{ marginRight: 4 }} aria-hidden="true" />{action}
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import ScheduleCheckInModal from '@/components/platform/ScheduleCheckInModal'
+import { useT } from '@/lib/i18n/context'
 
 interface Journey {
   id: string
@@ -75,6 +118,7 @@ function weekLabel(week: number) {
 }
 
 export default function HiresClient({ journeys, kpis, hirees }: HiresClientProps) {
+  const { t } = useT()
   const router = useRouter()
   const [search,       setSearch]       = useState('')
   const [filter,       setFilter]       = useState<StatusFilter>('all')
@@ -121,12 +165,12 @@ export default function HiresClient({ journeys, kpis, hirees }: HiresClientProps
     <>
       <div className="db-header">
         <div className="db-header-left">
-          <h1>My New Hires</h1>
-          <p>Manage and monitor the onboarding journey of your direct reports.</p>
+          <h1>{t('manager.hires.title')}</h1>
+          <p>{t('manager.hires.subtitle')}</p>
         </div>
         <div className="db-header-actions">
           <button className="btn btn-outline btn-sm" onClick={() => setCheckInHiree(hirees)} aria-label="Schedule a check-in with your new hires">
-            <i className="fa-solid fa-calendar-check" aria-hidden="true" /> Schedule Check-in
+            <i className="fa-solid fa-calendar-check" aria-hidden="true" /> {t('manager.hires.scheduleCheckIn')}
           </button>
         </div>
       </div>
@@ -138,32 +182,32 @@ export default function HiresClient({ journeys, kpis, hirees }: HiresClientProps
           <div className="kpi-card">
             <div className="kpi-icon cyan"><i className="fa-solid fa-user-group" /></div>
             <div className="kpi-value">{kpis.totalHires}</div>
-            <div className="kpi-label">Total New Hires</div>
+            <div className="kpi-label">{t('manager.hires.totalHires')}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon blue"><i className="fa-solid fa-road" /></div>
             <div className="kpi-value">{kpis.activeCount}</div>
-            <div className="kpi-label">Active Journeys</div>
+            <div className="kpi-label">{t('manager.hires.activeJourneys')}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon red"><i className="fa-solid fa-triangle-exclamation" /></div>
             <div className="kpi-value">{kpis.atRisk}</div>
-            <div className="kpi-label">At Risk</div>
+            <div className="kpi-label">{t('manager.hires.atRisk')}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon green"><i className="fa-solid fa-circle-check" /></div>
             <div className="kpi-value">{kpis.completedCount}</div>
-            <div className="kpi-label">Completed</div>
+            <div className="kpi-label">{t('manager.hires.completed')}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon aqua"><i className="fa-solid fa-list-check" /></div>
             <div className="kpi-value">{kpis.avgTaskCompletion}%</div>
-            <div className="kpi-label">Avg Task Completion</div>
+            <div className="kpi-label">{t('manager.hires.avgCompletion')}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon amber"><i className="fa-solid fa-calendar-clock" /></div>
             <div className="kpi-value">{kpis.pendingCheckIns}</div>
-            <div className="kpi-label">Pending Check-ins</div>
+            <div className="kpi-label">{t('manager.hires.pendingCheckIns')}</div>
           </div>
         </div>
 
@@ -220,7 +264,7 @@ export default function HiresClient({ journeys, kpis, hirees }: HiresClientProps
           {filtered.length === 0 ? (
             <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>
               <i className="fa-solid fa-user-slash" style={{ fontSize: 28, display: 'block', marginBottom: 10, color: 'var(--border)' }} />
-              No hires match your search.
+              {t('manager.hires.noHires')}
             </div>
           ) : (
             <table className="emp-tbl">
@@ -291,7 +335,7 @@ export default function HiresClient({ journeys, kpis, hirees }: HiresClientProps
                       </td>
 
                       {/* Risk */}
-                      <td><RiskBadge score={j.risk_score} /></td>
+                      <td><RiskScoreCell score={j.risk_score} /></td>
 
                       {/* Status */}
                       <td><StatusBadge status={j.status} riskScore={j.risk_score} /></td>
@@ -304,14 +348,14 @@ export default function HiresClient({ journeys, kpis, hirees }: HiresClientProps
                             onClick={() => router.push(`/manager/team/${j.id}`)}
                             style={{ fontSize: 11 }}
                           >
-                            <i className="fa-solid fa-eye" /> View
+                            <i className="fa-solid fa-eye" /> {t('manager.hires.viewJourney')}
                           </button>
                           <button
                             className="btn btn-outline btn-sm"
                             onClick={() => openSchedule(j)}
                             style={{ fontSize: 11 }}
                           >
-                            <i className="fa-solid fa-calendar-plus" /> Schedule
+                            <i className="fa-solid fa-calendar-plus" /> {t('manager.hires.scheduleCheckIn')}
                           </button>
                         </div>
                       </td>
@@ -324,7 +368,7 @@ export default function HiresClient({ journeys, kpis, hirees }: HiresClientProps
         </div>
 
         {/* Insight Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--gap-standard)' }}>
+        <div className="db-grid-3col">
           <div className="db-card">
             <div className="db-card-hd">
               <h3><i className="fa-solid fa-bolt" style={{ color: 'var(--cyan)' }} /> Integration Velocity</h3>

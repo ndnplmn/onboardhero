@@ -3,6 +3,7 @@
 import { useState, useTransition, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toggleManagerTask } from '@/app/(platform)/manager/actions'
+import { useT } from '@/lib/i18n/context'
 
 interface Task {
   id: string
@@ -45,6 +46,7 @@ interface TasksClientProps {
 type Filter = 'all' | 'pending' | 'completed'
 
 export default function TasksClient({ tasks, kpis, breakdown }: TasksClientProps) {
+  const { t } = useT()
   const [filter,     setFilter]     = useState<Filter>('all')
   const [search,     setSearch]     = useState('')
   const [optimistic, setOptimistic] = useState<Record<string, string>>({})
@@ -86,8 +88,8 @@ export default function TasksClient({ tasks, kpis, breakdown }: TasksClientProps
     <>
       <div className="db-header">
         <div className="db-header-left">
-          <h1>My Tasks</h1>
-          <p>Track and manage your onboarding-related actions and follow-ups.</p>
+          <h1>{t('manager.tasks.title')}</h1>
+          <p>{t('manager.tasks.subtitle')}</p>
         </div>
       </div>
 
@@ -98,27 +100,27 @@ export default function TasksClient({ tasks, kpis, breakdown }: TasksClientProps
           <div className="kpi-card">
             <div className="kpi-icon blue"><i className="fa-solid fa-list-check" /></div>
             <div className="kpi-value">{kpis.total}</div>
-            <div className="kpi-label">Total Tasks</div>
+            <div className="kpi-label">{t('manager.tasks.totalTasks')}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon amber"><i className="fa-solid fa-clock" /></div>
             <div className="kpi-value">{livePending}</div>
-            <div className="kpi-label">Pending</div>
+            <div className="kpi-label">{t('manager.tasks.pending')}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon green"><i className="fa-solid fa-circle-check" /></div>
             <div className="kpi-value">{liveCompleted}</div>
-            <div className="kpi-label">Completed</div>
+            <div className="kpi-label">{t('manager.tasks.completed')}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon cyan"><i className="fa-solid fa-chart-pie" /></div>
             <div className="kpi-value">{livePct}%</div>
-            <div className="kpi-label">Completion Rate</div>
+            <div className="kpi-label">{t('manager.tasks.completionRate')}</div>
           </div>
         </div>
 
         {/* Main 2/3 + Side 1/3 */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--gap-standard)', alignItems: 'start' }}>
+        <div className="db-grid-2-1" style={{ alignItems: 'start' }}>
 
           {/* Task list */}
           <div className="db-card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -173,7 +175,7 @@ export default function TasksClient({ tasks, kpis, breakdown }: TasksClientProps
               {weeks.length === 0 ? (
                 <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>
                   <i className="fa-solid fa-circle-check" style={{ fontSize: 28, color: 'var(--green)', display: 'block', marginBottom: 10 }} />
-                  No tasks match your filter.
+                  {t('manager.tasks.noTasks')}
                 </div>
               ) : (
                 weeks.map(week => {
@@ -237,7 +239,7 @@ export default function TasksClient({ tasks, kpis, breakdown }: TasksClientProps
                                   </strong>
                                   {isDone && (
                                     <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 100, background: 'var(--green-bg)', color: 'var(--green)' }}>
-                                      Done
+                                      {t('manager.tasks.markDone')}
                                     </span>
                                   )}
                                 </div>
@@ -291,7 +293,7 @@ export default function TasksClient({ tasks, kpis, breakdown }: TasksClientProps
               <div className="db-card-hd" style={{ marginBottom: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <i className="fa-solid fa-chart-pie" style={{ color: 'var(--cyan)' }} />
-                  <h3>Task Analytics</h3>
+                  <h3>{t('manager.tasks.completionByEmployee')}</h3>
                 </div>
               </div>
 

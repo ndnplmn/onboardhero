@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { saveSettings, type SettingsPayload } from './actions'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -111,36 +112,44 @@ const NAV_ITEMS: { id: SectionId; label: string; icon: string; color: string }[]
   { id: 'templates',     label: 'Journey Templates',icon: 'fa-route',             color: 'var(--aqua)'   },
 ]
 
-export default function SettingsClient() {
+interface SettingsClientProps {
+  initialSettings?: SettingsPayload | null
+}
+
+export default function SettingsClient({ initialSettings }: SettingsClientProps) {
   const router = useRouter()
   const [active, setActive]   = useState<SectionId>('org')
   const [saved, setSaved]     = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   // ── Org settings state ───────────────────────────────────────────────────
-  const [orgName, setOrgName]           = useState('Acme Corp')
-  const [orgIndustry, setOrgIndustry]   = useState('Technology')
-  const [orgSize, setOrgSize]           = useState('50-200')
-  const [orgTimezone, setOrgTimezone]   = useState('America/New_York')
-  const [departments, setDepartments]   = useState(['Engineering', 'Product', 'Design', 'Sales', 'People', 'Finance'])
+  const [orgName, setOrgName]           = useState(initialSettings?.org?.name        ?? 'Acme Corp')
+  const [orgIndustry, setOrgIndustry]   = useState(initialSettings?.org?.industry    ?? 'Technology')
+  const [orgSize, setOrgSize]           = useState(initialSettings?.org?.size        ?? '50-200')
+  const [orgTimezone, setOrgTimezone]   = useState(initialSettings?.org?.timezone    ?? 'America/New_York')
+  const [departments, setDepartments]   = useState(initialSettings?.org?.departments ?? ['Engineering', 'Product', 'Design', 'Sales', 'People', 'Finance'])
   const [newDept, setNewDept]           = useState('')
 
   // ── Role settings state ──────────────────────────────────────────────────
   const [roles, setRoles] = useState({
-    manager_invite:      true,
-    manager_view_all:    false,
-    manager_edit_tasks:  true,
-    hr_risk_scan:        true,
-    hr_edit_templates:   true,
-    hr_export_reports:   true,
+    manager_invite:      initialSettings?.roles?.manager_invite      ?? true,
+    manager_view_all:    initialSettings?.roles?.manager_view_all    ?? false,
+    manager_edit_tasks:  initialSettings?.roles?.manager_edit_tasks  ?? true,
+    hr_risk_scan:        initialSettings?.roles?.hr_risk_scan        ?? true,
+    hr_edit_templates:   initialSettings?.roles?.hr_edit_templates   ?? true,
+    hr_export_reports:   initialSettings?.roles?.hr_export_reports   ?? true,
   })
 
   // ── AI settings state ────────────────────────────────────────────────────
-  const [riskThreshold, setRiskThreshold]       = useState(60)
-  const [scanFrequency, setScanFrequency]        = useState('weekly')
-  const [sentimentEnabled, setSentimentEnabled]  = useState(true)
-  const [autoAlerts, setAutoAlerts]              = useState(true)
-  const [aiModel, setAiModel]                    = useState('claude-sonnet-4-6')
+  const [riskThreshold, setRiskThreshold]       = useState(initialSettings?.ai?.riskThreshold     ?? 60)
+  const [scanFrequency, setScanFrequency]        = useState(initialSettings?.ai?.scanFrequency     ?? 'weekly')
+  const [sentimentEnabled, setSentimentEnabled]  = useState(initialSettings?.ai?.sentimentEnabled  ?? true)
+  const [autoAlerts, setAutoAlerts]              = useState(initialSettings?.ai?.autoAlerts        ?? true)
+  const [aiModel, setAiModel]                    = useState(initialSettings?.ai?.aiModel           ?? 'claude-sonnet-4-6')
+  const [taskOverdueDays, setTaskOverdueDays]   = useState(initialSettings?.ai?.taskOverdueDays   ?? 3)
+  const [hireInactiveDays, setHireInactiveDays] = useState(initialSettings?.ai?.hireInactiveDays  ?? 5)
+  const [lowMoraleThreshold, setLowMorale]      = useState(initialSettings?.ai?.lowMoraleThreshold ?? 2)
 
   // ── Integration settings ─────────────────────────────────────────────────
   const [integrations, setIntegrations] = useState({
@@ -150,25 +159,55 @@ export default function SettingsClient() {
     bamboohr: { enabled: false, apiKey: '' },
   })
 
+  // ── Webhook test state ───────────────────────────────────────────────────
+  const [webhookTest, setWebhookTest] = useState<Record<string, 'idle' | 'loading' | 'ok' | 'error'>>({
+    slack: 'idle', teams: 'idle',
+  })
+
+  async function testWebhook(platform: 'slack' | 'teams') {
+    const url = integrations[platform].webhook.trim()
+    if (!url) return
+    setWebhookTest(p => ({ ...p, [platform]: 'loading' }))
+    try {
+      const body = platform === 'slack'
+        ? JSON.stringify({ text: '✅ *Onboarding Hero* — Test connection successful!' })
+        : JSON.stringify({ type: 'message', text: '✅ Onboarding Hero — Test connection successful!' })
+      const res = await fetch(url, { method: 'POST', body, headers: { 'Content-Type': 'application/json' } })
+      setWebhookTest(p => ({ ...p, [platform]: res.ok ? 'ok' : 'error' }))
+    } catch {
+      setWebhookTest(p => ({ ...p, [platform]: 'error' }))
+    }
+    setTimeout(() => setWebhookTest(p => ({ ...p, [platform]: 'idle' })), 4000)
+  }
+
   // ── Notification settings ─────────────────────────────────────────────────
   const [notifs, setNotifs] = useState({
-    journey_complete:  true,
-    task_overdue:      true,
-    risk_increase:     true,
-    checkin_reminder:  true,
-    weekly_digest:     true,
-    new_hire_joined:   true,
+    journey_complete:  initialSettings?.notifications?.events?.journey_complete  ?? true,
+    task_overdue:      initialSettings?.notifications?.events?.task_overdue      ?? true,
+    risk_increase:     initialSettings?.notifications?.events?.risk_increase     ?? true,
+    checkin_reminder:  initialSettings?.notifications?.events?.checkin_reminder  ?? true,
+    weekly_digest:     initialSettings?.notifications?.events?.weekly_digest     ?? true,
+    new_hire_joined:   initialSettings?.notifications?.events?.new_hire_joined   ?? true,
   })
-  const [digestDay, setDigestDay]   = useState('monday')
-  const [digestTime, setDigestTime] = useState('09:00')
+  const [digestDay, setDigestDay]   = useState(initialSettings?.notifications?.digestDay  ?? 'monday')
+  const [digestTime, setDigestTime] = useState(initialSettings?.notifications?.digestTime ?? '09:00')
 
   function handleSave() {
-    startTransition(() => {
-      // Simulate async save
-      setTimeout(() => {
+    setSaveError(null)
+    startTransition(async () => {
+      const payload: SettingsPayload = {
+        org:           { name: orgName, industry: orgIndustry, size: orgSize, timezone: orgTimezone, departments },
+        roles:         roles as Record<string, boolean>,
+        ai:            { riskThreshold, scanFrequency, sentimentEnabled, autoAlerts, aiModel, taskOverdueDays, hireInactiveDays, lowMoraleThreshold },
+        notifications: { events: notifs as Record<string, boolean>, digestDay, digestTime },
+      }
+      const result = await saveSettings(payload)
+      if (result.ok) {
         setSaved(true)
         setTimeout(() => setSaved(false), 3500)
-      }, 400)
+      } else {
+        setSaveError(result.error ?? 'Save failed')
+      }
     })
   }
 
@@ -215,7 +254,7 @@ export default function SettingsClient() {
       </div>
 
       <div className="db-body">
-        <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 20, alignItems: 'start' }}>
+        <div className="db-grid-nav-1fr">
 
           {/* Sidebar nav */}
           <div className="db-card" style={{ padding: 8, position: 'sticky', top: 80 }}>
@@ -504,6 +543,80 @@ export default function SettingsClient() {
                       <span>Conservative (90) — fewer alerts</span>
                     </div>
                   </div>
+
+                  {/* ── Operational thresholds ── */}
+                  <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: -8 }}>Operational Thresholds</div>
+
+                    {/* Task overdue days */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>Task Overdue After</div>
+                          <div style={{ fontSize: 11, color: 'var(--text3)' }}>Days after a task&apos;s week deadline before it&apos;s flagged overdue.</div>
+                        </div>
+                        <span style={{ fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--amber)' }}>
+                          {taskOverdueDays}d
+                        </span>
+                      </div>
+                      <input
+                        type="range" min={1} max={14} step={1}
+                        value={taskOverdueDays}
+                        onChange={e => setTaskOverdueDays(Number(e.target.value))}
+                        style={{ width: '100%', accentColor: 'var(--amber)', marginTop: 4 }}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginTop: 5 }}>
+                        <span>Strict (1 day)</span>
+                        <span>Lenient (14 days)</span>
+                      </div>
+                    </div>
+
+                    {/* Hire inactive days */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>Inactive Hire Alert</div>
+                          <div style={{ fontSize: 11, color: 'var(--text3)' }}>Days without login or task activity before flagging a hire as inactive.</div>
+                        </div>
+                        <span style={{ fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--red)' }}>
+                          {hireInactiveDays}d
+                        </span>
+                      </div>
+                      <input
+                        type="range" min={2} max={14} step={1}
+                        value={hireInactiveDays}
+                        onChange={e => setHireInactiveDays(Number(e.target.value))}
+                        style={{ width: '100%', accentColor: 'var(--red)', marginTop: 4 }}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginTop: 5 }}>
+                        <span>Sensitive (2 days)</span>
+                        <span>Relaxed (14 days)</span>
+                      </div>
+                    </div>
+
+                    {/* Low morale threshold */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>Low Morale Threshold</div>
+                          <div style={{ fontSize: 11, color: 'var(--text3)' }}>Pulse score at or below this value triggers a morale alert to managers.</div>
+                        </div>
+                        <span style={{ fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-display)', color: lowMoraleThreshold <= 2 ? 'var(--red)' : 'var(--amber)' }}>
+                          {lowMoraleThreshold}/5
+                        </span>
+                      </div>
+                      <input
+                        type="range" min={1} max={4} step={1}
+                        value={lowMoraleThreshold}
+                        onChange={e => setLowMorale(Number(e.target.value))}
+                        style={{ width: '100%', accentColor: 'var(--red)', marginTop: 4 }}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginTop: 5 }}>
+                        <span>Only critical (1/5)</span>
+                        <span>All below average (4/5)</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -558,8 +671,21 @@ export default function SettingsClient() {
                             style={{ fontSize: 12 }}
                           />
                         </div>
-                        <button className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start', fontSize: 11 }}>
-                          <i className="fa-solid fa-paper-plane" /> Test Connection
+                        <button
+                          className="btn btn-outline btn-sm"
+                          style={{ alignSelf: 'flex-start', fontSize: 11, minWidth: 140 }}
+                          disabled={!integrations.slack.webhook.trim() || webhookTest.slack === 'loading'}
+                          onClick={() => testWebhook('slack')}
+                        >
+                          {webhookTest.slack === 'loading' && <i className="fa-solid fa-spinner fa-spin" />}
+                          {webhookTest.slack === 'ok'      && <i className="fa-solid fa-circle-check" style={{ color: 'var(--green)' }} />}
+                          {webhookTest.slack === 'error'   && <i className="fa-solid fa-circle-xmark" style={{ color: 'var(--red)' }} />}
+                          {webhookTest.slack === 'idle'    && <i className="fa-solid fa-paper-plane" />}
+                          {' '}
+                          {webhookTest.slack === 'loading' ? 'Sending…'
+                            : webhookTest.slack === 'ok'    ? 'Message sent!'
+                            : webhookTest.slack === 'error' ? 'Failed — check URL'
+                            : 'Test Connection'}
                         </button>
                       </div>
                     )}
@@ -596,6 +722,22 @@ export default function SettingsClient() {
                             style={{ fontSize: 12 }}
                           />
                         </div>
+                        <button
+                          className="btn btn-outline btn-sm"
+                          style={{ alignSelf: 'flex-start', fontSize: 11, minWidth: 140 }}
+                          disabled={!integrations.teams.webhook.trim() || webhookTest.teams === 'loading'}
+                          onClick={() => testWebhook('teams')}
+                        >
+                          {webhookTest.teams === 'loading' && <i className="fa-solid fa-spinner fa-spin" />}
+                          {webhookTest.teams === 'ok'      && <i className="fa-solid fa-circle-check" style={{ color: 'var(--green)' }} />}
+                          {webhookTest.teams === 'error'   && <i className="fa-solid fa-circle-xmark" style={{ color: 'var(--red)' }} />}
+                          {webhookTest.teams === 'idle'    && <i className="fa-solid fa-paper-plane" />}
+                          {' '}
+                          {webhookTest.teams === 'loading' ? 'Sending…'
+                            : webhookTest.teams === 'ok'    ? 'Message sent!'
+                            : webhookTest.teams === 'error' ? 'Failed — check URL'
+                            : 'Test Connection'}
+                        </button>
                       </div>
                     )}
                   </div>
@@ -664,13 +806,13 @@ export default function SettingsClient() {
                     </SettingRow>
                   ))}
 
-                  {/* Digest schedule */}
+                  {/* Digest schedule + preview */}
                   {notifs.weekly_digest && (
                     <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border)' }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 14 }}>
                         Weekly Digest Schedule
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div className="db-grid-2col" style={{ gap: 12 }}>
                         <div className="fg" style={{ margin: 0 }}>
                           <label>Send on</label>
                           <select value={digestDay} onChange={e => setDigestDay(e.target.value)}>
@@ -686,6 +828,32 @@ export default function SettingsClient() {
                             value={digestTime}
                             onChange={e => setDigestTime(e.target.value)}
                           />
+                        </div>
+                      </div>
+
+                      {/* Digest preview */}
+                      <div style={{ marginTop: 16, padding: '14px 16px', background: 'var(--surface2)', borderRadius: 'var(--r)', border: '1px solid var(--border)' }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <i className="fa-solid fa-eye" style={{ fontSize: 10 }} />
+                          Digest Preview — What managers receive
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.8 }}>
+                          <div style={{ fontWeight: 700, marginBottom: 4 }}>
+                            <i className="fa-solid fa-chart-bar" style={{ color: 'var(--blue)', marginRight: 6, fontSize: 11 }} />
+                            Weekly Onboarding Digest
+                          </div>
+                          <div style={{ color: 'var(--text3)', fontSize: 11, marginBottom: 8 }}>
+                            Sent every {digestDay.charAt(0).toUpperCase() + digestDay.slice(1)} at {digestTime}
+                          </div>
+                          {[
+                            '📊 Team completion rate this week',
+                            '⚠️ At-risk hires requiring attention',
+                            '✅ Hires who completed a milestone',
+                            '📅 Upcoming check-ins this week',
+                            '💡 AI-recommended actions',
+                          ].map((line, i) => (
+                            <div key={i} style={{ fontSize: 11, color: 'var(--text2)', padding: '2px 0' }}>{line}</div>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -759,6 +927,23 @@ export default function SettingsClient() {
       </div>
 
       <SaveToast visible={saved} onHide={() => setSaved(false)} />
+      {saveError && (
+        <div style={{
+          position: 'fixed', bottom: 28, right: 28, zIndex: 3000,
+          background: 'var(--red-bg)', border: '1px solid rgba(239,68,68,0.3)',
+          borderRadius: 'var(--r-xl)', padding: '12px 18px',
+          display: 'flex', alignItems: 'center', gap: 10,
+          boxShadow: 'var(--shadow-lg)',
+        }}>
+          <i className="fa-solid fa-triangle-exclamation" style={{ color: 'var(--red)', fontSize: 14 }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--red)' }}>
+            {saveError.includes('does not exist') ? 'Run the DB migration first — see supabase/migrations/' : saveError}
+          </span>
+          <button onClick={() => setSaveError(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', marginLeft: 4, padding: 0 }}>
+            <i className="fa-solid fa-xmark" style={{ fontSize: 11 }} />
+          </button>
+        </div>
+      )}
     </>
   )
 }

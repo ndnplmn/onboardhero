@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react'
 import { markResourceRead } from '@/app/(platform)/hire/actions'
+import { useT } from '@/lib/i18n/context'
 
 const TYPE_ICON: Record<string, string> = {
   document: 'fa-file-lines',
@@ -25,6 +26,7 @@ const TYPE_BG: Record<string, string> = {
 }
 
 export default function ResourcesClient({ resources, userId }: { resources: any[]; userId: string }) {
+  const { t } = useT()
   const [isPending, startTransition] = useTransition()
 
   function handleMarkRead(resourceId: string) {
@@ -46,9 +48,9 @@ export default function ResourcesClient({ resources, userId }: { resources: any[
               background: 'var(--grad)', WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }} />
-            Resources
+            {t('hire.resources.title')}
           </h1>
-          <p>Documents, videos, and links curated for your onboarding journey.</p>
+          <p>{t('hire.resources.subtitle')}</p>
         </div>
         {totalCount > 0 && (
           <div className="db-header-actions">
@@ -66,7 +68,7 @@ export default function ResourcesClient({ resources, userId }: { resources: any[
           <div className="db-card">
             <div className="db-card-bd">
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
-                <span style={{ color: 'var(--text2)' }}>Reading progress</span>
+                <span style={{ color: 'var(--text2)' }}>{t('hire.resources.readingProgress')}</span>
                 <span style={{ color: 'var(--text3)', fontFamily: 'var(--font-display)' }}>{readPct}%</span>
               </div>
               <div style={{ height: 6, background: 'var(--border)', borderRadius: 100, overflow: 'hidden' }}>
@@ -86,7 +88,7 @@ export default function ResourcesClient({ resources, userId }: { resources: any[
           <div className="db-card-hd">
             <h3>
               <i className="fa-solid fa-layer-group" style={{ color: 'var(--blue)' }} />
-              All Resources
+              {t('hire.resources.allResources')}
             </h3>
             {resources.some((r: any) => r.ai_generated) && (
               <span className="badge-ai">

@@ -1,16 +1,21 @@
 import { inngest } from '@/inngest/client'
 import { createSupabaseAdmin } from '@/lib/db/supabase-server'
 import { sendNotificationEmail } from '@/lib/email/resend'
+import { nudgeEmailTemplate } from '@/lib/email/templates'
+import { postToSlack, nudgeSlackMessage } from '@/lib/slack'
 
 export const sendNudge = inngest.createFunction(
   { id: 'send-nudge', name: 'Send Nudge', triggers: [{ event: 'app/nudge.send' }] },
   async ({ event, step }) => {
-    const { journeyId, managerId, employeeId, reason } = event.data as {
+    const { journeyId, managerId, employeeId, reason: rawReason } = event.data as {
       journeyId: string
       managerId: string
       employeeId: string
       reason: string
     }
+
+    // Strip HTML/script tags to prevent injection in email body
+    const reason = (rawReason ?? '').replace(/<[^>]*>/g, '').slice(0, 1000).trim()
 
     const supabase = createSupabaseAdmin()
 
@@ -51,22 +56,18 @@ export const sendNudge = inngest.createFunction(
     await step.run('send-email', async () => {
       await sendNotificationEmail(
         manager.email,
-        `OnboardHero Nudge: ${employee.full_name}`,
-        `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Action Needed for ${employee.full_name}</h2>
-          <p>Hi ${manager.full_name},</p>
-          <p>${reason}</p>
-          <p>
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/journeys/${journeyId}"
-               style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px;">
-              View Journey
-            </a>
-          </p>
-          <p style="color: #6b7280; font-size: 14px;">— OnboardHero</p>
-        </div>
-        `
+        `Action needed: ${employee.full_name} needs your support`,
+        nudgeEmailTemplate({
+          managerName: manager.full_name,
+          hireName: employee.full_name,
+          message: reason,
+          journeyId,
+        })
       )
+    })
+
+    await step.run('slack-notification', async () => {
+      await postToSlack(nudgeSlackMessage(employee.full_name, manager.full_name, reason, journeyId))
     })
 
     return { success: true, managerId, employeeId }

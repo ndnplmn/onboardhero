@@ -216,7 +216,7 @@ function CreateTaskModal({
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="db-grid-2col" style={{ gap: 12 }}>
                 <div className="fg">
                   <label>Week</label>
                   <select name="week" defaultValue="1">

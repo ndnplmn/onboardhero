@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation'
-import { createSupabaseServer } from '@/lib/db/supabase-server'
+import { createSupabaseServer, createSupabaseAdmin } from '@/lib/db/supabase-server'
 import { getTeamMemberDetail } from '@/lib/db/queries/manager'
 import JourneyTimeline from '@/components/platform/JourneyTimeline'
 import RiskBadge from '@/components/platform/RiskBadge'
 import TeamMemberCoachButton from './TeamMemberCoachButton'
 import TeamMemberTasks from './TeamMemberTasks'
 import CheckInActions from './CheckInActions'
+import FeedbackPanel from './FeedbackPanel'
+import { logAction } from '@/lib/db/log-action'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,6 +64,47 @@ export default async function TeamMemberPage({ params }: { params: Promise<{ id:
   const tasks   = dbTasks.length   > 0 ? dbTasks   : (mock?.tasks   ?? [])
   const checkIns = dbCheckIns.length > 0 ? dbCheckIns : (mock?.checkIns ?? [])
 
+  // Fetch hire's 30/60/90 goals so manager sees them before the check-in
+  const admin = createSupabaseAdmin()
+  const { data: goalsData } = journey
+    ? await admin
+        .from('journey_goals')
+        .select('id, milestone, title, status, updated_at')
+        .eq('journey_id', journey.id)
+        .order('milestone')
+    : { data: [] }
+  const goals = (goalsData ?? []) as { id: string; milestone: string; title: string; status: string; updated_at: string }[]
+
+  let auraTopics: string[] = []
+  if (journey?.employee_id) {
+    const { data: conv } = await admin
+      .from('ai_conversations')
+      .select('messages')
+      .eq('user_id', journey.employee_id)
+      .eq('preset', 'aura')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+    if (conv?.messages && Array.isArray(conv.messages)) {
+      auraTopics = (conv.messages as { role: string; content: string }[])
+        .filter(m => m.role === 'user')
+        .slice(-6)
+        .map(m => m.content.slice(0, 120))
+        .reverse()
+    }
+  }
+
+  // Log manager viewing this hire's detail — hire will see "Your manager reviewed your progress"
+  if (journey) {
+    void logAction({
+      journeyId:  journey.id,
+      actorId:    user.id,
+      actorRole:  'manager',
+      actionType: 'progress_reviewed',
+      label:      'Your manager reviewed your progress',
+    })
+  }
+
   if (!journey) return (
     <div className="db-body">
       <div className="db-card">
@@ -94,6 +137,78 @@ export default async function TeamMemberPage({ params }: { params: Promise<{ id:
         <JourneyTimeline currentWeek={journey.current_week} checkIns={checkIns} />
         <CheckInActions checkIns={checkIns} />
         <TeamMemberTasks tasks={tasks} currentWeek={journey.current_week} />
+
+        {goals.length > 0 && (
+          <div className="db-card">
+            <div className="db-card-hd">
+              <h3><i className="fa-solid fa-flag" style={{ color: 'var(--cyan)' }} aria-hidden="true" /> Their Goals</h3>
+              <span style={{ fontSize: 11, color: 'var(--text3)' }}>30 / 60 / 90-day objectives set by the hire</span>
+            </div>
+            <div className="db-card-bd" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {(['day_30', 'day_60', 'day_90'] as const).map(ms => {
+                const msGoals = goals.filter(g => g.milestone === ms)
+                if (!msGoals.length) return null
+                const label = ms === 'day_30' ? '30-Day' : ms === 'day_60' ? '60-Day' : '90-Day'
+                return (
+                  <div key={ms}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>{label}</div>
+                    {msGoals.map(g => (
+                      <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+                        <i className={`fa-solid ${g.status === 'completed' ? 'fa-circle-check' : g.status === 'in_progress' ? 'fa-circle-half-stroke' : 'fa-circle'}`}
+                          style={{ fontSize: 11, color: g.status === 'completed' ? 'var(--green)' : g.status === 'in_progress' ? 'var(--blue)' : 'var(--border)', flexShrink: 0 }}
+                          aria-hidden="true" />
+                        <span style={{ fontSize: 13, color: 'var(--text)', flex: 1 }}>{g.title}</span>
+                        <span style={{ fontSize: 10, color: 'var(--text3)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                          {g.status === 'completed' ? 'Done' : g.status === 'in_progress' ? 'In progress' : 'Not started'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="db-card">
+          <div className="db-card-hd">
+            <h3><i className="fa-solid fa-comment-dots" style={{ color: 'var(--blue)' }} aria-hidden="true" /> Manager Feedback</h3>
+            <span style={{ fontSize: 11, color: 'var(--text3)' }}>Visible to the hire in their dashboard</span>
+          </div>
+          <div style={{ padding: '16px 20px' }}>
+            <FeedbackPanel
+              journeyId={journey.id}
+              hireName={journey.employee?.full_name?.split(' ')[0] ?? 'this hire'}
+            />
+          </div>
+        </div>
+
+        {auraTopics.length > 0 && (
+          <div className="db-card">
+            <div className="db-card-hd">
+              <h3>
+                <i className="fa-solid fa-sparkles" style={{ background: 'var(--grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
+                {' '}What&apos;s on their mind
+              </h3>
+              <span className="badge-ai">Aura Insights</span>
+            </div>
+            <div style={{ padding: '4px 20px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <p style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>
+                Recent questions {journey.employee?.full_name?.split(' ')[0] ?? 'this hire'} asked Aura — useful context for your 1:1.
+              </p>
+              {auraTopics.map((topic, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                  padding: '8px 12px', borderRadius: 'var(--r)',
+                  background: 'var(--surface2)', border: '1px solid var(--border)',
+                }}>
+                  <i className="fa-regular fa-message" style={{ fontSize: 11, color: 'var(--blue)', marginTop: 2, flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.5 }}>{topic}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {journey.risk_score > 30 && (
           <div className="db-card">

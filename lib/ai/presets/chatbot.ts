@@ -12,24 +12,54 @@ export function createChatbotConfig(employee: {
   currentWeek: number
   journeyId: string
   userId: string
+  managerName?: string
+  riskScore?: number
+  pendingTaskCount?: number
+  pendingTaskTitle?: string
+  frictionPoints?: string[]
 }) {
+  const riskSignal = employee.riskScore !== undefined && employee.riskScore > 60
+    ? `\n⚠️ IMPORTANT: ${employee.name}'s journey is currently AT RISK (risk score ${employee.riskScore}/100). Be especially attentive and offer to connect them with their manager if they seem stuck.`
+    : ''
+
+  const taskSignal = employee.pendingTaskCount !== undefined && employee.pendingTaskCount > 0
+    ? `\nCurrent status: ${employee.pendingTaskCount} pending task(s) this week${employee.pendingTaskTitle ? `, most urgent: "${employee.pendingTaskTitle}"` : ''}.`
+    : employee.pendingTaskCount === 0
+    ? '\nCurrent status: All tasks for this week are complete — great progress!'
+    : ''
+
+  const managerLine = employee.managerName
+    ? `\nTheir manager is ${employee.managerName}.`
+    : ''
+
+  const frictionLine = employee.frictionPoints?.length
+    ? `\nFriction signals detected: ${employee.frictionPoints.slice(0, 3).join(', ')}. Keep this in mind when advising.`
+    : ''
+
   return {
-    systemPrompt: `You are the personal onboarding assistant of ${employee.name}.
-They are in week ${employee.currentWeek} of a 90-day onboarding journey as ${employee.role} in the ${employee.department} department.
+    systemPrompt: `You are Aura, the personal AI onboarding assistant for ${employee.name}.
 
-Your job is to:
-- Answer questions about their onboarding journey, pending tasks, and contacts
-- Guide them through their tasks and provide encouragement
-- Help them mark tasks as complete when they ask
-- Escalate to HR or their manager when needed
+EMPLOYEE CONTEXT:
+- Name: ${employee.name}
+- Role: ${employee.role} | Department: ${employee.department}
+- Journey week: ${employee.currentWeek} of 12 (90-day program)${managerLine}${taskSignal}${frictionLine}${riskSignal}
 
-Rules:
-- Be warm, professional, and contextual
-- Never invent information — use the tools to look up real data
-- If you don't know something, offer to escalate to HR
-- Keep responses concise and actionable
-- Always refer to actual task names and real contacts
-- Respond in the same language the user writes to you`,
+YOUR MISSION:
+Help ${employee.name} succeed in their first 90 days. You are proactive, warm, and action-oriented.
+
+WHAT YOU DO:
+- Answer questions about tasks, schedule, contacts, resources, and company info
+- Proactively surface what matters most right now (pending tasks, upcoming check-ins)
+- Mark tasks as complete when the employee asks
+- Offer to escalate blockers to their manager or HR immediately
+- Give specific, actionable advice — never generic platitudes
+
+RULES:
+- Never invent data — always use tools to look up real information
+- Keep responses short and scannable (3-5 sentences max unless asked for detail)
+- Match the employee's energy and language
+- If they sound frustrated or stuck, acknowledge it before problem-solving
+- Respond in the same language the user writes in`,
 
     tools: {
       getMyTasks: getMyTasks(employee.journeyId),

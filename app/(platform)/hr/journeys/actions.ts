@@ -91,6 +91,25 @@ export async function cloneTemplate(templateId: string) {
 
 // ── Assign journey to a hire ───────────────────────────────────────────────
 
+const TEMPLATE_DEFAULT_GOALS: Record<string, { milestone: '30' | '60' | '90'; title: string; description: string }[]> = {
+  Engineering: [
+    { milestone: '30', title: 'Dev environment & first PR', description: 'Set up local environment, complete codebase walkthrough, and merge first PR.' },
+    { milestone: '60', title: 'Own a full feature end-to-end', description: 'Design, implement, and ship a production feature with full test coverage.' },
+    { milestone: '90', title: 'Lead sprint planning independently', description: 'Drive sprint ceremonies, write technical specs, and mentor a peer.' },
+  ],
+  Sales: [
+    { milestone: '30', title: 'CRM setup & product certification', description: 'Complete CRM onboarding, pass demo certification, and shadow 3 customer calls.' },
+    { milestone: '60', title: 'First solo prospect pipeline', description: 'Build a personal pipeline of 10+ prospects and run 5 solo discovery calls.' },
+    { milestone: '90', title: 'Close first deal', description: 'Close a deal independently, hitting first quota milestone.' },
+  ],
+}
+
+const DEFAULT_GOALS: { milestone: '30' | '60' | '90'; title: string; description: string }[] = [
+  { milestone: '30', title: 'Complete onboarding checklist', description: 'Finish all required tasks, meet the team, and complete IT + benefits setup.' },
+  { milestone: '60', title: 'Deliver first contribution', description: 'Complete a meaningful project or deliverable with manager sign-off.' },
+  { milestone: '90', title: 'Operate independently', description: 'Work autonomously on core responsibilities with minimal guidance.' },
+]
+
 export async function assignJourneyToEmployee(templateId: string, employeeId: string, managerId: string) {
   const supabase = await createSupabaseServer()
 
@@ -101,6 +120,37 @@ export async function assignJourneyToEmployee(templateId: string, employeeId: st
   })
 
   if (error) return { error: error.message }
+
+  // Seed default goals based on template department
+  const { data: template } = await supabase
+    .from('journey_templates')
+    .select('department')
+    .eq('id', templateId)
+    .single()
+
+  const { data: journey } = await supabase
+    .from('journeys')
+    .select('id')
+    .eq('employee_id', employeeId)
+    .eq('template_id', templateId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (journey?.id) {
+    const dept = (template as any)?.department ?? ''
+    const goalSet = TEMPLATE_DEFAULT_GOALS[dept] ?? DEFAULT_GOALS
+    await supabase.from('journey_goals').insert(
+      goalSet.map(g => ({
+        journey_id: journey.id,
+        milestone:  g.milestone,
+        title:      g.title,
+        description: g.description,
+        status:     'pending',
+      }))
+    )
+  }
+
   revalidatePath('/hr/employees')
   revalidatePath('/hr/journeys')
   revalidatePath('/manager/dashboard')
@@ -165,6 +215,96 @@ const STARTER_DEFINITIONS: Record<string, {
       { title: '30-day quota plan sign-off', week: 4, assigned_to_role: 'manager' },
       { title: 'Close first deal', week: 10, assigned_to_role: 'new_hire' },
       { title: '90-day sales review', week: 12, assigned_to_role: 'hr' },
+    ],
+  },
+  customer_success: {
+    name: 'Customer Success Fast-Track',
+    role_type: 'Customer Success Manager',
+    department: 'Customer Success',
+    description: 'Ramp CSMs on product, customers, and health metrics for fast value delivery.',
+    duration_days: 90,
+    tasks: [
+      { title: 'Product trial walkthrough (full)', week: 1, assigned_to_role: 'new_hire' },
+      { title: 'Shadow 3 onboarding calls with senior CSM', week: 2, assigned_to_role: 'new_hire' },
+      { title: 'Read 10 customer health records', week: 1, assigned_to_role: 'new_hire' },
+      { title: 'Complete CSM certification', week: 3, assigned_to_role: 'new_hire' },
+      { title: 'Assign first customer portfolio', week: 4, assigned_to_role: 'manager' },
+      { title: 'First solo QBR prep', week: 6, assigned_to_role: 'new_hire' },
+      { title: '30-day CS methodology review', week: 4, assigned_to_role: 'manager' },
+      { title: 'Present customer health dashboard', week: 8, assigned_to_role: 'new_hire' },
+      { title: '90-day CS performance review', week: 12, assigned_to_role: 'hr' },
+    ],
+  },
+  marketing: {
+    name: 'Marketing Onboarding',
+    role_type: 'Marketing',
+    department: 'Marketing',
+    description: 'Brand, tools, and campaign ownership ramp for marketing hires.',
+    duration_days: 90,
+    tasks: [
+      { title: 'Brand guidelines & tone-of-voice review', week: 1, assigned_to_role: 'new_hire' },
+      { title: 'Marketing stack access & setup', week: 1, assigned_to_role: 'new_hire' },
+      { title: 'Audit last 3 campaigns', week: 2, assigned_to_role: 'new_hire' },
+      { title: 'Meet with content, demand gen, and product marketing', week: 2, assigned_to_role: 'new_hire' },
+      { title: 'First campaign contribution (assist)', week: 3, assigned_to_role: 'new_hire' },
+      { title: '30-day channel strategy review', week: 4, assigned_to_role: 'manager' },
+      { title: 'Own first solo campaign end-to-end', week: 8, assigned_to_role: 'new_hire' },
+      { title: 'Present Q2 growth experiments', week: 10, assigned_to_role: 'new_hire' },
+      { title: '90-day marketing review', week: 12, assigned_to_role: 'hr' },
+    ],
+  },
+  finance: {
+    name: 'Finance & Operations',
+    role_type: 'Finance',
+    department: 'Finance',
+    description: 'Structured ramp for finance roles focused on systems, compliance, and reporting.',
+    duration_days: 90,
+    tasks: [
+      { title: 'Finance systems access & setup (NetSuite, Stripe, etc.)', week: 1, assigned_to_role: 'new_hire' },
+      { title: 'Review chart of accounts and closing calendar', week: 1, assigned_to_role: 'new_hire' },
+      { title: 'Shadow monthly close process', week: 2, assigned_to_role: 'new_hire' },
+      { title: 'Compliance & SOC2 training', week: 2, assigned_to_role: 'new_hire' },
+      { title: '30-day financial controls review', week: 4, assigned_to_role: 'manager' },
+      { title: 'Own one reporting area independently', week: 6, assigned_to_role: 'new_hire' },
+      { title: 'Prepare first board-ready report section', week: 9, assigned_to_role: 'new_hire' },
+      { title: 'Budget planning contribution', week: 10, assigned_to_role: 'new_hire' },
+      { title: '90-day finance performance review', week: 12, assigned_to_role: 'hr' },
+    ],
+  },
+  product: {
+    name: 'Product Manager Ramp',
+    role_type: 'Product Manager',
+    department: 'Product',
+    description: 'Discovery, stakeholder alignment, and first roadmap ownership for new PMs.',
+    duration_days: 90,
+    tasks: [
+      { title: 'Read all product specs and PRDs from last 2 quarters', week: 1, assigned_to_role: 'new_hire' },
+      { title: 'Conduct 5 user interviews with existing customers', week: 2, assigned_to_role: 'new_hire' },
+      { title: 'Meet engineering, design, and data leads', week: 1, assigned_to_role: 'new_hire' },
+      { title: 'Review current product roadmap & strategy', week: 2, assigned_to_role: 'manager' },
+      { title: 'Shadow 2 sprint planning and retro sessions', week: 2, assigned_to_role: 'new_hire' },
+      { title: 'Write first product spec (small scoped)', week: 4, assigned_to_role: 'new_hire' },
+      { title: '30-day PM craft review with VP Product', week: 4, assigned_to_role: 'manager' },
+      { title: 'Own first epic from kickoff to ship', week: 10, assigned_to_role: 'new_hire' },
+      { title: '90-day roadmap ownership review', week: 12, assigned_to_role: 'hr' },
+    ],
+  },
+  design: {
+    name: 'Design Onboarding',
+    role_type: 'Designer',
+    department: 'Design',
+    description: 'Design system, user research, and first shipped design for product/UX designers.',
+    duration_days: 90,
+    tasks: [
+      { title: 'Design system deep-dive & component library', week: 1, assigned_to_role: 'new_hire' },
+      { title: 'Figma org setup & file structure review', week: 1, assigned_to_role: 'new_hire' },
+      { title: 'Review 5 recent shipped features (critique lens)', week: 2, assigned_to_role: 'new_hire' },
+      { title: 'User research methodology session with UX lead', week: 2, assigned_to_role: 'new_hire' },
+      { title: 'First design crit participation', week: 3, assigned_to_role: 'new_hire' },
+      { title: '30-day design quality calibration', week: 4, assigned_to_role: 'manager' },
+      { title: 'Own first end-to-end design project', week: 7, assigned_to_role: 'new_hire' },
+      { title: 'Present to full product team', week: 9, assigned_to_role: 'new_hire' },
+      { title: '90-day design impact review', week: 12, assigned_to_role: 'hr' },
     ],
   },
 }
@@ -234,24 +374,69 @@ export async function getManagersList(): Promise<{ id: string; full_name: string
   return (data || []) as { id: string; full_name: string }[]
 }
 
+export interface TemplatePerf {
+  activeHires: number
+  completedHires: number
+  avgCompletionPct: number
+  avgTTP: number | null
+}
+
 export async function getTemplatesWithTasks() {
   const supabase = await createSupabaseServer()
-  const { data: templates } = await supabase
-    .from('journey_templates')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  const { data: tasks } = await supabase
-    .from('template_tasks')
-    .select('*')
-    .order('week')
-    .order('order')
+  const [templatesRes, tasksRes, journeysRes, journeyTasksRes] = await Promise.all([
+    supabase.from('journey_templates').select('*').order('created_at', { ascending: false }),
+    supabase.from('template_tasks').select('*').order('week').order('order'),
+    supabase.from('journeys').select('id, template_id, status, start_date').not('template_id', 'is', null),
+    supabase.from('journey_tasks').select('journey_id, status'),
+  ])
 
   const tasksByTemplate: Record<string, any[]> = {}
-  ;(tasks || []).forEach((t: any) => {
+  ;(tasksRes.data || []).forEach((t: any) => {
     if (!tasksByTemplate[t.template_id]) tasksByTemplate[t.template_id] = []
     tasksByTemplate[t.template_id].push(t)
   })
 
-  return { templates: templates || [], tasksByTemplate }
+  // Build performance stats per template
+  const jtMap: Record<string, { total: number; done: number }> = {}
+  ;(journeyTasksRes.data || []).forEach((jt: any) => {
+    if (!jtMap[jt.journey_id]) jtMap[jt.journey_id] = { total: 0, done: 0 }
+    jtMap[jt.journey_id].total++
+    if (jt.status === 'completed') jtMap[jt.journey_id].done++
+  })
+
+  const perfByTemplate: Record<string, TemplatePerf> = {}
+  ;(journeysRes.data || []).forEach((j: any) => {
+    const tid = j.template_id
+    if (!tid) return
+    if (!perfByTemplate[tid]) perfByTemplate[tid] = { activeHires: 0, completedHires: 0, avgCompletionPct: 0, avgTTP: null }
+    const p = perfByTemplate[tid]
+    if (j.status === 'completed') p.completedHires++
+    else p.activeHires++
+  })
+
+  // Compute avg completion & TTP per template
+  Object.keys(perfByTemplate).forEach(tid => {
+    const journeys = (journeysRes.data || []).filter((j: any) => j.template_id === tid)
+    const completions: number[] = []
+    const ttps: number[] = []
+    journeys.forEach((j: any) => {
+      const jt = jtMap[j.id]
+      if (!jt || jt.total === 0) return
+      const pct = Math.round((jt.done / jt.total) * 100)
+      completions.push(pct)
+      if (j.start_date && pct > 0) {
+        const elapsed = Math.max(1, Math.round((Date.now() - new Date(j.start_date).getTime()) / 86400000))
+        const ttp = j.status === 'completed' ? Math.round(elapsed * 0.8) : Math.round(elapsed * 0.8 / (pct / 100))
+        if (ttp > 0 && ttp <= 180) ttps.push(ttp)
+      }
+    })
+    if (completions.length) {
+      perfByTemplate[tid].avgCompletionPct = Math.round(completions.reduce((a, b) => a + b, 0) / completions.length)
+    }
+    if (ttps.length) {
+      perfByTemplate[tid].avgTTP = Math.round(ttps.reduce((a, b) => a + b, 0) / ttps.length)
+    }
+  })
+
+  return { templates: templatesRes.data || [], tasksByTemplate, perfByTemplate }
 }

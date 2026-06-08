@@ -18,9 +18,14 @@ interface TemplateRow {
 
 // Shown as stubs when DB is empty
 const STARTER_STUBS = [
-  { key: 'standard',    name: '90-Day Standard',       icon: 'fa-solid fa-star',        color: 'var(--blue)',  desc: '9 tasks · 90 days · General' },
-  { key: 'engineering', name: 'Engineering Fast-Track', icon: 'fa-solid fa-laptop-code', color: 'var(--cyan)',  desc: '9 tasks · 90 days · Engineering' },
-  { key: 'sales',       name: 'Sales Enablement',       icon: 'fa-solid fa-chart-line',  color: 'var(--green)', desc: '9 tasks · 90 days · Sales' },
+  { key: 'standard',         name: '90-Day Standard',             icon: 'fa-solid fa-star',          color: 'var(--blue)',    desc: '9 tasks · 90 days · General' },
+  { key: 'engineering',      name: 'Engineering Fast-Track',      icon: 'fa-solid fa-laptop-code',   color: 'var(--cyan)',    desc: '9 tasks · 90 days · Engineering' },
+  { key: 'sales',            name: 'Sales Enablement',            icon: 'fa-solid fa-chart-line',    color: 'var(--green)',   desc: '9 tasks · 90 days · Sales' },
+  { key: 'customer_success', name: 'Customer Success Fast-Track', icon: 'fa-solid fa-headset',       color: 'var(--violet)',  desc: '9 tasks · 90 days · Customer Success' },
+  { key: 'marketing',        name: 'Marketing Onboarding',        icon: 'fa-solid fa-bullhorn',      color: 'var(--amber)',   desc: '9 tasks · 90 days · Marketing' },
+  { key: 'finance',          name: 'Finance & Operations',        icon: 'fa-solid fa-landmark',      color: 'var(--red)',     desc: '9 tasks · 90 days · Finance' },
+  { key: 'product',          name: 'Product Manager Ramp',        icon: 'fa-solid fa-compass-drafting', color: 'var(--blue)', desc: '9 tasks · 90 days · Product' },
+  { key: 'design',           name: 'Design Onboarding',           icon: 'fa-solid fa-pen-nib',       color: 'var(--cyan)',    desc: '9 tasks · 90 days · Design' },
 ]
 
 export default function JourneyTemplate() {
