@@ -2,99 +2,113 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useT } from '@/lib/i18n/context'
 
 export default function Pricing() {
+  const { t } = useT()
   const [annual, setAnnual] = useState(false)
 
-  const starterPrice = annual ? 39 : 49
+  const starterPrice      = annual ? 39 : 49
   const professionalPrice = annual ? 119 : 149
-  const enterprisePrice = annual ? 319 : 399
+  const enterprisePrice   = annual ? 319 : 399
+
+  const billing = annual ? 'annual' : 'monthly'
+
+  const starter = [
+    { yes: true,  key: 'starterF0' }, { yes: true,  key: 'starterF1' },
+    { yes: true,  key: 'starterF2' }, { yes: true,  key: 'starterF3' },
+    { yes: true,  key: 'starterF4' }, { yes: false, key: 'starterM0' },
+    { yes: false, key: 'starterM1' }, { yes: false, key: 'starterM2' },
+  ] as const
+  const pro = [
+    { yes: true,  key: 'proF0' }, { yes: true,  key: 'proF1' },
+    { yes: true,  key: 'proF2' }, { yes: true,  key: 'proF3' },
+    { yes: true,  key: 'proF4' }, { yes: true,  key: 'proF5' },
+    { yes: true,  key: 'proF6' }, { yes: false, key: 'proM0' },
+  ] as const
+  const ent = [
+    { yes: true, key: 'entF0' }, { yes: true, key: 'entF1' },
+    { yes: true, key: 'entF2' }, { yes: true, key: 'entF3' },
+    { yes: true, key: 'entF4' }, { yes: true, key: 'entF5' },
+    { yes: true, key: 'entF6' }, { yes: true, key: 'entF7' },
+  ] as const
 
   return (
     <section className="section pricing-sec" id="pricing">
       <div className="container">
         <div className="sec-head">
-          <span className="sec-tag">Pricing</span>
-          <h2>Simple, transparent pricing</h2>
-          <p>Start small or scale company-wide. Every plan includes a 14-day free trial — no card needed.</p>
+          <span className="sec-tag">{t('landing.pricing.tag')}</span>
+          <h2>{t('landing.pricing.heading')}</h2>
+          <p>{t('landing.pricing.sub')}</p>
         </div>
         <div className="billing-toggle">
-          <span id="toggle-monthly" className={`tl${!annual ? ' active' : ''}`}>Monthly</span>
+          <span id="toggle-monthly" className={`tl${!annual ? ' active' : ''}`}>{t('landing.pricing.monthly')}</span>
           <label className="switch">
-            <input
-              type="checkbox"
-              id="billing-cb"
-              checked={annual}
-              onChange={() => setAnnual(!annual)}
-            />
+            <input type="checkbox" id="billing-cb" checked={annual} onChange={() => setAnnual(!annual)} />
             <span className="slider"></span>
           </label>
-          <span id="toggle-annual" className={`tl${annual ? ' active' : ''}`}>Annual <em className="save-pill">Save 20%</em></span>
+          <span id="toggle-annual" className={`tl${annual ? ' active' : ''}`}>
+            {t('landing.pricing.annual')} <em className="save-pill">{t('landing.pricing.save')}</em>
+          </span>
         </div>
         <div className="price-grid">
           {/* STARTER */}
-          <div className="price-card" data-plan="starter" data-monthly="49" data-annual="39">
-            <div className="pc-name">Starter</div>
+          <div className="price-card" data-plan="starter">
+            <div className="pc-name">{t('landing.pricing.starterName')}</div>
             <div className="pc-price-wrap">
               <span className="pc-curr">$</span>
-              <span className="pc-amount" id="p-starter">{starterPrice}</span>
-              <span className="pc-per">/mo</span>
+              <span className="pc-amount">{starterPrice}</span>
+              <span className="pc-per">{t('landing.pricing.perMonth')}</span>
             </div>
-            <p className="pc-desc">For small teams taking their first steps toward structured onboarding.</p>
+            <p className="pc-desc">{t('landing.pricing.starterDesc')}</p>
             <ul className="pc-list">
-              <li className="y"><i className="fa-solid fa-check"></i> Up to 10 active new hires</li>
-              <li className="y"><i className="fa-solid fa-check"></i> 3 journey templates</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Basic task assignment</li>
-              <li className="y"><i className="fa-solid fa-check"></i> HR &amp; Manager dashboards</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Email support</li>
-              <li className="n"><i className="fa-solid fa-xmark"></i> Custom journeys</li>
-              <li className="n"><i className="fa-solid fa-xmark"></i> Analytics dashboard</li>
-              <li className="n"><i className="fa-solid fa-xmark"></i> Integrations</li>
+              {starter.map(({ yes, key }) => (
+                <li key={key} className={yes ? 'y' : 'n'}>
+                  <i className={`fa-solid ${yes ? 'fa-check' : 'fa-xmark'}`}></i>
+                  {t(`landing.pricing.${key}` as never)}
+                </li>
+              ))}
             </ul>
-            <Link href={`/checkout?plan=starter&billing=${annual ? 'annual' : 'monthly'}`} className="btn btn-outline btn-block">Choose Starter</Link>
+            <Link href={`/checkout?plan=starter&billing=${billing}`} className="btn btn-outline btn-block">{t('landing.pricing.chooseStarter')}</Link>
           </div>
           {/* PROFESSIONAL */}
-          <div className="price-card featured" data-plan="professional" data-monthly="149" data-annual="119">
-            <div className="pc-pop">Most popular</div>
-            <div className="pc-name">Professional</div>
+          <div className="price-card featured" data-plan="professional">
+            <div className="pc-pop">{t('landing.pricing.mostPopular')}</div>
+            <div className="pc-name">{t('landing.pricing.proName')}</div>
             <div className="pc-price-wrap">
               <span className="pc-curr">$</span>
-              <span className="pc-amount" id="p-professional">{professionalPrice}</span>
-              <span className="pc-per">/mo</span>
+              <span className="pc-amount">{professionalPrice}</span>
+              <span className="pc-per">{t('landing.pricing.perMonth')}</span>
             </div>
-            <p className="pc-desc">For growing companies building a repeatable, high-quality onboarding experience.</p>
+            <p className="pc-desc">{t('landing.pricing.proDesc')}</p>
             <ul className="pc-list">
-              <li className="y"><i className="fa-solid fa-check"></i> Up to 50 active new hires</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Unlimited journey templates</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Custom journey builder</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Full role-based dashboards</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Automated reminders</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Onboarding analytics</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Manager collaboration tools</li>
-              <li className="n"><i className="fa-solid fa-xmark"></i> White-label / branding</li>
+              {pro.map(({ yes, key }) => (
+                <li key={key} className={yes ? 'y' : 'n'}>
+                  <i className={`fa-solid ${yes ? 'fa-check' : 'fa-xmark'}`}></i>
+                  {t(`landing.pricing.${key}` as never)}
+                </li>
+              ))}
             </ul>
-            <Link href={`/checkout?plan=professional&billing=${annual ? 'annual' : 'monthly'}`} className="btn btn-primary btn-block">Choose Professional</Link>
+            <Link href={`/checkout?plan=professional&billing=${billing}`} className="btn btn-primary btn-block">{t('landing.pricing.choosePro')}</Link>
           </div>
           {/* ENTERPRISE */}
-          <div className="price-card" data-plan="enterprise" data-monthly="399" data-annual="319">
-            <div className="pc-name">Enterprise</div>
+          <div className="price-card" data-plan="enterprise">
+            <div className="pc-name">{t('landing.pricing.entName')}</div>
             <div className="pc-price-wrap">
               <span className="pc-curr">$</span>
-              <span className="pc-amount" id="p-enterprise">{enterprisePrice}</span>
-              <span className="pc-per">/mo</span>
+              <span className="pc-amount">{enterprisePrice}</span>
+              <span className="pc-per">{t('landing.pricing.perMonth')}</span>
             </div>
-            <p className="pc-desc">For large organizations requiring advanced customization, analytics, and dedicated support.</p>
+            <p className="pc-desc">{t('landing.pricing.entDesc')}</p>
             <ul className="pc-list">
-              <li className="y"><i className="fa-solid fa-check"></i> Unlimited new hires</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Advanced journey builder</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Multi-department management</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Advanced analytics &amp; reporting</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Corporate white-label</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Unlimited HRIS integrations</li>
-              <li className="y"><i className="fa-solid fa-check"></i> SSO / SAML support</li>
-              <li className="y"><i className="fa-solid fa-check"></i> Dedicated CSM &amp; priority SLA</li>
+              {ent.map(({ yes, key }) => (
+                <li key={key} className={yes ? 'y' : 'n'}>
+                  <i className={`fa-solid ${yes ? 'fa-check' : 'fa-xmark'}`}></i>
+                  {t(`landing.pricing.${key}` as never)}
+                </li>
+              ))}
             </ul>
-            <Link href={`/checkout?plan=enterprise&billing=${annual ? 'annual' : 'monthly'}`} className="btn btn-outline btn-block">Choose Enterprise</Link>
+            <Link href={`/checkout?plan=enterprise&billing=${billing}`} className="btn btn-outline btn-block">{t('landing.pricing.chooseEnt')}</Link>
           </div>
         </div>
       </div>

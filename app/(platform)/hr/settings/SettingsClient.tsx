@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { saveSettings, type SettingsPayload } from './actions'
+import { useT } from '@/lib/i18n/context'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -11,7 +12,7 @@ type SectionId = 'org' | 'roles' | 'ai' | 'integrations' | 'notifications' | 'te
 
 // ── Save Toast ─────────────────────────────────────────────────────────────
 
-function SaveToast({ visible, onHide }: { visible: boolean; onHide: () => void }) {
+function SaveToast({ visible, onHide, savedMsg }: { visible: boolean; onHide: () => void; savedMsg: string }) {
   return (
     <AnimatePresence>
       {visible && (
@@ -29,7 +30,7 @@ function SaveToast({ visible, onHide }: { visible: boolean; onHide: () => void }
           }}
         >
           <i className="fa-solid fa-circle-check" style={{ color: 'var(--green)', fontSize: 14 }} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--green)' }}>Settings saved successfully</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--green)' }}>{savedMsg}</span>
           <button onClick={onHide} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', marginLeft: 4, padding: 0 }}>
             <i className="fa-solid fa-xmark" style={{ fontSize: 11 }} />
           </button>
@@ -103,13 +104,13 @@ function SettingRow({ label, description, children, last = false }: { label: str
 
 // ── Main Component ─────────────────────────────────────────────────────────
 
-const NAV_ITEMS: { id: SectionId; label: string; icon: string; color: string }[] = [
-  { id: 'org',           label: 'Organization',    icon: 'fa-building',           color: 'var(--blue)'   },
-  { id: 'roles',         label: 'Roles & Access',  icon: 'fa-user-shield',        color: 'var(--cyan)'   },
-  { id: 'ai',            label: 'AI Configuration',icon: 'fa-brain',              color: 'var(--purple)' },
-  { id: 'integrations',  label: 'Integrations',    icon: 'fa-plug',               color: 'var(--green)'  },
-  { id: 'notifications', label: 'Notifications',   icon: 'fa-envelope-open-text', color: 'var(--amber)'  },
-  { id: 'templates',     label: 'Journey Templates',icon: 'fa-route',             color: 'var(--aqua)'   },
+const NAV_ITEM_DEFS: { id: SectionId; icon: string; color: string }[] = [
+  { id: 'org',           icon: 'fa-building',           color: 'var(--blue)'   },
+  { id: 'roles',         icon: 'fa-user-shield',        color: 'var(--cyan)'   },
+  { id: 'ai',            icon: 'fa-brain',              color: 'var(--purple)' },
+  { id: 'integrations',  icon: 'fa-plug',               color: 'var(--green)'  },
+  { id: 'notifications', icon: 'fa-envelope-open-text', color: 'var(--amber)'  },
+  { id: 'templates',     icon: 'fa-route',              color: 'var(--aqua)'   },
 ]
 
 interface SettingsClientProps {
@@ -118,6 +119,7 @@ interface SettingsClientProps {
 
 export default function SettingsClient({ initialSettings }: SettingsClientProps) {
   const router = useRouter()
+  const { t } = useT()
   const [active, setActive]   = useState<SectionId>('org')
   const [saved, setSaved]     = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -235,19 +237,19 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
     <>
       <div className="db-header">
         <div className="db-header-left">
-          <h1>Settings</h1>
-          <p>Configure your organization&apos;s onboarding platform and preferences.</p>
+          <h1>{t('settings.title')}</h1>
+          <p>{t('settings.subtitle')}</p>
         </div>
         <div className="db-header-actions">
           <button
             className="btn btn-primary btn-sm btn-glow"
             onClick={handleSave}
             disabled={isPending}
-            aria-label="Save settings changes"
+            aria-label={t('settings.saveChanges')}
           >
             {isPending
-              ? <><i className="fa-solid fa-spinner fa-spin" aria-hidden="true" /> Saving...</>
-              : <><i className="fa-solid fa-floppy-disk" aria-hidden="true" /> Save Changes</>
+              ? <><i className="fa-solid fa-spinner fa-spin" aria-hidden="true" /> {t('settings.saving')}</>
+              : <><i className="fa-solid fa-floppy-disk" aria-hidden="true" /> {t('settings.saveChanges')}</>
             }
           </button>
         </div>
@@ -258,7 +260,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
           {/* Sidebar nav */}
           <div className="db-card" style={{ padding: 8, position: 'sticky', top: 80 }}>
-            {NAV_ITEMS.map(item => (
+            {NAV_ITEM_DEFS.map(item => (
               <button
                 key={item.id}
                 onClick={() => setActive(item.id)}
@@ -274,7 +276,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                 }}
               >
                 <i className={`fa-solid ${item.icon}`} style={{ fontSize: 13, width: 16, textAlign: 'center', flexShrink: 0 }} />
-                {item.label}
+                {t(`settings.nav.${item.id}` as never)}
               </button>
             ))}
 
@@ -282,21 +284,21 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
             <div style={{ padding: '10px 12px' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
-                System
+                {t('settings.system')}
               </div>
               <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.6 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                  <span>Version</span><span style={{ fontWeight: 700, color: 'var(--text2)' }}>v2.6.4</span>
+                  <span>{t('settings.version')}</span><span style={{ fontWeight: 700, color: 'var(--text2)' }}>v2.6.4</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                  <span>Status</span>
+                  <span>{t('settings.statusLabel')}</span>
                   <span style={{ fontWeight: 700, color: 'var(--green)', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', display: 'inline-block' }} />
-                    Operational
+                    {t('settings.operational')}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Build</span><span style={{ fontWeight: 700, color: 'var(--text2)' }}>#9821</span>
+                  <span>{t('settings.build')}</span><span style={{ fontWeight: 700, color: 'var(--text2)' }}>#9821</span>
                 </div>
               </div>
             </div>
@@ -315,10 +317,10 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
               {/* ── ORGANIZATION ─────────────────────────────────── */}
               {active === 'org' && (
                 <div className="db-card" style={{ padding: '24px' }}>
-                  <SectionHeader icon="fa-building" title="Organization Profile" description="Manage company details, departments, and workspace configuration." />
+                  <SectionHeader icon="fa-building" title={t('settings.org.sectionTitle')} description={t('settings.org.sectionDesc')} />
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                    <SettingRow label="Company Name" description="Displayed across all employee-facing screens.">
+                    <SettingRow label={t('settings.org.companyName')} description={t('settings.org.companyNameDesc')}>
                       <input
                         value={orgName}
                         onChange={e => setOrgName(e.target.value)}
@@ -331,7 +333,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                       />
                     </SettingRow>
 
-                    <SettingRow label="Industry" description="Used to tailor AI recommendations.">
+                    <SettingRow label={t('settings.org.industry')} description={t('settings.org.industryDesc')}>
                       <select
                         value={orgIndustry}
                         onChange={e => setOrgIndustry(e.target.value)}
@@ -347,7 +349,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                       </select>
                     </SettingRow>
 
-                    <SettingRow label="Company Size">
+                    <SettingRow label={t('settings.org.companySize')}>
                       <select
                         value={orgSize}
                         onChange={e => setOrgSize(e.target.value)}
@@ -358,12 +360,12 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         }}
                       >
                         {['1-10', '11-50', '50-200', '200-1000', '1000+'].map(s => (
-                          <option key={s} value={s}>{s} employees</option>
+                          <option key={s} value={s}>{s} {t('settings.org.employeesLabel')}</option>
                         ))}
                       </select>
                     </SettingRow>
 
-                    <SettingRow label="Default Timezone" description="Used for scheduling check-ins and notifications." last>
+                    <SettingRow label={t('settings.org.timezone')} description={t('settings.org.timezoneDesc')} last>
                       <select
                         value={orgTimezone}
                         onChange={e => setOrgTimezone(e.target.value)}
@@ -382,8 +384,8 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
                   {/* Departments */}
                   <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border)' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Departments</div>
-                    <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 14 }}>These appear in employee profiles and journey filters.</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{t('settings.org.departments')}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 14 }}>{t('settings.org.departmentsDesc')}</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
                       {departments.map(d => (
                         <span key={d} style={{
@@ -407,7 +409,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         value={newDept}
                         onChange={e => setNewDept(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && addDepartment()}
-                        placeholder="Add department..."
+                        placeholder={t('settings.org.addDeptPlaceholder')}
                         style={{
                           flex: 1, padding: '8px 12px', borderRadius: 'var(--r)',
                           border: '1.5px solid var(--border)', background: 'var(--bg)',
@@ -416,7 +418,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         }}
                       />
                       <button className="btn btn-outline btn-sm" onClick={addDepartment} disabled={!newDept.trim()}>
-                        <i className="fa-solid fa-plus" /> Add
+                        <i className="fa-solid fa-plus" /> {t('settings.org.addDeptBtn')}
                       </button>
                     </div>
                   </div>
@@ -426,7 +428,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
               {/* ── ROLES & ACCESS ───────────────────────────────── */}
               {active === 'roles' && (
                 <div className="db-card" style={{ padding: '24px' }}>
-                  <SectionHeader icon="fa-user-shield" title="Roles & Access" description="Define what each role can see and do within the platform." color="var(--cyan)" />
+                  <SectionHeader icon="fa-user-shield" title={t('settings.roles.sectionTitle')} description={t('settings.roles.sectionDesc')} color="var(--cyan)" />
 
                   {/* Manager permissions */}
                   <div style={{ marginBottom: 24 }}>
@@ -438,13 +440,13 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         <i className="fa-solid fa-user-tie" style={{ marginRight: 4, fontSize: 9 }} />Manager
                       </span>
                     </div>
-                    <SettingRow label="Can invite new hires" description="Allow managers to send invitations without HR approval.">
+                    <SettingRow label={t('settings.roles.managerInvite')} description={t('settings.roles.managerInviteDesc')}>
                       <Toggle on={roles.manager_invite} onChange={() => toggleRole('manager_invite')} />
                     </SettingRow>
-                    <SettingRow label="View all journeys" description="Access journeys outside their direct reports.">
+                    <SettingRow label={t('settings.roles.managerViewAll')} description={t('settings.roles.managerViewAllDesc')}>
                       <Toggle on={roles.manager_view_all} onChange={() => toggleRole('manager_view_all')} />
                     </SettingRow>
-                    <SettingRow label="Edit & add tasks" description="Create and modify tasks on active journeys." last>
+                    <SettingRow label={t('settings.roles.managerEditTasks')} description={t('settings.roles.managerEditTasksDesc')} last>
                       <Toggle on={roles.manager_edit_tasks} onChange={() => toggleRole('manager_edit_tasks')} />
                     </SettingRow>
                   </div>
@@ -459,13 +461,13 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         <i className="fa-solid fa-id-badge" style={{ marginRight: 4, fontSize: 9 }} />HR
                       </span>
                     </div>
-                    <SettingRow label="Run risk scans" description="Trigger AI-powered risk analysis across all journeys.">
+                    <SettingRow label={t('settings.roles.hrRiskScan')} description={t('settings.roles.hrRiskScanDesc')}>
                       <Toggle on={roles.hr_risk_scan} onChange={() => toggleRole('hr_risk_scan')} />
                     </SettingRow>
-                    <SettingRow label="Edit journey templates" description="Create, modify, and delete onboarding templates.">
+                    <SettingRow label={t('settings.roles.hrEditTemplates')} description={t('settings.roles.hrEditTemplatesDesc')}>
                       <Toggle on={roles.hr_edit_templates} onChange={() => toggleRole('hr_edit_templates')} />
                     </SettingRow>
-                    <SettingRow label="Export reports" description="Download CSV and analytics reports." last>
+                    <SettingRow label={t('settings.roles.hrExportReports')} description={t('settings.roles.hrExportReportsDesc')} last>
                       <Toggle on={roles.hr_export_reports} onChange={() => toggleRole('hr_export_reports')} />
                     </SettingRow>
                   </div>
@@ -475,9 +477,9 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
               {/* ── AI CONFIGURATION ─────────────────────────────── */}
               {active === 'ai' && (
                 <div className="db-card" style={{ padding: '24px' }}>
-                  <SectionHeader icon="fa-brain" title="AI Configuration" description="Tune sentiment analysis, risk scoring, and scan behavior." color="var(--purple)" />
+                  <SectionHeader icon="fa-brain" title={t('settings.ai.sectionTitle')} description={t('settings.ai.sectionDesc')} color="var(--purple)" />
 
-                  <SettingRow label="AI Model" description="Model used for journey analysis and risk scoring.">
+                  <SettingRow label={t('settings.ai.aiModel')} description={t('settings.ai.aiModelDesc')}>
                     <select
                       value={aiModel}
                       onChange={e => setAiModel(e.target.value)}
@@ -487,21 +489,21 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         color: 'var(--text)', fontSize: 13, outline: 'none', cursor: 'pointer',
                       }}
                     >
-                      <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (Recommended)</option>
-                      <option value="claude-haiku-4-5">Claude Haiku 4.5 (Faster)</option>
-                      <option value="claude-opus-4-6">Claude Opus 4.6 (Most accurate)</option>
+                      <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
+                      <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
+                      <option value="claude-opus-4-6">Claude Opus 4.6</option>
                     </select>
                   </SettingRow>
 
-                  <SettingRow label="Sentiment Analysis" description="Analyze feedback text and survey responses for emotional signals.">
+                  <SettingRow label={t('settings.ai.sentimentAnalysis')} description={t('settings.ai.sentimentAnalysisDesc')}>
                     <Toggle on={sentimentEnabled} onChange={setSentimentEnabled} />
                   </SettingRow>
 
-                  <SettingRow label="Automatic Risk Alerts" description="Send alerts when a risk score exceeds the threshold automatically.">
+                  <SettingRow label={t('settings.ai.autoAlerts')} description={t('settings.ai.autoAlertsDesc')}>
                     <Toggle on={autoAlerts} onChange={setAutoAlerts} />
                   </SettingRow>
 
-                  <SettingRow label="Scan Frequency" description="How often AI re-evaluates all active journeys." last>
+                  <SettingRow label={t('settings.ai.scanFrequency')} description={t('settings.ai.scanFrequencyDesc')} last>
                     <select
                       value={scanFrequency}
                       onChange={e => setScanFrequency(e.target.value)}
@@ -511,10 +513,10 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         color: 'var(--text)', fontSize: 13, outline: 'none', cursor: 'pointer',
                       }}
                     >
-                      <option value="realtime">Real-time</option>
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="manual">Manual only</option>
+                      <option value="realtime">{t('settings.ai.realtime')}</option>
+                      <option value="daily">{t('settings.ai.daily')}</option>
+                      <option value="weekly">{t('settings.ai.weekly')}</option>
+                      <option value="manual">{t('settings.ai.manualOnly')}</option>
                     </select>
                   </SettingRow>
 
@@ -522,8 +524,8 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                   <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>Risk Alert Threshold</div>
-                        <div style={{ fontSize: 11, color: 'var(--text3)' }}>Trigger an alert when a journey risk score exceeds this value.</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{t('settings.ai.riskThreshold')}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text3)' }}>{t('settings.ai.riskThresholdDesc')}</div>
                       </div>
                       <span style={{
                         fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-display)',
@@ -539,21 +541,21 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                       style={{ width: '100%', accentColor: 'var(--blue)', marginTop: 4 }}
                     />
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginTop: 5 }}>
-                      <span>Sensitive (20) — more alerts</span>
-                      <span>Conservative (90) — fewer alerts</span>
+                      <span>{t('settings.ai.riskSensitive')}</span>
+                      <span>{t('settings.ai.riskConservative')}</span>
                     </div>
                   </div>
 
                   {/* ── Operational thresholds ── */}
                   <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 20 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: -8 }}>Operational Thresholds</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: -8 }}>{t('settings.ai.opThresholds')}</div>
 
                     {/* Task overdue days */}
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>Task Overdue After</div>
-                          <div style={{ fontSize: 11, color: 'var(--text3)' }}>Days after a task&apos;s week deadline before it&apos;s flagged overdue.</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{t('settings.ai.taskOverdue')}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text3)' }}>{t('settings.ai.taskOverdueDesc')}</div>
                         </div>
                         <span style={{ fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--amber)' }}>
                           {taskOverdueDays}d
@@ -566,8 +568,8 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         style={{ width: '100%', accentColor: 'var(--amber)', marginTop: 4 }}
                       />
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginTop: 5 }}>
-                        <span>Strict (1 day)</span>
-                        <span>Lenient (14 days)</span>
+                        <span>{t('settings.ai.taskStrict')}</span>
+                        <span>{t('settings.ai.taskLenient')}</span>
                       </div>
                     </div>
 
@@ -575,8 +577,8 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>Inactive Hire Alert</div>
-                          <div style={{ fontSize: 11, color: 'var(--text3)' }}>Days without login or task activity before flagging a hire as inactive.</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{t('settings.ai.inactiveAlert')}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text3)' }}>{t('settings.ai.inactiveAlertDesc')}</div>
                         </div>
                         <span style={{ fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--red)' }}>
                           {hireInactiveDays}d
@@ -589,8 +591,8 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         style={{ width: '100%', accentColor: 'var(--red)', marginTop: 4 }}
                       />
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginTop: 5 }}>
-                        <span>Sensitive (2 days)</span>
-                        <span>Relaxed (14 days)</span>
+                        <span>{t('settings.ai.inactiveSensitive')}</span>
+                        <span>{t('settings.ai.inactiveRelaxed')}</span>
                       </div>
                     </div>
 
@@ -598,8 +600,8 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>Low Morale Threshold</div>
-                          <div style={{ fontSize: 11, color: 'var(--text3)' }}>Pulse score at or below this value triggers a morale alert to managers.</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{t('settings.ai.lowMorale')}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text3)' }}>{t('settings.ai.lowMoraleDesc')}</div>
                         </div>
                         <span style={{ fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-display)', color: lowMoraleThreshold <= 2 ? 'var(--red)' : 'var(--amber)' }}>
                           {lowMoraleThreshold}/5
@@ -612,8 +614,8 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         style={{ width: '100%', accentColor: 'var(--red)', marginTop: 4 }}
                       />
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginTop: 5 }}>
-                        <span>Only critical (1/5)</span>
-                        <span>All below average (4/5)</span>
+                        <span>{t('settings.ai.moraleCritical')}</span>
+                        <span>{t('settings.ai.moraleAverage')}</span>
                       </div>
                     </div>
                   </div>
@@ -635,14 +637,14 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         </div>
                         <div>
                           <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Slack</div>
-                          <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>Send alerts and journey updates to Slack channels.</div>
+                          <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>{t('settings.integrations.slackDesc')}</div>
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         {integrations.slack.enabled && (
                           <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--green)', display: 'flex', alignItems: 'center', gap: 4 }}>
                             <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', display: 'inline-block' }} />
-                            Connected
+                            {t('settings.integrations.connected')}
                           </span>
                         )}
                         <Toggle
@@ -654,7 +656,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                     {integrations.slack.enabled && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         <div className="fg" style={{ margin: 0 }}>
-                          <label style={{ fontSize: 11 }}>Webhook URL</label>
+                          <label style={{ fontSize: 11 }}>{t('settings.integrations.webhookUrl')}</label>
                           <input
                             value={integrations.slack.webhook}
                             onChange={e => setIntegrations(p => ({ ...p, slack: { ...p.slack, webhook: e.target.value } }))}
@@ -663,7 +665,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                           />
                         </div>
                         <div className="fg" style={{ margin: 0 }}>
-                          <label style={{ fontSize: 11 }}>Default Channel</label>
+                          <label style={{ fontSize: 11 }}>{t('settings.integrations.defaultChannel')}</label>
                           <input
                             value={integrations.slack.channel}
                             onChange={e => setIntegrations(p => ({ ...p, slack: { ...p.slack, channel: e.target.value } }))}
@@ -682,10 +684,10 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                           {webhookTest.slack === 'error'   && <i className="fa-solid fa-circle-xmark" style={{ color: 'var(--red)' }} />}
                           {webhookTest.slack === 'idle'    && <i className="fa-solid fa-paper-plane" />}
                           {' '}
-                          {webhookTest.slack === 'loading' ? 'Sending…'
-                            : webhookTest.slack === 'ok'    ? 'Message sent!'
-                            : webhookTest.slack === 'error' ? 'Failed — check URL'
-                            : 'Test Connection'}
+                          {webhookTest.slack === 'loading' ? t('settings.integrations.sending')
+                            : webhookTest.slack === 'ok'    ? t('settings.integrations.messageSent')
+                            : webhookTest.slack === 'error' ? t('settings.integrations.failed')
+                            : t('settings.integrations.testConnection')}
                         </button>
                       </div>
                     )}
@@ -703,7 +705,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         </div>
                         <div>
                           <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Microsoft Teams</div>
-                          <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>Post notifications to Teams channels via webhook.</div>
+                          <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>{t('settings.integrations.teamsDesc')}</div>
                         </div>
                       </div>
                       <Toggle
@@ -714,7 +716,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                     {integrations.teams.enabled && (
                       <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                         <div className="fg" style={{ margin: 0 }}>
-                          <label style={{ fontSize: 11 }}>Webhook URL</label>
+                          <label style={{ fontSize: 11 }}>{t('settings.integrations.webhookUrl')}</label>
                           <input
                             value={integrations.teams.webhook}
                             onChange={e => setIntegrations(p => ({ ...p, teams: { ...p.teams, webhook: e.target.value } }))}
@@ -733,10 +735,10 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                           {webhookTest.teams === 'error'   && <i className="fa-solid fa-circle-xmark" style={{ color: 'var(--red)' }} />}
                           {webhookTest.teams === 'idle'    && <i className="fa-solid fa-paper-plane" />}
                           {' '}
-                          {webhookTest.teams === 'loading' ? 'Sending…'
-                            : webhookTest.teams === 'ok'    ? 'Message sent!'
-                            : webhookTest.teams === 'error' ? 'Failed — check URL'
-                            : 'Test Connection'}
+                          {webhookTest.teams === 'loading' ? t('settings.integrations.sending')
+                            : webhookTest.teams === 'ok'    ? t('settings.integrations.messageSent')
+                            : webhookTest.teams === 'error' ? t('settings.integrations.failed')
+                            : t('settings.integrations.testConnection')}
                         </button>
                       </div>
                     )}
@@ -758,7 +760,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                           </div>
                           <div>
                             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{hris.name}</div>
-                            <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>Sync employee data and org structure automatically.</div>
+                            <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>{t('settings.integrations.hrisDesc')}</div>
                           </div>
                         </div>
                         <Toggle
@@ -769,7 +771,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                       {integrations[hris.key].enabled && (
                         <div style={{ marginTop: 16 }}>
                           <div className="fg" style={{ margin: 0 }}>
-                            <label style={{ fontSize: 11 }}>API Key</label>
+                            <label style={{ fontSize: 11 }}>{t('settings.integrations.apiKey')}</label>
                             <input
                               type="password"
                               value={integrations[hris.key].apiKey}
@@ -788,20 +790,25 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
               {/* ── NOTIFICATIONS ─────────────────────────────────── */}
               {active === 'notifications' && (
                 <div className="db-card" style={{ padding: '24px' }}>
-                  <SectionHeader icon="fa-envelope-open-text" title="Notification System" description="Configure which events trigger automated notifications and how they are delivered." color="var(--amber)" />
+                  <SectionHeader icon="fa-envelope-open-text" title={t('settings.notifications.sectionTitle')} description={t('settings.notifications.sectionDesc')} color="var(--amber)" />
 
                   <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
-                    Event Triggers
+                    {t('settings.notifications.eventTriggers')}
                   </div>
-                  {[
-                    { key: 'journey_complete' as const,  label: 'Journey completed',       desc: 'Notify HR and manager when a hire completes all 90 days.' },
-                    { key: 'task_overdue' as const,       label: 'Task overdue',            desc: 'Alert when tasks are past their target week.' },
-                    { key: 'risk_increase' as const,      label: 'Risk score increase',     desc: 'Notify when a journey risk score crosses the threshold.' },
-                    { key: 'checkin_reminder' as const,   label: 'Check-in reminder',       desc: 'Remind managers 24h before scheduled check-ins.' },
-                    { key: 'weekly_digest' as const,      label: 'Weekly digest email',     desc: 'Summary of all active journeys sent on the configured day.' },
-                    { key: 'new_hire_joined' as const,    label: 'New hire joined',         desc: 'Notify the team when a new hire accepts their invitation.' },
-                  ].map((item, i, arr) => (
-                    <SettingRow key={item.key} label={item.label} description={item.desc} last={i === arr.length - 1}>
+                  {([
+                    { key: 'journey_complete' as const,  labelKey: 'journeyComplete',  descKey: 'journeyCompleteDesc' },
+                    { key: 'task_overdue' as const,      labelKey: 'taskOverdue',      descKey: 'taskOverdueDesc' },
+                    { key: 'risk_increase' as const,     labelKey: 'riskIncrease',     descKey: 'riskIncreaseDesc' },
+                    { key: 'checkin_reminder' as const,  labelKey: 'checkinReminder',  descKey: 'checkinReminderDesc' },
+                    { key: 'weekly_digest' as const,     labelKey: 'weeklyDigest',     descKey: 'weeklyDigestDesc' },
+                    { key: 'new_hire_joined' as const,   labelKey: 'newHireJoined',    descKey: 'newHireJoinedDesc' },
+                  ] as const).map((item, i, arr) => (
+                    <SettingRow
+                      key={item.key}
+                      label={t(`settings.notifications.${item.labelKey}` as never)}
+                      description={t(`settings.notifications.${item.descKey}` as never)}
+                      last={i === arr.length - 1}
+                    >
                       <Toggle on={notifs[item.key]} onChange={() => toggleNotif(item.key)} />
                     </SettingRow>
                   ))}
@@ -810,11 +817,11 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                   {notifs.weekly_digest && (
                     <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border)' }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 14 }}>
-                        Weekly Digest Schedule
+                        {t('settings.notifications.digestSchedule')}
                       </div>
                       <div className="db-grid-2col" style={{ gap: 12 }}>
                         <div className="fg" style={{ margin: 0 }}>
-                          <label>Send on</label>
+                          <label>{t('settings.notifications.sendOn')}</label>
                           <select value={digestDay} onChange={e => setDigestDay(e.target.value)}>
                             {['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].map(d => (
                               <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
@@ -822,7 +829,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                           </select>
                         </div>
                         <div className="fg" style={{ margin: 0 }}>
-                          <label>At time</label>
+                          <label>{t('settings.notifications.atTime')}</label>
                           <input
                             type="time"
                             value={digestTime}
@@ -835,12 +842,12 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                       <div style={{ marginTop: 16, padding: '14px 16px', background: 'var(--surface2)', borderRadius: 'var(--r)', border: '1px solid var(--border)' }}>
                         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
                           <i className="fa-solid fa-eye" style={{ fontSize: 10 }} />
-                          Digest Preview — What managers receive
+                          {t('settings.notifications.digestPreview')}
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.8 }}>
                           <div style={{ fontWeight: 700, marginBottom: 4 }}>
                             <i className="fa-solid fa-chart-bar" style={{ color: 'var(--blue)', marginRight: 6, fontSize: 11 }} />
-                            Weekly Onboarding Digest
+                            {t('settings.notifications.weeklyDigestTitle')}
                           </div>
                           <div style={{ color: 'var(--text3)', fontSize: 11, marginBottom: 8 }}>
                             Sent every {digestDay.charAt(0).toUpperCase() + digestDay.slice(1)} at {digestTime}
@@ -864,7 +871,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
               {/* ── JOURNEY TEMPLATES ─────────────────────────────── */}
               {active === 'templates' && (
                 <div className="db-card" style={{ padding: '24px' }}>
-                  <SectionHeader icon="fa-route" title="Journey Templates" description="Manage the onboarding templates used when assigning new hires to journeys." color="var(--aqua)" />
+                  <SectionHeader icon="fa-route" title={t('settings.templates.sectionTitle')} description={t('settings.templates.sectionDesc')} color="var(--aqua)" />
 
                   <div style={{
                     padding: '20px', borderRadius: 'var(--r-xl)',
@@ -880,26 +887,26 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         <i className="fa-solid fa-route" style={{ fontSize: 18, color: '#fff' }} />
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Journey Builder</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t('settings.templates.builderTitle')}</div>
                         <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5 }}>
-                          Create, edit, and manage all onboarding journey templates. You can also generate templates with AI.
+                          {t('settings.templates.builderDesc')}
                         </div>
                       </div>
                       <button
                         className="btn btn-primary btn-sm"
                         onClick={() => router.push('/hr/journeys')}
                       >
-                        <i className="fa-solid fa-arrow-right" /> Open Builder
+                        <i className="fa-solid fa-arrow-right" /> {t('settings.templates.openBuilder')}
                       </button>
                     </div>
                   </div>
 
                   <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.6 }}>
-                    Journey templates define the tasks, milestones, and check-ins that each new hire follows during their onboarding journey. Changes to templates only affect <strong>new</strong> journeys — existing active journeys are not modified.
+                    {t('settings.templates.templateInfo')}
                   </div>
 
                   <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--border)' }}>
-                    <SettingRow label="Default onboarding duration" description="Applied when creating journeys without a specific template.">
+                    <SettingRow label={t('settings.templates.defaultDuration')} description={t('settings.templates.defaultDurationDesc')}>
                       <select
                         style={{
                           width: 160, padding: '8px 12px', borderRadius: 'var(--r)',
@@ -914,7 +921,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         <option value="24">24 weeks (6 months)</option>
                       </select>
                     </SettingRow>
-                    <SettingRow label="Auto-assign template" description="Automatically assign a default template when a new hire is invited." last>
+                    <SettingRow label={t('settings.templates.autoAssign')} description={t('settings.templates.autoAssignDesc')} last>
                       <Toggle on={false} onChange={() => {}} />
                     </SettingRow>
                   </div>
@@ -926,7 +933,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
         </div>
       </div>
 
-      <SaveToast visible={saved} onHide={() => setSaved(false)} />
+      <SaveToast visible={saved} onHide={() => setSaved(false)} savedMsg={t('settings.savedToast')} />
       {saveError && (
         <div style={{
           position: 'fixed', bottom: 28, right: 28, zIndex: 3000,

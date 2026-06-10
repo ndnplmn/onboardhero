@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/db/supabase-client'
 import Link from 'next/link'
 import { useT } from '@/lib/i18n/context'
+import LanguageToggle from '@/components/platform/LanguageToggle'
 
 export default function LoginForm() {
   const { t } = useT()
@@ -48,7 +49,11 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="auth-card">
+    <>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <LanguageToggle />
+      </div>
+      <div className="auth-card">
       <img
         src="/ONBOARD_HERO_LOGO.png"
         alt="OnboardHero"
@@ -95,5 +100,6 @@ export default function LoginForm() {
         {t('auth.login.noAccount')} <Link href="/signup">{t('auth.login.signupLink')}</Link>
       </p>
     </div>
+    </>
   )
 }
